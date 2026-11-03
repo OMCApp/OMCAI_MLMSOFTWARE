@@ -115,7 +115,13 @@ if (Path::current() === '/_migrate') {
         /* ‼️ ปิดโหมดปรับปรุงที่นี่ — CI ลบไฟล์บน runner ได้อย่างเดียว ลบบน server ไม่ได้
               ถ้า migration ล้มเหลว ไม่ถึงบรรทัดนี้ ระบบจึงค้างในโหมดปรับปรุงซึ่งปลอดภัยกว่า */
         if (is_file($config['paths']['maintenance'])) {
-            unlink($config['paths']['maintenance']);
+            // ลบไม่ได้ (เช่นสิทธิ์ไฟล์ของผู้ใช้ FTP) ต้องตอบ 500 ให้ CI รู้ ไม่ใช่ 200 แล้วเว็บค้าง 503
+            if (!@unlink($config['paths']['maintenance'])) {
+                Logger::warning('maintenance_flag_not_removed');
+                http_response_code(500);
+                echo "maintenance flag could not be removed\n";
+                exit;
+            }
             echo "maintenance off\n";
         }
     } catch (Throwable $e) {

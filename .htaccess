@@ -4,6 +4,12 @@
 
 Options -Indexes
 
+# ไฟล์นี้ใช้เฉพาะ staging — กันไฟล์ static (รูป, CSS) ไม่ให้ถูก index ด้วย
+# Core\Staging ใส่ header นี้ให้หน้าที่ผ่าน PHP แต่ไฟล์ static Apache ส่งตรงไม่ผ่าน PHP
+<IfModule mod_headers.c>
+    Header always set X-Robots-Tag "noindex, nofollow, noarchive"
+</IfModule>
+
 <FilesMatch "^\.">
     Require all denied
 </FilesMatch>

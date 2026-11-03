@@ -86,6 +86,11 @@ jobs:
           STAGING_PASS: ${{ secrets.STAGING_PASS }}
         run: |
           umask 077
+          # config.php trims values and strips surrounding quotes — quote them so leading/trailing
+          # spaces survive; refuse characters the .env format cannot hold
+          for v in DB_PASS DB_USER DB_NAME STAGING_PASS MIGRATE_TOKEN; do
+            case "${!v}" in *$'\n'*|*'"'*) echo "::error::secret $v contains a newline or double quote"; exit 1;; esac
+          done
           {
             echo 'APP_NAME="MLM Software by OMC"'
             echo 'APP_ENV=staging'
@@ -93,12 +98,12 @@ jobs:
             echo 'APP_HTTPS=false'
             echo 'APP_TIMEZONE=Asia/Bangkok'
             echo 'STAGING_USER=omc'
-            echo "STAGING_PASS=${STAGING_PASS}"
+            echo "STAGING_PASS=\"${STAGING_PASS}\""
             echo "DB_HOST=${DB_HOST:-localhost}"
             echo 'DB_PORT=3306'
-            echo "DB_NAME=${DB_NAME}"
-            echo "DB_USER=${DB_USER}"
-            echo "DB_PASS=${DB_PASS}"
+            echo "DB_NAME=\"${DB_NAME}\""
+            echo "DB_USER=\"${DB_USER}\""
+            echo "DB_PASS=\"${DB_PASS}\""
             echo "MIGRATE_TOKEN=${MIGRATE_TOKEN}"
           } > .env
           echo ".env written: yes"
@@ -181,6 +186,7 @@ jobs:
       - name: Verify site and that source files are not reachable
         env:
           APP_URL: ${{ secrets.APP_URL }}
+          STAGING_PASS: ${{ secrets.STAGING_PASS }}
         run: |
           base="${APP_URL%/}"
           fail=0
@@ -188,8 +194,13 @@ jobs:
           [ "$code" = "200" ] && echo "health: ok" || { echo "::error::/_health returned $code"; fail=1; }
           code=$(curl -s -o /dev/null -w "%{http_code}" "$base/")
           [ "$code" = "401" ] && echo "staging login required: yes" || { echo "::error::home returned $code, expected 401 (staging must require login)"; fail=1; }
-          robots=$(curl -s -D - -o /dev/null "$base/_health" | grep -ci '^x-robots-tag: noindex')
-          [ "$robots" = "1" ] && echo "noindex header: yes" || { echo "::error::X-Robots-Tag noindex missing"; fail=1; }
+          # With the password the real home page must render — catches a site stuck in maintenance (503)
+          code=$(curl -s -o /dev/null -w "%{http_code}" -u "omc:${STAGING_PASS}" "$base/")
+          [ "$code" = "200" ] && echo "home with login: 200" || { echo "::error::home with login returned $code"; fail=1; }
+          for p in _health assets/css/app.css; do
+            robots=$(curl -s -D - -o /dev/null "$base/$p" | grep -ci '^x-robots-tag: noindex')
+            [ "$robots" -ge 1 ] && echo "noindex on /$p: yes" || { echo "::error::X-Robots-Tag noindex missing on /$p"; fail=1; }
+          done
           for p in .env composer.json app/Controllers/HomeController.php core/Auth.php config/config.php database/migrations/001_create_users_table.sql; do
             code=$(curl -s -o /dev/null -w "%{http_code}" "$base/$p")
             if [ "$code" = "200" ]; then echo "::error::$p is reachable from the web"; fail=1; else echo "$p blocked: yes ($code)"; fi
