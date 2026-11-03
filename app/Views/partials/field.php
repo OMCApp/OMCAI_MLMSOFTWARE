@@ -115,7 +115,7 @@ $fieldId           = 'f-' . preg_replace('/[^a-z0-9_-]/i', '-', $fieldName);
     <?php elseif ($fieldType === 'select'): ?>
         <select id="<?= e($fieldId) ?>" name="<?= e($fieldName) ?>" <?php if ($fieldRequired): ?>required<?php endif; ?>
                 <?php if ($fieldSearch): ?>data-search="true"<?php endif; ?>
-                <?php if ($fieldSource !== ''): ?>data-source="<?= e(url('/options/' . $fieldSource)) ?>"<?php endif; ?>
+                <?php if ($fieldSource !== ''): ?>data-source="<?= e(url('/admin/options/' . $fieldSource)) ?>"<?php endif; ?>
                 <?php if ($fieldHint !== ''): ?>aria-describedby="<?= e($fieldId) ?>-hint"<?php endif; ?>>
             <?php foreach ($fieldOptions as $optionValue => $optionLabel): ?>
                 <option value="<?= e((string) $optionValue) ?>"

@@ -92,15 +92,16 @@
 - [ ] partial บล็อกทั้งหมด (`partials/blocks/*`) ตามรายการบล็อกข้างบน · animation เบา (reveal, counter, hover) เคารพ `prefers-reduced-motion`
 - [ ] C4ก เทียบหน้าแรกกับแบบอ้างอิงทีละบล็อก (โหมดเร็วไม่เลื่อน)
 
-## Phase 2 — Content engine + SEO infrastructure  ⬜
+## Phase 2 — Content engine + SEO infrastructure  🔨
 ### ครบลูป
-- [ ] resource ทุกตัวมี Model/Service + audit log
+- [x] resource ทุกตัวมี Model/Service + audit log (หน้าจัดการ ดู/เพิ่ม/แก้/ลบ อยู่ใน Phase 3)
 ### ขั้นตอน
-- [ ] migrations 006+ ตามตารางข้างบน
-- [ ] public router ตามลำดับการจับ URL · trailing slash · redirects · 404 log
-- [ ] `seo-head` partial · JSON-LD · breadcrumbs · sitemap · robots · RSS
-- [ ] ย้าย `/login` `/dashboard` ไป `/admin/...`
-- [ ] tests: router (ทุกแถวใน URL map + redirect map), sitemap, canonical, noindex ตาม env
+- [x] migrations 006–011 ตามตารางข้างบน + seed redirect map, page shell (draft) ทุก URL ใน URL map, หมวด 2 ตัว, settings
+- [x] public router ตามลำดับการจับ URL (`Router::fallback` → `App\Services\SiteResolver`) · trailing slash · redirects (exact/prefix · 301/302/410 · นับ hits) · บทความวันที่ผิด 301 · 404 log
+- [x] `seo-head` partial · JSON-LD · breadcrumbs · sitemap · robots · RSS · ดูตัวอย่าง draft `?preview=1`
+- [x] ย้าย `/login` `/dashboard` ไป `/admin/...`
+- [x] tests: `php tests/run.php` — router (ทุกแถวใน URL map + redirect map), sitemap, canonical, noindex ตาม env (397 ผ่าน)
+- [ ] เปลี่ยน `PublicController::LAYOUT` เป็น `site` เมื่อ Phase 1 ส่ง `layouts/site.php` (บรรทัดเดียว)
 
 ## Phase 3 — CMS admin  ⬜
 ### ครบลูป (ทุกตัว ดู/เพิ่ม/แก้/ลบ + สิทธิ์)

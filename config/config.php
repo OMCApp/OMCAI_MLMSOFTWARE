@@ -73,6 +73,14 @@ return [
     'url'   => rtrim($get('APP_URL'), '/'),
     'https' => $get('APP_HTTPS', $appEnv === 'production' ? 'true' : 'false') === 'true',
 
+    /* ‼️ canonical / og:url / sitemap <loc> ชี้ host ของ production เสมอ แม้รันบน staging
+       (PLAN.md "SEO ที่ทุกหน้า public ต้องมี") — staging ถูกกันด้วย noindex + Basic Auth อยู่แล้ว
+       และหน้าที่เห็นบน staging ต้องเป็นหน้าเดียวกับที่จะขึ้นจริงทุกตัวอักษร
+       ไม่ใช้ APP_URL เพราะบน staging APP_URL คือ http://IP/~omcai/... ซึ่งห้ามหลุดไปเป็น canonical */
+    'seo' => [
+        'canonical_url' => rtrim($get('CANONICAL_URL', 'https://mlmsoftware.omc.co.th'), '/'),
+    ],
+
     'db' => [
         'host' => $get('DB_HOST', '127.0.0.1'),
         'port' => (int) $get('DB_PORT', '3306'),

@@ -9,7 +9,7 @@ declare(strict_types=1);
 <footer class="site-footer">
     <span><?= e((string) config('name')) ?></span>
     <span class="muted">v<?= e(trim((string) @file_get_contents(dirname(__DIR__, 3) . '/standard/VERSION'))) ?></span>
-    <a href="<?= e(url('/manual')) ?>"><?= e(__('ui.manual')) ?></a>
+    <a href="<?= e(url('/admin/manual')) ?>"><?= e(__('ui.manual')) ?></a>
     <button type="button" class="btn" data-support-open><?= e(__('ui.support')) ?></button>
     <span class="spacer muted">&copy; <?= e(date('Y')) ?></span>
 

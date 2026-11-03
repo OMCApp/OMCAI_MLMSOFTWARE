@@ -9,20 +9,13 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
-use Core\Auth;
 use Core\Controller;
 
+/**
+ * ‼️ หน้าแรกของเว็บ (/) เป็นหน้าสาธารณะจากตาราง pages แล้ว (SiteController) — ที่นี่เหลือแค่หน้าแรกของหลังบ้าน /admin
+ */
 final class HomeController extends Controller
 {
-    public function index(): void
-    {
-        if (Auth::check()) {
-            $this->redirect('/dashboard');
-        }
-
-        $this->view('home', ['title' => (string) config('name')]);
-    }
-
     public function dashboard(): void
     {
         $this->view('dashboard', ['title' => __('common.view')]);

@@ -194,4 +194,18 @@ return [
             'admin'  => 'For administrators',
         ],
     ],
+
+    // Public website — UI text only; page content lives in the database (PLAN.md)
+    'site' => [
+        'home'            => 'Home',
+        'blog'            => 'Blog',
+        'page_n'          => 'Page :page',
+        'pagination'      => 'Pages',
+        'newer'           => 'Newer',
+        'older'           => 'Older',
+        'gone_title'      => 'This page has been removed',
+        'gone_body'       => 'This page is no longer available. Start from the home page or read our latest articles.',
+        'preview_notice'  => 'Preview — this page is not published yet and the public cannot see it',
+        'preview_empty'   => 'This page has no content yet',
+    ],
 ];

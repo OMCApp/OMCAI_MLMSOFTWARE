@@ -21,6 +21,13 @@ if (PHP_SAPI === 'cli-server') {
         return false;
     }
 
+    /* ‼️ built-in server ตั้ง SCRIPT_NAME เป็น path ที่ขอมา (/admin/login) ไม่ใช่ /index.php
+          Core\Path::base() จึงคิดว่าระบบติดตั้งใต้ /admin แล้วตัดทิ้ง — route ซ้อนชั้นหาไม่เจอทั้งหมด
+          ตั้งให้เหมือน Apache ที่ rewrite เข้า public/index.php */
+    $_SERVER['SCRIPT_NAME']     = '/index.php';
+    $_SERVER['PHP_SELF']        = '/index.php';
+    $_SERVER['SCRIPT_FILENAME'] = __DIR__ . '/public/index.php';
+
     require __DIR__ . '/public/index.php';
 
     return true;

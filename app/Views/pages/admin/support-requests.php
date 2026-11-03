@@ -80,7 +80,7 @@ foreach (\App\Models\SupportRequest::TYPES as $typeKey) {
             <ul class="stack">
                 <?php foreach ($mostAsked as $item): ?>
                     <li>
-                        <a href="<?= e(url('/manual/' . $item['manual_slug'])) ?>"><?= e($item['manual_slug']) ?></a>
+                        <a href="<?= e(url('/admin/manual/' . $item['manual_slug'])) ?>"><?= e($item['manual_slug']) ?></a>
                         <span class="muted small"><?= e((string) $item['total']) ?></span>
                     </li>
                 <?php endforeach; ?>
