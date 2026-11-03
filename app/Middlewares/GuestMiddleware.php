@@ -18,7 +18,7 @@ final class GuestMiddleware
             return;
         }
 
-        header('Location: ' . Path::url('/dashboard'), true, 302);
+        header('Location: ' . Path::url('/admin'), true, 302);
         exit;
     }
 }

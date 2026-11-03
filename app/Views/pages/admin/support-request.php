@@ -38,7 +38,7 @@ foreach (\App\Models\SupportRequest::STATUSES as $fieldValue) {
         </dl>
 
         <?php if (($record['attachment_path'] ?? null) !== null): ?>
-            <a class="btn btn-secondary" href="<?= e(url('/files/' . $record['id'])) ?>">
+            <a class="btn btn-secondary" href="<?= e(url('/admin/files/' . $record['id'])) ?>">
                 <?= icon('download') ?><?= e((string) $record['attachment_name']) ?>
             </a>
         <?php endif; ?>

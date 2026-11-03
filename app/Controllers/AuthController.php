@@ -46,7 +46,7 @@ final class AuthController extends Controller
             $this->backWithErrors([], ['username' => $request->input('username')]);
         }
 
-        $this->redirect('/dashboard');
+        $this->redirect('/admin');
     }
 
     public function logout(): void
@@ -54,6 +54,6 @@ final class AuthController extends Controller
         Auth::logout();
 
         $this->flash('success', __('auth.logged_out'));
-        $this->redirect('/login');
+        $this->redirect('/admin/login');
     }
 }

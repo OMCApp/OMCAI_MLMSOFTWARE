@@ -27,7 +27,7 @@ php -d curl.cainfo=C:/xampp/apache/bin/curl-ca-bundle.crt tools/seo-audit/crawl.
 
 | Group | Count | URL pattern | Plan |
 |---|---|---|---|
-| Blog posts | 37 | `/YYYY/MM/DD/<slug>/` (Thai slugs) | **Keep the same URL**; migrate content, title, description and images |
+| Blog posts | 36 (27 ข่าวขายตรง + 9 ประกัน) | `/YYYY/MM/DD/<slug>/` (Thai slugs) | **Keep the same URL**; migrate content, title, description and images |
 | Core pages | `/`, `/mlm-software-omc/`, `/ocpb-mlm/`, `/ocpb-mlm2/`, `/services/`, `/blog/`, `/contact/`, `/portfolio/` | — | Keep the URL; redesign the content but keep the search intent |
 | Policy pages | 2 | `/นโยบายความเป็นส่วนตัวข/`, `/นโยบายการใช้คุกกี้-cookies-policy/` | Keep the URL |
 | Categories | 2 | `/category/ข่าวขายตรง/`, `/category/ประกัน/` | Keep the URL |
@@ -51,7 +51,7 @@ php -d curl.cainfo=C:/xampp/apache/bin/curl-ca-bundle.crt tools/seo-audit/crawl.
 | Home page loads 36 scripts + 18 stylesheets, 120 KB HTML | home |
 | Theme demo pages and demo portfolio items are indexable | 26 |
 | The sitemap is WordPress core's, not Rank Math's; the sitemap includes demo pages | — |
-| Insurance articles (11 posts, `/category/ประกัน/`) sit inside an MLM software site, which dilutes the topic | 11 |
+| Insurance articles (9 posts, `/category/ประกัน/`) sit inside an MLM software site, which dilutes the topic | 11 |
 | Pages use `Article` schema; no `Organization`/`SoftwareApplication`/`BreadcrumbList`/`FAQPage` | all |
 
 ## Still needed

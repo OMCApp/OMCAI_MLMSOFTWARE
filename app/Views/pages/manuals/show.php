@@ -18,7 +18,7 @@ declare(strict_types=1);
 
     <hr>
 
-    <form method="POST" action="<?= e(url('/support')) ?>" class="stack">
+    <form method="POST" action="<?= e(url('/admin/support')) ?>" class="stack">
         <?= csrf_field() ?>
         <input type="hidden" name="type" value="how_to">
         <input type="hidden" name="manual_slug" value="<?= e($slug) ?>">

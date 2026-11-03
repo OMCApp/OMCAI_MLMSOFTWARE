@@ -23,6 +23,9 @@ final class Router
 
     private string $groupPrefix = '';
 
+    /** @var array{action:mixed,middleware:array<int,string>}|null */
+    private ?array $fallback = null;
+
     /** @var array<string, class-string> */
     private array $middlewareMap = [];
 
@@ -83,16 +86,20 @@ final class Router
         $pattern = $pattern === '/' ? '/' : rtrim($pattern, '/');
         $pattern = $pattern === '' ? '/' : $pattern;
 
+        /* ‼️ ส่วนที่เป็นตัวอักษรตรงตัวต้อง preg_quote — ไม่งั้น . ใน /sitemap.xml กลายเป็น "ตัวอะไรก็ได้"
+              แล้ว /sitemapXxml ก็ตรง route นี้ด้วย · ส่วน {param:regex} ใช้ regex ตามที่ประกาศ */
         $params = [];
-        $regex  = preg_replace_callback(
-            '/\{(\w+)(?::([^}]+))?\}/',
-            static function (array $m) use (&$params): string {
-                $params[] = $m[1];
+        $regex  = '';
 
-                return '(' . ($m[2] ?? '[^/]+') . ')';
-            },
-            $pattern
-        );
+        foreach (preg_split('/(\{\w+(?::[^}]+)?\})/', $pattern, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [] as $part) {
+            if (preg_match('/^\{(\w+)(?::([^}]+))?\}$/', $part, $m) === 1) {
+                $params[] = $m[1];
+                $regex   .= '(' . ($m[2] ?? '[^/]+') . ')';
+                continue;
+            }
+
+            $regex .= preg_quote($part, '#');
+        }
 
         $this->routes[] = [
             'method'     => $method,
@@ -102,6 +109,22 @@ final class Router
             'action'     => $action,
             'middleware' => array_merge($this->groupMiddleware, $middleware),
         ];
+    }
+
+    /**
+     * ตัวรับ request GET/HEAD ที่ไม่ตรง route ไหนเลย — ใช้กับเว็บสาธารณะที่ URL มาจากฐานข้อมูล
+     *
+     * ‼️ route ระบบ (/admin, /sitemap.xml, /_health ...) ถูกจับก่อนเสมอ ตัวนี้ทำงานเป็นลำดับสุดท้าย
+     *    ลำดับการจับ URL ของเว็บสาธารณะ (trailing slash → redirects → บทความ → หมวด → บล็อก → หน้า → 404)
+     *    อยู่ใน App\Services\SiteResolver ที่เดียว — ห้ามกระจายไปเป็น route แยกที่นี่
+     *
+     * ‼️ middleware ของ fallback ทำงานเหมือน route ปกติ — สิทธิ์ดู draft ตัดสินที่นั่น ไม่ใช่ใน Controller
+     *
+     * @param array<int, string> $middleware
+     */
+    public function fallback(mixed $action, array $middleware = []): void
+    {
+        $this->fallback = ['action' => $action, 'middleware' => $middleware];
     }
 
     /** @return array<int, array<string, mixed>> ใช้โดย check.php และหน้าตรวจภายใน */
@@ -122,7 +145,8 @@ final class Router
                 continue;
             }
 
-            if ($route['method'] !== $method) {
+            // HEAD ตอบเหมือน GET (crawler และตัวตรวจลิงก์ใช้ HEAD) — web server ตัด body ทิ้งให้เอง
+            if ($route['method'] !== $method && !($method === 'HEAD' && $route['method'] === 'GET')) {
                 $allowed[] = $route['method'];
                 continue;
             }
@@ -139,6 +163,13 @@ final class Router
         if ($allowed !== []) {
             header('Allow: ' . implode(', ', array_unique($allowed)));
             $this->fail(405);
+
+            return;
+        }
+
+        if ($this->fallback !== null && in_array($method, ['GET', 'HEAD'], true)) {
+            $this->runMiddleware($this->fallback['middleware']);
+            $this->runAction($this->fallback['action'], []);
 
             return;
         }

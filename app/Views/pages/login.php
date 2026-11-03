@@ -6,7 +6,7 @@
 
 declare(strict_types=1);
 ?>
-<form class="card stack" method="POST" action="<?= e(url('/login')) ?>">
+<form class="card stack" method="POST" action="<?= e(url('/admin/login')) ?>">
     <?= csrf_field() ?>
 
     <h2><?= e(__('auth.login')) ?></h2>

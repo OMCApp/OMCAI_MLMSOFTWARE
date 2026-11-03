@@ -85,6 +85,44 @@ final class Path
     }
 
     /**
+     * เส้นทางที่ผู้ใช้ขอมาจริง — decode แล้ว และ **คง / ท้ายไว้** (ไม่มี base path ไม่มี query string)
+     *
+     * ‼️ current() ตัด / ท้ายทิ้งเพื่อให้ route หลังบ้านจับได้ทั้งสองแบบ
+     *    แต่เว็บสาธารณะต้องรู้ว่ามี / ท้ายหรือไม่ เพราะ /contact กับ /contact/ คนละ URL ในสายตา Google
+     *    (ไม่มี / → 301 ไปตัวที่มี — PLAN.md "Routing สาธารณะ" ข้อ 3)
+     *
+     * ‼️ ยุบ // ที่ซ้ำกันเหลือตัวเดียว — ไม่งั้น //evil.example ที่ถูก redirect ต่อ
+     *    จะกลายเป็น Location ที่เบราว์เซอร์อ่านเป็นโดเมนอื่น (open redirect)
+     *
+     * เบราว์เซอร์ส่ง path ภาษาไทยมาแบบ percent-encode เสมอ — decode ที่นี่ที่เดียว
+     * แล้วทั้งระบบเทียบกับค่าที่เก็บแบบ decode ในฐานข้อมูล
+     */
+    public static function requested(): string
+    {
+        $uri  = (string) ($_SERVER['REQUEST_URI'] ?? '/');
+        $uri  = explode('?', $uri, 2)[0];
+        $base = self::base();
+
+        if ($base !== '' && str_starts_with($uri, $base)) {
+            $uri = substr($uri, strlen($base));
+        }
+
+        $uri = (string) preg_replace('#/{2,}#', '/', '/' . rawurldecode($uri));
+
+        return $uri;
+    }
+
+    /**
+     * เข้ารหัส path ที่ decode แล้วกลับเป็นรูปที่ใส่ใน Location / sitemap / canonical ได้
+     *
+     * ‼️ เข้ารหัสทีละช่วงระหว่าง / — ห้าม rawurlencode() ทั้งก้อน ไม่งั้น / กลายเป็น %2F
+     */
+    public static function encode(string $path): string
+    {
+        return implode('/', array_map('rawurlencode', explode('/', $path)));
+    }
+
+    /**
      * เส้นทางเต็มรวม query string — ใช้เก็บบริบทของระบบแจ้งปัญหา
      *
      * ต้องเก็บ query string ด้วย เพราะเคส "ข้อมูลแสดงผิด" มักขึ้นกับตัวกรองที่เลือกอยู่ตอนนั้น
