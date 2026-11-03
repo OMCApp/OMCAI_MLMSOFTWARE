@@ -44,6 +44,6 @@ modern · clean · premium · corporate · trustworthy · technology-driven · �
 - Core Web Vitals: LCP ≤ 2.5s · CLS ≤ 0.1 · INP ≤ 200ms (field p75)
 - Git + CI/CD (build · test · deploy · rollback) · branch `rebuild-cms` → merge `main` (ผู้ใช้ให้ merge+push เองได้)
 - staging แยก มี auth + noindex · ห้าม deploy ทับ production
-- เก็บบทความเดิม 37 เรื่อง + ประกัน 11 เรื่องไว้ก่อน ห้ามลบหรือ redirect จนกว่าดู SEO performance/backlinks
+- เก็บบทความเดิม 36 เรื่อง (ข่าวขายตรง 27 + ประกัน 9)ไว้ก่อน ห้ามลบหรือ redirect จนกว่าดู SEO performance/backlinks
 - ห้ามสลับ production จนผ่าน SEO Migration Gate + Rollback Readiness
 - Deploy: ผู้ใช้เลือก FTP ธรรมดา (ไม่ใช่ FTPS)

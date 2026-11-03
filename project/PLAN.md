@@ -61,7 +61,7 @@
 | `/portfolio/` | Case Studies | คง · แสดงเฉพาะของจริง ไม่มีก็สถานะว่าง+CTA |
 | `/category/ข่าวขายตรง/` · `/category/ประกัน/` | หมวด | คง |
 | `/นโยบายความเป็นส่วนตัวข/` · `/นโยบายการใช้คุกกี้-cookies-policy/` | Policy | คง |
-| `/YYYY/MM/DD/slug/` (37 เรื่อง) | บทความ | **คงทุก URL ห้ามแตะ** (รวมประกัน 11 เรื่อง) |
+| `/YYYY/MM/DD/slug/` (36 เรื่อง) | บทความ | **คงทุก URL ห้ามแตะ** (รวมประกัน 9 เรื่อง) |
 | `/mlm-software/` | — | redirect เดิม 301 → `/2025/05/20/mlm-software-คำตอบการจัดการสต็อก/` **คงไว้ตามเดิม** |
 | `/features/` | Features | ใหม่ |
 | `/compensation-plans/` + `/binary/` `/unilevel/` `/matrix/` `/board/` `/stair-step/` `/hybrid/` | แผนรายได้ | ใหม่ (Board/Stair Step รอยืนยันว่ารองรับจริง — QUESTIONS) |
@@ -115,7 +115,7 @@
 - [ ] lead form: ขอ Demo / ใบเสนอราคา / ปรึกษา / ติดต่อ / ย้ายระบบ · CSRF · honeypot + rate limit · บันทึก lead + แจ้งอีเมล (ถ้าตั้ง SMTP) · หน้า thank-you (noindex) · ปุ่ม LINE/โทร
 
 ## Phase 5 — Content migration  ⬜
-- [ ] ดึงบทความ 37 เรื่อง + หน้าเดิมจาก HTML เว็บจริง (title, meta description, H1, เนื้อหา, วันที่, หมวด, รูปเด่น, alt) → posts/pages · **URL เดิมตรงทุกตัว**
+- [ ] ดึงบทความ 36 เรื่อง + หน้าเดิมจาก HTML เว็บจริง (title, meta description, H1, เนื้อหา, วันที่, หมวด, รูปเด่น, alt) → posts/pages · **URL เดิมตรงทุกตัว**
 - [ ] รูปที่ถูกอ้างถึง → `public/wp-content/uploads/` path เดิม · เติม alt ที่หาย (จากบริบท) · ใส่ width/height
 - [ ] แก้ title ที่ยัด keyword (ตัด suffix ยาวของ WordPress) โดย**รักษาส่วนต้นที่เป็น intent** · เติม meta description ที่หาย · H1 ตัวเดียว
 - [ ] นำเข้า redirect map
