@@ -1,9 +1,17 @@
+# Secrets (standard/rule.md: .env must never be committed)
+.env
+
+# Dependencies
+vendor/
+
+# Runtime data — keep the folders, not their contents
+storage/logs/*
+storage/uploads/*
+storage/backups/*
+!storage/*/.gitkeep
+
 # Local / OS
 .DS_Store
 Thumbs.db
 .idea/
 .vscode/
-
-# Secrets
-.env
-config/local.php
