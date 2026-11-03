@@ -18,8 +18,10 @@ declare(strict_types=1);
 $richBlock      = (array) ($block ?? []);
 $richParagraphs = array_values(array_filter(array_map('strval', (array) ($richBlock['paragraphs'] ?? [])), 'strlen'));
 $richList       = array_values(array_filter(array_map('strval', (array) ($richBlock['list'] ?? [])), 'strlen'));
+// ‼️ 'html' ต้องผ่าน App\Services\HtmlSanitizer มาแล้วเท่านั้น (SiteViewService::withPartials ทำให้) — เนื้อหาที่ย้ายจากเว็บเดิม
+$richHtml       = (string) ($richBlock['html'] ?? '');
 
-if ($richParagraphs === [] && $richList === []) {
+if ($richParagraphs === [] && $richList === [] && $richHtml === '') {
     return;
 }
 ?>
@@ -39,6 +41,10 @@ if ($richParagraphs === [] && $richList === []) {
                     <?php endforeach; ?>
                 </ul>
             <?php endif; ?>
+            <?php
+            // sanitize แล้วใน Service (allowlist) — ครอบ e() ซ้ำจะได้แท็กดิบขึ้นเป็นข้อความ
+            echo $richHtml;
+            ?>
         </div>
     </div>
 </section>

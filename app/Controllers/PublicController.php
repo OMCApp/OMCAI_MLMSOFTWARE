@@ -26,7 +26,7 @@ abstract class PublicController extends Controller
      * ‼️ layout ของเว็บสาธารณะ — เปลี่ยนที่บรรทัดนี้บรรทัดเดียว
      *    Phase 1 ส่ง layouts/site.php แล้วให้เปลี่ยนเป็น 'site'
      */
-    public const LAYOUT = 'site-fallback';
+    public const LAYOUT = 'site';
 
     /**
      * @param array{status:int, view:string, title:string, data:array<string,mixed>, seo:array<string,mixed>,
@@ -45,8 +45,9 @@ abstract class PublicController extends Controller
 
         $this->view($screen['view'], $screen['data'] + [
             'title'       => $screen['title'],
-            'seoHead'     => $this->capture('partials/seo-head', ['seoHeadMeta' => $screen['seo']]),
-            'jsonLd'      => $this->capture('partials/json-ld', ['jsonLdGraph' => $screen['graph']]),
+            // layouts/site.php include partial เอง — ส่งเป็นข้อมูล ไม่ใช่ HTML ที่ต้องพิมพ์ดิบ
+            'seoHeadMeta' => $screen['seo'],
+            'jsonLdGraph' => $screen['graph'],
             'breadcrumbs' => $screen['breadcrumbs'],
             'siteBrand'   => SettingService::brand(),
         ], self::LAYOUT);

@@ -460,7 +460,9 @@ foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root . '/
         $sources[] = str_replace('\\', '/', substr($file->getPathname(), strlen($root) + 1));
     }
 }
-$check($sources === ['app/Controllers/PublicController.php'], 'only preview responses add X-Robots-Tag in app/', implode(', ', $sources));
+// PreviewController = หน้า /_preview/* ของ Phase 1 ซึ่งมี route เฉพาะ environment ที่ไม่ใช่ production
+sort($sources);
+$check($sources === ['app/Controllers/PreviewController.php', 'app/Controllers/PublicController.php'], 'only preview responses add X-Robots-Tag in app/', implode(', ', $sources));
 
 // ------------------------------------------------------------------ audit log ผ่าน base Model
 

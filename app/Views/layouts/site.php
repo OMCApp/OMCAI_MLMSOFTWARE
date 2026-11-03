@@ -10,32 +10,31 @@
  *
  * ตัวแปรที่รับ (Controller ส่งมาใน $data):
  *   $site            view-model จาก App\Services\SiteService::layout() — header/footer/ติดต่อ
- *   $seo             ข้อมูล SEO ของหน้า (array) — ส่งต่อให้ช่อง SEO head ข้างล่าง
- *   $jsonLd          list ของ schema (array) — ส่งต่อให้ช่อง SEO head
+ *   $seoHeadMeta     ข้อมูล SEO ของหน้า (App\Services\SeoService::meta()) → partials/seo-head.php
+ *   $jsonLdGraph     schema ของหน้า → partials/json-ld.php
+ *   $breadcrumbs     [['label','url'], ...] → page-head.php
  *   $title           ชื่อหน้า (สำรอง) · $metaDescription คำอธิบาย (สำรอง)
  *   $content         เนื้อหาของหน้า (Controller::render ใส่ให้)
  *
- * ‼️ ช่อง SEO head = partials/seo-head.php (Phase 2 สร้าง) — มีไฟล์เมื่อไหร่ layout include ให้เอง
- *    partial นั้นเป็นคนวาด <title> meta canonical robots OG และ <script type="application/ld+json">
- *    ไม่รับเป็น string HTML ดิบ เพราะ layout ต้องพิมพ์โดยไม่ผ่าน e() (กฎเหล็กข้อ 6 · security/output-escape)
- *    ยังไม่มีไฟล์ = ใช้ <title> และ description สำรองจาก $title + $metaDescription
+ * ‼️ ส่งเป็นข้อมูล ไม่ใช่ string HTML — partial เป็นคนวาดและ escape เอง (กฎเหล็กข้อ 6 · security/output-escape)
+ *    ไม่มี $seoHeadMeta (เช่นหน้า /_preview) = ใช้ <title> และ description สำรองจาก $title + $metaDescription
  */
 
 declare(strict_types=1);
 
 $site            = (array) ($site ?? \App\Services\SiteService::layout(current_path()));
-$seo             = (array) ($seo ?? []);
-$jsonLd          = (array) ($jsonLd ?? []);
 $metaDescription = (string) ($metaDescription ?? '');
 $siteName        = (string) ($site['brand']['name'] ?? config('name'));
+$pageBreadcrumb  = (array) ($breadcrumbs ?? []);
 ?>
 <!doctype html>
-<html lang="<?= e(locale()) ?>" data-theme="light">
+<html lang="th" data-theme="light">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <?php if (is_file(__DIR__ . '/../partials/seo-head.php')): ?>
+    <?php if (isset($seoHeadMeta)): ?>
         <?php include __DIR__ . '/../partials/seo-head.php'; ?>
+        <?php if (isset($jsonLdGraph)) { include __DIR__ . '/../partials/json-ld.php'; } ?>
     <?php else: ?>
         <title><?= e(($title ?? '') !== '' && ($title ?? '') !== $siteName ? $title . ' | ' . $siteName : $siteName) ?></title>
         <?php if ($metaDescription !== ''): ?>
