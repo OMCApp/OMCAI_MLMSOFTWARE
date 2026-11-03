@@ -162,6 +162,7 @@ jobs:
             .codex/**
             docs/**
             tools/**
+            tests/**
             project/**
             server.php
             .env
@@ -194,9 +195,10 @@ jobs:
           [ "$code" = "200" ] && echo "health: ok" || { echo "::error::/_health returned $code"; fail=1; }
           code=$(curl -s -o /dev/null -w "%{http_code}" "$base/")
           [ "$code" = "401" ] && echo "staging login required: yes" || { echo "::error::home returned $code, expected 401 (staging must require login)"; fail=1; }
-          # With the password the real home page must render — catches a site stuck in maintenance (503)
-          code=$(curl -s -o /dev/null -w "%{http_code}" -u "omc:${STAGING_PASS}" "$base/")
-          [ "$code" = "200" ] && echo "home with login: 200" || { echo "::error::home with login returned $code"; fail=1; }
+          # With the password a rendered page must come back — catches a site stuck in maintenance (503)
+          # /admin/login, not /: public pages are draft shells until Phase 4 publishes them, so / is 404 by design
+          code=$(curl -s -o /dev/null -w "%{http_code}" -u "omc:${STAGING_PASS}" "$base/admin/login")
+          [ "$code" = "200" ] && echo "admin login with staging auth: 200" || { echo "::error::/admin/login with staging auth returned $code"; fail=1; }
           for p in _health assets/css/app.css; do
             robots=$(curl -s -D - -o /dev/null "$base/$p" | grep -ci '^x-robots-tag: noindex')
             [ "$robots" -ge 1 ] && echo "noindex on /$p: yes" || { echo "::error::X-Robots-Tag noindex missing on /$p"; fail=1; }

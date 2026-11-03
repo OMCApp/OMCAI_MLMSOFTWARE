@@ -17,3 +17,15 @@
 - [x] URL หน้าใหม่ใช้ slug ภาษาอังกฤษสั้นๆ (`/features/`) · URL เดิมคงไว้ทั้งหมด (รายละเอียดใน PLAN.md)
 - [x] ทุก URL สาธารณะลงท้าย `/` เหมือนเว็บเดิม — ไม่มี `/` → 301
 - [x] หน้าเดโมของธีมเดิม 26 URL → 301 ไปหน้าใกล้เคียง (404 แย่กว่า) · **ยืนยันกับ GSC อีกครั้งที่ SEO Migration Gate**
+
+## Phase 2 — ตัดสินเองไปแล้ว (แก้ได้)
+- [x] `/solutions/` ไม่มีหน้าของตัวเอง (หน้า industry เป็นลูกของ `/services/` ตาม PLAN) → เพิ่ม redirect `/solutions/` 301 → `/services/` กันคนตัด URL แล้วเจอ 404 · ลบได้ใน CMS ถ้าจะทำหน้า `/solutions/` จริง
+- [x] `/index.php` (ไม่มี `/`) 301 → `/` เพิ่มคู่กับ `/index.php/` ของเดิม — path ที่เป็นไฟล์ไม่โดน trailing-slash 301
+- [x] `/wp-admin/` เป็นกฎแบบ prefix (410 ทั้ง `/wp-admin/*`) · `/portfolio_category/*` `/portfolio_tag/*` `/author/*` เป็น prefix ตาม PLAN · `/portfolio/<demo>/` 9 ตัวเป็นแบบตรงตัว (prefix `/portfolio/` จะกิน `/portfolio/` เอง)
+- [x] redirect ส่ง query string ต่อไปด้วย (utm ของแคมเปญเดิมไม่หาย) · `/blog/page/1/` และ `/category/x/page/1/` 301 กลับ base · หน้าเกินจำนวนจริง 404
+- [x] canonical ของ `/blog/page/N/` ชี้ตัวเอง (เว็บเดิมชี้ `/blog/`) — Google แนะนำให้หน้าแบ่งหน้า canonical ตัวเอง
+- [x] title ของหน้า draft shell เป็นชื่อทำงานภาษาอังกฤษ (`Features`, `Binary Plan` …) — Phase 4 เขียน title/H1 ภาษาไทยจริง · ชื่อ Organization ใน schema = "OMC MLM Software" จนกว่าจะได้ชื่อนิติบุคคลจริง (settings.organization.legal_name)
+- [-] SoftwareApplication ไม่ใส่ `operatingSystem` / `offers` / `aggregateRating` — ไม่มีข้อมูลจริงรองรับ (ใส่เมื่อมีราคา/รีวิวจริง)
+- [x] robots.txt production มี `Disallow: /admin/` เพิ่มจาก Allow + Sitemap
+- [ ] บทบาท `editor` ดูตัวอย่าง draft ได้แล้วใน `PreviewMiddleware` แต่ยังไม่มีผู้ใช้บทบาทนี้ — Phase 3 สร้าง
+- [ ] Phase 1: ชื่อ/ตัวแปรของ partial บล็อก — Phase 2 ส่ง `$block = ['type','data']` ให้ ถ้า Phase 1 ใช้รูปอื่นให้ปรับที่ `pages/site/page.php` จุดเดียว
