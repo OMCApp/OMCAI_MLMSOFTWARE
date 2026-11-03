@@ -830,3 +830,354 @@
         showSelected();
     });
 })();
+
+/* ================================================================== เว็บสาธารณะ
+ *
+ * header (เมนูกาง · drawer มือถือ · เงาตอนเลื่อน) · reveal · ตัวนับ · แท็บ · accordion · slider · parallax
+ *
+ * ‼️ ทุกอย่างเป็นการเสริม — หน้าต้องใช้ได้ครบเมื่อไม่มี JS (design.md 5.11)
+ *    เนื้อหาที่ "รอเลื่อนมาถึง" ถูกซ่อนเฉพาะเมื่อไฟล์นี้ใส่ data-motion="on" ที่ <html>
+ * ‼️ prefers-reduced-motion: ไม่ใส่ data-motion · ไม่วิ่งตัวนับ · ไม่ parallax
+ * ‼️ ไม่มีข้อความที่ผู้ใช้เห็นในไฟล์นี้ — ป้ายทุกตัวมาจาก HTML ที่ผ่าน __() แล้ว
+ */
+(() => {
+    'use strict';
+
+    const root = document.documentElement;
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const canObserve = 'IntersectionObserver' in window;
+    const motionOn = !reduceMotion && canObserve;
+
+    /* ------------------------------------------------------------ reveal */
+
+    const reveals = Array.from(document.querySelectorAll('.reveal'));
+
+    if (motionOn && reveals.length > 0) {
+        // ‼️ ของที่อยู่ในจอแรกแล้วต้องไม่ถูกซ่อนแล้วโผล่ใหม่ (กะพริบ) — ทำเครื่องหมายก่อนเปิด data-motion
+        const fold = window.innerHeight;
+
+        reveals.forEach((element) => {
+            if (element.getBoundingClientRect().top < fold * 0.92) {
+                element.classList.add('is-visible');
+            }
+        });
+
+        root.dataset.motion = 'on';
+
+        const revealObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    revealObserver.unobserve(entry.target);
+                }
+            });
+        }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+
+        reveals.filter((element) => !element.classList.contains('is-visible'))
+            .forEach((element) => revealObserver.observe(element));
+    } else {
+        reveals.forEach((element) => element.classList.add('is-visible'));
+    }
+
+    /* ------------------------------------------------------------ ตัวนับ */
+
+    // ‼️ ค่าจริงอยู่ใน HTML อยู่แล้ว — ไม่มี JS หรือลดการเคลื่อนไหว = เห็นค่าสุดท้ายทันที
+    const counters = Array.from(document.querySelectorAll('[data-count]'));
+
+    if (motionOn && counters.length > 0) {
+        const locale = document.getElementById('js-lang')?.dataset.locale || root.lang || 'th';
+
+        const run = (element) => {
+            const target = Number(element.dataset.count);
+
+            if (!Number.isFinite(target)) {
+                return;
+            }
+
+            const decimals = (String(element.dataset.count).split('.')[1] || '').length;
+            const format = new Intl.NumberFormat(locale, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+            const duration = 1400;
+            const start = performance.now();
+
+            const step = (now) => {
+                const progress = Math.min(1, (now - start) / duration);
+                const eased = 1 - Math.pow(1 - progress, 3);
+
+                element.textContent = format.format(target * eased);
+
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+
+            window.requestAnimationFrame(step);
+        };
+
+        const counterObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry) => {
+                if (entry.isIntersecting) {
+                    counterObserver.unobserve(entry.target);
+                    run(entry.target);
+                }
+            });
+        }, { threshold: 0.4 });
+
+        counters.forEach((element) => counterObserver.observe(element));
+    }
+
+    /* ------------------------------------------------------------ header */
+
+    const header = document.querySelector('[data-site-header]');
+
+    if (header) {
+        header.dataset.enhanced = 'true';
+
+        // เงาเบาๆ เมื่อเลื่อนลง — บอกว่า header ลอยอยู่เหนือเนื้อหา
+        const onScroll = () => {
+            header.dataset.scrolled = window.scrollY > 8 ? 'true' : 'false';
+        };
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+
+        const menus = Array.from(header.querySelectorAll('[data-menu]'));
+        const toggleOf = (menu) => menu.querySelector('[data-menu-toggle]');
+        const linksOf = (menu) => Array.from(menu.querySelectorAll('[data-menu-panel] a'));
+
+        const setMenu = (menu, open) => {
+            toggleOf(menu).setAttribute('aria-expanded', open ? 'true' : 'false');
+        };
+        const closeMenus = (except = null) => {
+            menus.filter((menu) => menu !== except).forEach((menu) => setMenu(menu, false));
+        };
+
+        menus.forEach((menu) => {
+            const toggle = toggleOf(menu);
+
+            toggle.addEventListener('click', () => {
+                const open = toggle.getAttribute('aria-expanded') !== 'true';
+                closeMenus(menu);
+                setMenu(menu, open);
+            });
+
+            toggle.addEventListener('keydown', (event) => {
+                if (event.key === 'ArrowDown') {
+                    event.preventDefault();
+                    closeMenus(menu);
+                    setMenu(menu, true);
+                    linksOf(menu)[0]?.focus();
+                }
+            });
+
+            menu.addEventListener('keydown', (event) => {
+                const links = linksOf(menu);
+                const index = links.indexOf(document.activeElement);
+
+                if (event.key === 'Escape') {
+                    setMenu(menu, false);
+                    toggle.focus();
+                } else if (index >= 0 && (event.key === 'ArrowDown' || event.key === 'ArrowUp')) {
+                    event.preventDefault();
+                    const next = event.key === 'ArrowDown' ? index + 1 : index - 1;
+                    links[(next + links.length) % links.length].focus();
+                }
+            });
+
+            // ‼️ จอใหญ่: focus ออกจากเมนูแล้วต้องปิด ไม่งั้นแผงค้างทับหน้า
+            menu.addEventListener('focusout', (event) => {
+                if (!menu.contains(event.relatedTarget) && !isDrawer()) {
+                    setMenu(menu, false);
+                }
+            });
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!isDrawer() && !event.target.closest('[data-menu]')) {
+                closeMenus();
+            }
+        });
+
+        /* ---- drawer มือถือ — ปุ่มมี hidden ใน HTML เพราะใช้ได้ด้วย JS เท่านั้น */
+        const nav = header.querySelector('[data-site-nav]');
+        const openButton = header.querySelector('[data-site-nav-open]');
+        const closeButton = header.querySelector('[data-site-nav-close]');
+        const backdrop = header.querySelector('[data-site-nav-backdrop]');
+        const drawerQuery = window.matchMedia('(max-width: 1199.98px)');
+        const isDrawer = () => drawerQuery.matches;
+
+        const setDrawer = (open) => {
+            header.dataset.navOpen = open ? 'true' : 'false';
+            root.dataset.navOpen = open ? 'true' : 'false';
+            openButton?.setAttribute('aria-expanded', open ? 'true' : 'false');
+
+            if (open) {
+                closeButton?.focus();
+            } else {
+                closeMenus();
+            }
+        };
+
+        if (nav && openButton) {
+            openButton.hidden = false;
+
+            if (closeButton) {
+                closeButton.hidden = false;
+            }
+
+            openButton.addEventListener('click', () => setDrawer(true));
+            closeButton?.addEventListener('click', () => {
+                setDrawer(false);
+                openButton.focus();
+            });
+            backdrop?.addEventListener('click', () => setDrawer(false));
+
+            document.addEventListener('keydown', (event) => {
+                if (header.dataset.navOpen !== 'true') {
+                    return;
+                }
+
+                if (event.key === 'Escape') {
+                    setDrawer(false);
+                    openButton.focus();
+                    return;
+                }
+
+                // ‼️ กัน Tab หลุดออกไปหลัง drawer — ผู้ใช้คีย์บอร์ดจะหลงอยู่ใต้ชั้นมืด
+                if (event.key === 'Tab') {
+                    const focusables = Array.from(nav.querySelectorAll('a[href], button:not([hidden])'))
+                        .filter((element) => element.offsetParent !== null);
+                    const first = focusables[0];
+                    const last = focusables[focusables.length - 1];
+
+                    if (event.shiftKey && document.activeElement === first) {
+                        event.preventDefault();
+                        last.focus();
+                    } else if (!event.shiftKey && document.activeElement === last) {
+                        event.preventDefault();
+                        first.focus();
+                    }
+                }
+            });
+
+            drawerQuery.addEventListener('change', () => setDrawer(false));
+        }
+    }
+
+    /* ------------------------------------------------------------ แท็บ */
+
+    document.querySelectorAll('[data-tabs]').forEach((container) => {
+        const list = container.querySelector('[role="tablist"]');
+        const tabs = Array.from(container.querySelectorAll('[role="tab"]'));
+
+        if (!list || tabs.length === 0) {
+            return;
+        }
+
+        const select = (tab, focus = false) => {
+            tabs.forEach((other) => {
+                const on = other === tab;
+                other.setAttribute('aria-selected', on ? 'true' : 'false');
+                other.tabIndex = on ? 0 : -1;
+
+                const panel = document.getElementById(other.getAttribute('aria-controls'));
+                if (panel) {
+                    panel.hidden = !on;
+                }
+            });
+
+            if (focus) {
+                tab.focus();
+            }
+        };
+
+        // ‼️ ไม่มี JS = เห็นทุกแผงเรียงกัน · มี JS = เปิดแถบแท็บแล้วซ่อนแผงที่ไม่ได้เลือก
+        list.hidden = false;
+        select(tabs.find((tab) => tab.getAttribute('aria-selected') === 'true') || tabs[0]);
+
+        tabs.forEach((tab, index) => {
+            tab.addEventListener('click', () => select(tab));
+            tab.addEventListener('keydown', (event) => {
+                const keys = { ArrowRight: index + 1, ArrowLeft: index - 1, Home: 0, End: tabs.length - 1 };
+
+                if (event.key in keys) {
+                    event.preventDefault();
+                    select(tabs[(keys[event.key] + tabs.length) % tabs.length], true);
+                }
+            });
+        });
+    });
+
+    /* ------------------------------------------------------------ accordion */
+
+    // <details name> เปิดได้ทีละข้อในเบราว์เซอร์ใหม่อยู่แล้ว — ตัวนี้ทำให้เบราว์เซอร์เก่าได้พฤติกรรมเดียวกัน
+    document.querySelectorAll('details[name]').forEach((details) => {
+        details.addEventListener('toggle', () => {
+            if (!details.open) {
+                return;
+            }
+
+            document.querySelectorAll(`details[name="${CSS.escape(details.getAttribute('name'))}"]`).forEach((other) => {
+                if (other !== details) {
+                    other.open = false;
+                }
+            });
+        });
+    });
+
+    /* ------------------------------------------------------------ slider */
+
+    document.querySelectorAll('[data-slider]').forEach((slider) => {
+        const track = slider.querySelector('[data-slider-track]');
+        const controls = slider.querySelector('[data-slider-controls]');
+
+        if (!track || !controls) {
+            return;
+        }
+
+        controls.hidden = false;
+
+        const move = (direction) => {
+            const card = track.firstElementChild;
+            const width = card ? card.getBoundingClientRect().width : track.clientWidth;
+            track.scrollBy({ left: direction * width, behavior: reduceMotion ? 'auto' : 'smooth' });
+        };
+
+        slider.querySelector('[data-slider-prev]')?.addEventListener('click', () => move(-1));
+        slider.querySelector('[data-slider-next]')?.addEventListener('click', () => move(1));
+    });
+
+    /* ------------------------------------------------------------ parallax เบาๆ */
+
+    // ‼️ ขยับแค่ของตกแต่ง (แสงพื้นหลัง · แผงโลโก้) ผ่าน --parallax-y ที่ CSS อ่านใน transform เท่านั้น
+    const layers = Array.from(document.querySelectorAll('[data-parallax]'));
+
+    if (motionOn && layers.length > 0) {
+        let ticking = false;
+
+        const update = () => {
+            const middle = window.innerHeight / 2;
+
+            layers.forEach((layer) => {
+                const rect = layer.getBoundingClientRect();
+
+                if (rect.bottom < 0 || rect.top > window.innerHeight) {
+                    return;
+                }
+
+                const factor = Number(layer.dataset.parallax) || 0;
+                const offset = (rect.top + rect.height / 2 - middle) * factor * -1;
+                layer.style.setProperty('--parallax-y', `${offset.toFixed(1)}px`);
+            });
+
+            ticking = false;
+        };
+
+        window.addEventListener('scroll', () => {
+            if (!ticking) {
+                ticking = true;
+                window.requestAnimationFrame(update);
+            }
+        }, { passive: true });
+
+        update();
+    }
+})();

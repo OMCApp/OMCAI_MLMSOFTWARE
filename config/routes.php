@@ -40,6 +40,12 @@ $router->get('/sitemap-{section:[a-z]+}.xml', 'SeoController@sitemap');
 $router->get('/robots.txt', 'SeoController@robots');
 $router->get('/feed', 'SeoController@feed');
 
+// ‼️ หน้าดูตัวอย่าง design system ระหว่างที่ยังไม่มี CMS (Phase 1)
+//    ประกาศเฉพาะ environment ที่ไม่ใช่ production — production ได้ 404 จาก Router เพราะ route ไม่มีอยู่
+if (config('env', 'production') !== 'production') {
+    $router->get('/_preview/home', 'PreviewController@home');
+}
+
 // ---------------------------------------------------------------- หลังบ้าน (/admin)
 
 $router->group(['prefix' => '/admin'], function (Router $router): void {
