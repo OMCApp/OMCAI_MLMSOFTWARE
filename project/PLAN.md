@@ -80,17 +80,17 @@
 
 ---
 
-## Phase 1 — Design system + public layout  🔄
+## Phase 1 — Design system + public layout  🔨
 ### ครบลูป
-- [ ] ไม่มี resource (เป็นฐานของหน้า)
+- [-] ไม่มี resource (เป็นฐานของหน้า) — phase นี้ไม่มีข้อมูลให้ ดู/เพิ่ม/แก้/ลบ
 ### หน้า
 - `/` (โครงหน้าแรกตามแบบ ใช้ข้อมูลจาก DB เมื่อ Phase 2 เสร็จ)
 ### ขั้นตอน
-- [ ] `DESIGN.md` จากแบบอ้างอิง — สีวัดด้วย `design-refs.php --palette/--pick` · ตาราง `## แบบของแต่ละหน้า` · รายการจุดที่ขัดกับกฎ · `design-sync.php` · `check-contrast.php`
-- [ ] โลโก้: header (horizontal), footer, favicon/app icon (`make-favicon.php`), compact · ยึดโลโก้ที่แนบ
-- [ ] `layouts/site.php` + header (mega nav ตามแบบ, CTA "ขอ Demo ฟรี", เบอร์โทร) + footer + mobile nav
-- [ ] partial บล็อกทั้งหมด (`partials/blocks/*`) ตามรายการบล็อกข้างบน · animation เบา (reveal, counter, hover) เคารพ `prefers-reduced-motion`
-- [ ] C4ก เทียบหน้าแรกกับแบบอ้างอิงทีละบล็อก (โหมดเร็วไม่เลื่อน)
+- [x] `DESIGN.md` จากแบบอ้างอิง — สีวัดด้วย `design-refs.php --palette/--pick` · ตาราง `## แบบของแต่ละหน้า` · รายการจุดที่ขัดกับกฎ · `design-sync.php` · `check-contrast.php`
+- [x] โลโก้: header (horizontal), footer, favicon/app icon (`make-favicon.php`), compact · ยึดโลโก้ที่แนบ
+- [x] `layouts/site.php` + header (mega nav ตามแบบ, CTA "ขอ Demo ฟรี", เบอร์โทร) + footer + mobile nav
+- [x] partial บล็อกทั้งหมด (`partials/blocks/*`) ตามรายการบล็อกข้างบน · animation เบา (reveal, counter, hover) เคารพ `prefers-reduced-motion`
+- [x] C4ก เทียบหน้าแรกกับแบบอ้างอิงทีละบล็อก (โหมดเร็วไม่เลื่อน) — ตารางใน DESIGN.md · ภาพ `project/design/built/home-reference.png` · ดูได้ที่ `/_preview/home` (+ `?all=1`)
 
 ## Phase 2 — Content engine + SEO infrastructure  ⬜
 ### ครบลูป

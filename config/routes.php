@@ -35,6 +35,12 @@ $router->get('/manual/{slug}', 'ManualController@show');
 // ผู้ใช้ที่เข้าระบบไม่ได้ก็ต้องแจ้งปัญหาได้
 $router->post('/support', 'SupportController@store');
 
+// ‼️ หน้าดูตัวอย่าง design system ระหว่างที่ยังไม่มี CMS (Phase 1)
+//    ประกาศเฉพาะ environment ที่ไม่ใช่ production — production ได้ 404 จาก Router เพราะ route ไม่มีอยู่
+if (config('env', 'production') !== 'production') {
+    $router->get('/_preview/home', 'PreviewController@home');
+}
+
 $router->post('/language', 'PreferenceController@language');
 $router->post('/theme', 'PreferenceController@theme');
 

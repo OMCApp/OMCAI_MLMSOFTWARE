@@ -21,6 +21,11 @@ if (PHP_SAPI === 'cli-server') {
         return false;
     }
 
+    /* ‼️ built-in server ตั้ง SCRIPT_NAME เป็น path ที่ขอมา (/_preview/home) เมื่อไม่มีไฟล์จริง
+          Core\Path::base() จึงได้ base เป็น /_preview แล้วทุกลิงก์และ asset ของหน้าที่ลึกกว่าหนึ่งชั้นพัง
+          บอกให้ตรงกับ document root ที่ public/ เหมือนเว็บเซิร์ฟเวอร์จริง */
+    $_SERVER['SCRIPT_NAME'] = '/index.php';
+
     require __DIR__ . '/public/index.php';
 
     return true;
