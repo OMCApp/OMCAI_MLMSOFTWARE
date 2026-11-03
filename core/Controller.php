@@ -70,12 +70,24 @@ abstract class Controller
     {
         $referer = (string) ($_SERVER['HTTP_REFERER'] ?? '');
 
-        // เชื่อ referer เฉพาะที่เป็นเส้นทางในระบบเราเอง
-        $host = (string) ($_SERVER['HTTP_HOST'] ?? '');
+        /* ‼️ เชื่อ referer เฉพาะที่ host ตรงกับเราทุกตัวอักษร แล้ว redirect ด้วย path ภายในเท่านั้น
+              เดิมใช้ str_contains() — https://evil.example/?x=<host> ผ่านได้ = open redirect */
+        $host = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
+        $parts = $referer !== '' ? parse_url($referer) : false;
 
-        if ($referer !== '' && str_contains($referer, $host)) {
-            header('Location: ' . $referer, true, 302);
-            exit;
+        if (
+            is_array($parts)
+            && $host !== ''
+            && strtolower(($parts['host'] ?? '') . (isset($parts['port']) ? ':' . $parts['port'] : '')) === $host
+        ) {
+            $path = '/' . ltrim((string) ($parts['path'] ?? '/'), '/');
+            $query = isset($parts['query']) ? '?' . $parts['query'] : '';
+
+            // path ที่ขึ้นต้นด้วย // เบราว์เซอร์อ่านเป็นโดเมนอื่น
+            if (!str_starts_with($path, '//')) {
+                header('Location: ' . $path . $query, true, 302);
+                exit;
+            }
         }
 
         $this->redirect('/');

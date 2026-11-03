@@ -1,0 +1,29 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "php scripts/hooks/post-edit.php",
+            "timeout": 60,
+            "statusMessage": "ตรวจไฟล์ที่เพิ่งแก้..."
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "php scripts/hooks/session-start.php",
+            "timeout": 15,
+            "statusMessage": "อ่านสถานะโปรเจค..."
+          }
+        ]
+      }
+    ]
+  }
+}

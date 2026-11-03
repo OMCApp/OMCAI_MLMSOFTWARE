@@ -18,7 +18,8 @@ final class AuthMiddleware
 {
     public function handle(): void
     {
-        if (Auth::check()) {
+        // refresh() อ่านสถานะบัญชีจากฐานข้อมูลใหม่ทุก request — ถูกปิด/ลบแล้วหลุดทันที
+        if (Auth::check() && Auth::refresh()) {
             return;
         }
 

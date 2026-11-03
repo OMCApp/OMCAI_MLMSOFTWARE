@@ -17,6 +17,7 @@ use Core\Path;
 use Core\Router;
 use Core\Security;
 use Core\Session;
+use Core\Staging;
 
 $root = dirname(__DIR__);
 
@@ -51,6 +52,29 @@ Session::rotateInput();
 
 Lang::configure($config, $config['paths']['lang']);
 
+// ‼️ ต้องอยู่ก่อนทุกอย่างที่แสดงเนื้อหา — staging ห้ามถูก index และต้องใส่รหัสก่อนเข้า
+Staging::guard($config);
+
+// ------------------------------------------------------- health check ของ CI
+//
+// ตอบแค่ว่าระบบขึ้นและต่อฐานข้อมูลได้ไหม ห้ามคืนรายละเอียดอื่น
+
+if (Path::current() === '/_health') {
+    header('Content-Type: text/plain; charset=utf-8');
+    header('Cache-Control: no-store');
+
+    try {
+        Database::selectOne('SELECT 1 AS ok');
+        echo "ok\n";
+    } catch (Throwable $e) {
+        Logger::exception($e);
+        http_response_code(503);
+        echo "db unavailable\n";
+    }
+
+    exit;
+}
+
 // ------------------------------------------------------------- maintenance
 
 if (is_file($config['paths']['maintenance']) && !str_starts_with(Path::current(), '/_migrate')) {
@@ -67,7 +91,8 @@ if (is_file($config['paths']['maintenance']) && !str_starts_with(Path::current()
 
 if (Path::current() === '/_migrate') {
     $expected = (string) $config['migrate_token'];
-    $given    = isset($_GET['token']) ? (string) $_GET['token'] : '';
+    // header ก่อน — token ใน query string ไปค้างใน access log ของ web server
+    $given    = (string) ($_SERVER['HTTP_X_MIGRATE_TOKEN'] ?? (isset($_GET['token']) ? $_GET['token'] : ''));
 
     Logger::warning('migrate_endpoint_called', ['ip' => Auth::ip()]);
 
@@ -86,6 +111,19 @@ if (Path::current() === '/_migrate') {
 
         Logger::info('migrate_ok', ['count' => count($done), 'files' => $done]);
         echo $done === [] ? "up-to-date\n" : 'migrated ' . count($done) . "\n";
+
+        /* ‼️ ปิดโหมดปรับปรุงที่นี่ — CI ลบไฟล์บน runner ได้อย่างเดียว ลบบน server ไม่ได้
+              ถ้า migration ล้มเหลว ไม่ถึงบรรทัดนี้ ระบบจึงค้างในโหมดปรับปรุงซึ่งปลอดภัยกว่า */
+        if (is_file($config['paths']['maintenance'])) {
+            // ลบไม่ได้ (เช่นสิทธิ์ไฟล์ของผู้ใช้ FTP) ต้องตอบ 500 ให้ CI รู้ ไม่ใช่ 200 แล้วเว็บค้าง 503
+            if (!@unlink($config['paths']['maintenance'])) {
+                Logger::warning('maintenance_flag_not_removed');
+                http_response_code(500);
+                echo "maintenance flag could not be removed\n";
+                exit;
+            }
+            echo "maintenance off\n";
+        }
     } catch (Throwable $e) {
         // ห้ามคืนรายละเอียด error ของฐานข้อมูลกลับไปใน response
         $reference = Logger::exception($e);

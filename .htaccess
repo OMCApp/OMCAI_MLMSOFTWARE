@@ -1,0 +1,30 @@
+# ‼️ ใช้เฉพาะเมื่อตั้ง document root ที่ public/ ไม่ได้ (เช่น staging ที่ http://IP/~omcai/mlmsoftware/)
+#    ส่งทุก request เข้า public/ ภายใน — ซอร์สโค้ด, .env, standard/, project/ จึงเปิดจากเบราว์เซอร์ไม่ได้
+#    บน production ให้ตั้ง document root ที่ public/ ตามมาตรฐาน แล้วไฟล์นี้จะไม่ถูกใช้
+
+Options -Indexes
+
+# ไฟล์นี้ใช้เฉพาะ staging — กันไฟล์ static (รูป, CSS) ไม่ให้ถูก index ด้วย
+# Core\Staging ใส่ header นี้ให้หน้าที่ผ่าน PHP แต่ไฟล์ static Apache ส่งตรงไม่ผ่าน PHP
+<IfModule mod_headers.c>
+    Header always set X-Robots-Tag "noindex, nofollow, noarchive"
+</IfModule>
+
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # request ที่ rewrite เข้า public/ แล้ว ไม่ต้องทำซ้ำ
+    RewriteCond %{ENV:REDIRECT_STATUS} !^$
+    RewriteRule ^ - [L]
+
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# ถ้าไม่มี mod_rewrite ห้ามเปิดอะไรเลย ดีกว่าเปิดซอร์สโค้ด
+<IfModule !mod_rewrite.c>
+    Require all denied
+</IfModule>

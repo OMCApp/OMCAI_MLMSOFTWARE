@@ -1,4 +1,24 @@
-name: Deploy to server
+# Deploy to the staging server automatically when main changes.
+#
+# Based on the standard's deploy.yml (check gate → maintenance → FTP → migrate → verify),
+# adapted for this project — see project/NOTES.md:
+#   · secret names FTP_SERVER / FTP_USERNAME / FTP_PASSWORD / FTP_SERVER_DIR
+#   · plain FTP (user decision 2026-11-03, not FTPS)
+#   · staging lives at http://IP/~omcai/mlmsoftware/ where the document root cannot point at
+#     public/, so the root .htaccess routes everything into public/ and the verify step proves it
+#   · .env is generated here from GitHub Secrets — it is never committed and never edited by hand
+#
+# ‼️ The check job is the last wall — if it fails nothing is uploaded.
+# ‼️ Never print command output from steps that hold credentials (a CI log once leaked the FTP
+#    password URL-encoded, which GitHub masking cannot catch). Print only yes/no results.
+#
+# Secrets: FTP_SERVER FTP_USERNAME FTP_PASSWORD FTP_SERVER_DIR APP_URL MIGRATE_TOKEN
+#          DB_HOST DB_NAME DB_USER DB_PASS STAGING_PASS
+#
+# Rollback: Actions → deploy → "Run workflow" and pick the last good commit/tag as the ref,
+#           or `git revert` the bad merge on main. See project/DEPLOY.md.
+
+name: deploy
 
 on:
   push:
@@ -6,26 +26,183 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: deploy-production
+  group: deploy-staging
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  check:
+    name: Standard checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: FTP deploy
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.1'
+          coverage: none
+
+      - name: .env must not be in git
+        run: |
+          if git ls-files --error-unmatch .env >/dev/null 2>&1; then
+            echo "::error::.env is committed — rotate every secret now"
+            exit 1
+          fi
+
+      - name: Standard check suite
+        run: php scripts/check.php
+
+  deploy:
+    name: Upload to staging
+    needs: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Required secrets present
+        env:
+          S1: ${{ secrets.FTP_SERVER_DIR }}
+          S2: ${{ secrets.APP_URL }}
+          S3: ${{ secrets.MIGRATE_TOKEN }}
+          S4: ${{ secrets.DB_NAME }}
+          S5: ${{ secrets.DB_USER }}
+          S6: ${{ secrets.STAGING_PASS }}
+        run: |
+          missing=0
+          for n in S1:FTP_SERVER_DIR S2:APP_URL S3:MIGRATE_TOKEN S4:DB_NAME S5:DB_USER S6:STAGING_PASS; do
+            v="${n%%:*}"; if [ -z "${!v}" ]; then echo "::error::secret ${n#*:} is not set"; missing=1; fi
+          done
+          # Basic Auth has no lockout — a long random password is what makes guessing impractical
+          if [ -n "$S6" ] && [ "${#S6}" -lt 20 ]; then echo "::error::STAGING_PASS must be at least 20 characters"; missing=1; fi
+          exit $missing
+
+      - name: Build .env from secrets
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          MIGRATE_TOKEN: ${{ secrets.MIGRATE_TOKEN }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASS: ${{ secrets.DB_PASS }}
+          STAGING_PASS: ${{ secrets.STAGING_PASS }}
+        run: |
+          umask 077
+          # config.php trims values and strips surrounding quotes — quote them so leading/trailing
+          # spaces survive; refuse characters the .env format cannot hold
+          for v in DB_PASS DB_USER DB_NAME STAGING_PASS MIGRATE_TOKEN; do
+            case "${!v}" in *$'\n'*|*'"'*) echo "::error::secret $v contains a newline or double quote"; exit 1;; esac
+          done
+          {
+            echo 'APP_NAME="MLM Software by OMC"'
+            echo 'APP_ENV=staging'
+            echo "APP_URL=${APP_URL}"
+            echo 'APP_HTTPS=false'
+            echo 'APP_TIMEZONE=Asia/Bangkok'
+            echo 'STAGING_USER=omc'
+            echo "STAGING_PASS=\"${STAGING_PASS}\""
+            echo "DB_HOST=${DB_HOST:-localhost}"
+            echo 'DB_PORT=3306'
+            echo "DB_NAME=\"${DB_NAME}\""
+            echo "DB_USER=\"${DB_USER}\""
+            echo "DB_PASS=\"${DB_PASS}\""
+            echo "MIGRATE_TOKEN=${MIGRATE_TOKEN}"
+          } > .env
+          echo ".env written: yes"
+
+      # ‼️ Under http://IP/~user/... (mod_userdir) relative rewrites need RewriteBase,
+      #    otherwise Apache rewrites to the physical path and every page 404s.
+      #    The value depends on where the site is installed, so it is set from APP_URL here.
+      - name: Set RewriteBase for subdirectory install
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+        run: |
+          base=$(printf '%s' "${APP_URL%/}" | sed -E 's#^[a-z]+://[^/]+##')
+          if [ -n "$base" ]; then
+            sed -i "s#^    RewriteEngine On\$#    RewriteEngine On\n    RewriteBase ${base}/#" .htaccess
+            sed -i "s#^    RewriteEngine On\$#    RewriteEngine On\n    RewriteBase ${base}/public/#" public/.htaccess
+          fi
+          grep -c '^    RewriteBase' .htaccess public/.htaccess || true
+
+      - name: Install lftp
+        run: sudo apt-get install -y -qq lftp >/dev/null
+
+      # FTP is not atomic — put the site in maintenance before the files change.
+      # /_migrate removes the flag after a successful migration.
+      - name: Maintenance on, upload .env
+        env:
+          H: ${{ secrets.FTP_SERVER }}
+          U: ${{ secrets.FTP_USERNAME }}
+          P: ${{ secrets.FTP_PASSWORD }}
+          D: ${{ secrets.FTP_SERVER_DIR }}
+        run: |
+          echo "deploy $(date -u +%FT%TZ)" > maintenance.flag
+          if lftp -u "$U,$P" -e "set ftp:ssl-allow no; set net:max-retries 2; mkdir -pf '$D/storage'; put maintenance.flag -o '$D/storage/maintenance.flag'; put .env -o '$D/.env'; bye" "$H" >/dev/null 2>&1; then
+            echo "maintenance on + .env uploaded: yes"
+          else
+            echo "::error::FTP step failed (output suppressed to protect credentials)"; exit 1
+          fi
+
+      # ‼️ Never exclude storage/ — the action deletes previously-uploaded paths that become
+      #    excluded, and storage/ holds logs and uploaded media on the server.
+      #    (It only deletes files it uploaded itself; files created on the server are left alone.)
+      - name: Upload files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: ${{ secrets.FTP_SERVER_DIR }}
+          log-level: minimal
           exclude: |
             **/.git*
             **/.git*/**
             **/node_modules/**
+            **/old/**
             .github/**
+            .claude/**
+            .codex/**
             docs/**
             tools/**
+            project/**
+            server.php
+            .env
+            .env.example
+            maintenance.flag
+            AGENTS.md
+            CLAUDE.md
+
+      - name: Run migrations (also turns maintenance off)
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          MIGRATE_TOKEN: ${{ secrets.MIGRATE_TOKEN }}
+        run: |
+          # Token goes in a header, not the URL, so it never lands in the web server's access log
+          code=$(curl -s -o out.txt -w "%{http_code}" -H "X-Migrate-Token: ${MIGRATE_TOKEN}" "${APP_URL%/}/_migrate")
+          cat out.txt
+          if [ "$code" != "200" ]; then
+            echo "::error::migration failed (HTTP $code) — site stays in maintenance mode"
+            exit 1
+          fi
+
+      - name: Verify site and that source files are not reachable
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          STAGING_PASS: ${{ secrets.STAGING_PASS }}
+        run: |
+          base="${APP_URL%/}"
+          fail=0
+          code=$(curl -s -o /dev/null -w "%{http_code}" "$base/_health")
+          [ "$code" = "200" ] && echo "health: ok" || { echo "::error::/_health returned $code"; fail=1; }
+          code=$(curl -s -o /dev/null -w "%{http_code}" "$base/")
+          [ "$code" = "401" ] && echo "staging login required: yes" || { echo "::error::home returned $code, expected 401 (staging must require login)"; fail=1; }
+          # With the password the real home page must render — catches a site stuck in maintenance (503)
+          code=$(curl -s -o /dev/null -w "%{http_code}" -u "omc:${STAGING_PASS}" "$base/")
+          [ "$code" = "200" ] && echo "home with login: 200" || { echo "::error::home with login returned $code"; fail=1; }
+          for p in _health assets/css/app.css; do
+            robots=$(curl -s -D - -o /dev/null "$base/$p" | grep -ci '^x-robots-tag: noindex')
+            [ "$robots" -ge 1 ] && echo "noindex on /$p: yes" || { echo "::error::X-Robots-Tag noindex missing on /$p"; fail=1; }
+          done
+          for p in .env composer.json app/Controllers/HomeController.php core/Auth.php config/config.php database/migrations/001_create_users_table.sql; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$base/$p")
+            if [ "$code" = "200" ]; then echo "::error::$p is reachable from the web"; fail=1; else echo "$p blocked: yes ($code)"; fi
+          done
+          exit $fail

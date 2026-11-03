@@ -16,8 +16,26 @@ namespace Core;
 
 final class Auth
 {
-    private const MAX_ATTEMPTS  = 5;
-    private const LOCK_MINUTES  = 15;
+    /** จำนวนครั้งที่ผิดได้ต่อคู่ username + IP ก่อนล็อกคู่นั้น */
+    private const MAX_ATTEMPTS    = 5;
+    /** จำนวนครั้งที่ผิดได้ต่อ IP รวมทุก username — กันการไล่ลองรหัสเดียวกับหลายบัญชี */
+    private const MAX_IP_ATTEMPTS = 20;
+    /**
+     * จำนวนครั้งที่ผิดได้ต่อ username รวมทุก IP — กันการเดารหัสแบบกระจายหลาย IP
+     * ตั้งสูงไว้จงใจ: ต่ำเกินไปคนนอกจะใช้ล็อกเจ้าของบัญชีได้ง่าย
+     */
+    private const MAX_USER_ATTEMPTS = 50;
+    private const LOCK_MINUTES    = 15;
+    /** เครื่อง/IP ที่เคยเข้าบัญชีนั้นสำเร็จภายในกี่วัน ถือว่าเป็นของเจ้าของ — ไม่โดนเพดานต่อ username */
+    private const KNOWN_IP_DAYS   = 90;
+
+    /**
+     * hash ตายตัวสำหรับเทียบตอนไม่เจอผู้ใช้ — cost เดียวกับ PASSWORD_DEFAULT (bcrypt 10)
+     *
+     * ‼️ ต้องเป็นค่าคงที่ ห้าม password_hash() ตอน runtime
+     *    hash ใหม่ทุก request ทำให้ username ที่ไม่มีอยู่ช้ากว่า (hash + verify) = เดาได้ว่าใครมีบัญชี
+     */
+    private const DUMMY_HASH = '$2y$10$BT1IMKiSaZ0XzEgCSnaDkud.6VIuEWWxc07ZaffmR7HTxPAzPLIoC';
 
     public static function id(): ?int
     {
@@ -38,6 +56,43 @@ final class Auth
         return self::id() !== null;
     }
 
+    /**
+     * อ่านผู้ใช้ปัจจุบันจากฐานข้อมูลใหม่แล้วปรับ session ให้ตรง
+     *
+     * ‼️ AuthMiddleware เรียกทุก request — ไม่งั้นผู้ใช้ที่ถูกปิดใช้งาน ถูกลบ หรือถูกลดสิทธิ์
+     *    ยังใช้สิทธิ์เดิมต่อได้จนกว่า session จะหมดอายุ
+     *
+     * @return bool false เมื่อบัญชีไม่มีสิทธิ์เข้าแล้ว (ล้าง session ให้แล้ว)
+     */
+    public static function refresh(): bool
+    {
+        $id = self::id();
+
+        if ($id === null) {
+            return false;
+        }
+
+        $user = Database::selectOne(
+            'SELECT role, is_active FROM users WHERE id = :id AND deleted_at IS NULL LIMIT 1',
+            ['id' => $id]
+        );
+
+        if ($user === null || (int) $user['is_active'] !== 1) {
+            Logger::info('session_revoked', ['user_id' => $id, 'ip' => self::ip()]);
+            Session::destroy();
+            // ‼️ ต้องส่ง config — ไม่ส่งแล้ว cookie ใหม่หลุด flag Secure และ idle timeout
+            Session::start((array) config('session'));
+
+            return false;
+        }
+
+        if ((string) $user['role'] !== self::role()) {
+            Session::put('role', (string) $user['role']);
+        }
+
+        return true;
+    }
+
     /** ใช้ซ่อนเมนูเท่านั้น — การกันจริงต้องอยู่ที่ Middleware */
     public static function can(string ...$roles): bool
     {
@@ -53,7 +108,7 @@ final class Auth
      */
     public static function attempt(string $username, string $password): array
     {
-        $ip = self::ip();
+        $ip = self::rateLimitKey();
 
         if (self::isLocked($username, $ip)) {
             return ['ok' => false, 'reason' => 'throttled', 'minutes' => self::LOCK_MINUTES];
@@ -69,10 +124,14 @@ final class Auth
 
         $hash = (string) ($user['password_hash'] ?? '');
 
-        // เทียบเสมอแม้ไม่เจอผู้ใช้ เพื่อให้เวลาที่ใช้ใกล้เคียงกัน
+        /* ‼️ ต้องเรียก password_verify() ทุกครั้ง แม้ไม่เจอผู้ใช้ — เทียบกับ hash หลอกแทน
+              ไม่งั้นเวลาตอบที่ต่างกันบอกคนนอกได้ว่า username ไหนมีอยู่จริง */
+        $verified = password_verify($password, $hash !== '' ? $hash : self::DUMMY_HASH);
+
         $valid = $user !== null
+            && $hash !== ''
             && (int) $user['is_active'] === 1
-            && password_verify($password, $hash);
+            && $verified;
 
         if (!$valid) {
             self::recordFailure($username, $ip);
@@ -136,7 +195,7 @@ final class Auth
 
         // ล้างให้หมดจริง ไม่ใช่แค่ลบบางคีย์
         Session::destroy();
-        Session::start();
+        Session::start((array) config('session'));
     }
 
     /** บันทึกภาษาหรือโหมดที่ผู้ใช้เลือกลงฐานข้อมูล เพื่อให้คงอยู่ข้ามอุปกรณ์ */
@@ -158,15 +217,54 @@ final class Auth
 
     private static function isLocked(string $username, string $ip): bool
     {
+        $username = mb_substr($username, 0, 100);
+
+        // นับทั้ง 3 แบบใน query เดียว — ตอนโดนยิงรัว ตารางนี้คือตารางที่รับโหลดหนักที่สุด
         $row = Database::selectOne(
-            'SELECT COUNT(*) AS total
+            'SELECT
+                 SUM(ip_address = :ip1)                         AS by_ip,
+                 SUM(username = :user1)                         AS by_user,
+                 SUM(username = :user2 AND ip_address = :ip2)   AS by_pair
              FROM login_attempts
-             WHERE (username = :username OR ip_address = :ip)
+             WHERE (ip_address = :ip3 OR username = :user3)
                AND attempted_at > (NOW() - INTERVAL :minutes MINUTE)',
-            ['username' => $username, 'ip' => $ip, 'minutes' => self::LOCK_MINUTES]
+            [
+                'ip1' => $ip, 'ip2' => $ip, 'ip3' => $ip,
+                'user1' => $username, 'user2' => $username, 'user3' => $username,
+                'minutes' => self::LOCK_MINUTES,
+            ]
         );
 
-        return (int) ($row['total'] ?? 0) >= self::MAX_ATTEMPTS;
+        /* ‼️ ล็อกแข็งที่คู่ username + IP และที่ IP เท่านั้น
+              ห้ามล็อกที่ username อย่างเดียวกับทุกคน ไม่งั้นคนนอกยิงรหัสผิดใส่ชื่อแอดมินจนเจ้าของเข้าไม่ได้ */
+        if ((int) ($row['by_pair'] ?? 0) >= self::MAX_ATTEMPTS || (int) ($row['by_ip'] ?? 0) >= self::MAX_IP_ATTEMPTS) {
+            return true;
+        }
+
+        /* เพดานต่อ username รวมทุก IP — กันเดารหัสแบบกระจายหลาย IP
+           แต่ยกเว้น IP ที่เคยเข้าบัญชีนี้สำเร็จ → เจ้าของบัญชีตัวจริงยังเข้าได้แม้กำลังถูกโจมตี */
+        if ((int) ($row['by_user'] ?? 0) < self::MAX_USER_ATTEMPTS) {
+            return false;
+        }
+
+        $known = Database::selectOne(
+            "SELECT 1 AS known
+             FROM audit_logs a
+             JOIN users u ON u.id = a.user_id
+             WHERE u.username = :username AND u.deleted_at IS NULL
+               AND a.action = 'login' AND a.ip_address = :ip
+               AND a.created_at > (NOW() - INTERVAL :days DAY)
+             LIMIT 1",
+            ['username' => $username, 'ip' => self::ip(), 'days' => self::KNOWN_IP_DAYS]
+        );
+
+        if ($known !== null) {
+            return false;
+        }
+
+        Logger::warning('login_user_cap_reached', ['username' => $username, 'ip' => self::ip()]);
+
+        return true;
     }
 
     private static function recordFailure(string $username, string $ip): void
@@ -196,13 +294,40 @@ final class Auth
     private static function clearFailures(string $username, string $ip): void
     {
         Database::run(
-            'DELETE FROM login_attempts WHERE username = :username OR ip_address = :ip',
-            ['username' => $username, 'ip' => $ip]
+            // ‼️ ลบเฉพาะคู่ username + IP นี้ — ลบตาม IP หรือ username อย่างเดียว
+            //    เท่ากับให้ login สำเร็จครั้งเดียวล้างประวัติเดารหัสของบัญชีอื่นได้
+            'DELETE FROM login_attempts WHERE username = :username AND ip_address = :ip',
+            ['username' => mb_substr($username, 0, 100), 'ip' => $ip]
         );
     }
 
+    /** IP จริงของผู้ใช้ — ใช้ใน log และ audit log (ต้องเป็นค่าเต็ม ไว้สืบเหตุการณ์) */
     public static function ip(): string
     {
         return mb_substr((string) ($_SERVER['REMOTE_ADDR'] ?? ''), 0, 45);
+    }
+
+    /**
+     * กุญแจสำหรับนับครั้งที่ล็อกอินผิด — ใช้กับ login_attempts เท่านั้น
+     *
+     * ‼️ IPv6 ยุบเหลือ /64 — ผู้ใช้หนึ่งคนได้ทั้งบล็อก สลับที่อยู่ได้หลายล้านค่า
+     *    ถ้านับทีละที่อยู่ การจำกัดต่อ IP ไม่มีผลเลย
+     * ‼️ IPv4 ที่มาในรูป ::ffff:a.b.c.d ต้องแปลงกลับเป็น IPv4 ก่อน
+     *    ไม่งั้น 8 byte แรกเป็นศูนย์หมด ทุกคนที่ใช้ IPv4 ตกถัง "::/64" เดียวกันแล้วล็อกพร้อมกันทั้งโลก
+     */
+    public static function rateLimitKey(): string
+    {
+        $ip = self::ip();
+        $packed = filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== false ? @inet_pton($ip) : false;
+
+        if ($packed === false || strlen($packed) !== 16) {
+            return $ip;
+        }
+
+        if (str_starts_with($packed, str_repeat("\0", 10) . "\xff\xff")) {
+            return (string) inet_ntop(substr($packed, 12));
+        }
+
+        return mb_substr((string) inet_ntop(substr($packed, 0, 8) . str_repeat("\0", 8)) . '/64', 0, 45);
     }
 }

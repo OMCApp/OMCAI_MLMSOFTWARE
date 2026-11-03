@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "php scripts/hooks/session-start.php",
+            "timeout": 15,
+            "statusMessage": "อ่านสถานะโปรเจค..."
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "php scripts/hooks/post-edit.php",
+            "timeout": 60,
+            "statusMessage": "ตรวจไฟล์ที่เพิ่งแก้..."
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "php scripts/hooks/guard-commit.php",
+            "if": "Bash(git commit *)",
+            "timeout": 120,
+            "statusMessage": "รันชุดตรวจก่อน commit..."
+          },
+          {
+            "type": "command",
+            "command": "php scripts/hooks/guard-git.php",
+            "if": "Bash(git push *)",
+            "timeout": 30,
+            "statusMessage": "ตรวจ branch ก่อน push..."
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(php scripts/setup.php*)",
+      "Bash(php scripts/check.php*)",
+      "Bash(php scripts/design-sync.php*)",
+      "Bash(php scripts/migrate.php*)",
+      "Bash(php server.php*)",
+      "Bash(composer install*)",
+      "Bash(git config core.hooksPath*)",
+      "Bash(composer dump-autoload*)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git branch*)",
+      "Bash(git fetch*)",
+      "Bash(./vendor/bin/phpstan*)",
+      "Read"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Edit(./.env)"
+    ],
+    "ask": [
+      "Bash(git push*)",
+      "Bash(git merge*)",
+      "Bash(git reset*)"
+    ]
+  }
+}
