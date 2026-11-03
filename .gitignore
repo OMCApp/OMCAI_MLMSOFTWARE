@@ -3,6 +3,8 @@
 
 # Dependencies
 vendor/
+# self-hosted front-end assets (fonts) live here and must be committed — CLAUDE.md rule 2
+!public/assets/vendor/
 
 # Runtime data — keep the folders, not their contents
 storage/logs/*
