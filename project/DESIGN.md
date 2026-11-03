@@ -108,10 +108,10 @@ component:
   site:
     headerHeight:       76px
     headerHeightMobile: 64px
-    logoHeight:         40px
-    logoHeightMobile:   32px
+    logoHeight:         36px
+    logoHeightMobile:   30px
     footerLogoHeight:   56px
-    sectionPad:         96px
+    sectionPad:         80px
     sectionPadMobile:   56px
     gutter:             24px
     gutterMobile:       16px
@@ -216,7 +216,22 @@ component:
 
 ## ความต่างจากแบบ (C4ก — หน้าแรก `/_preview/home` เทียบ `refs/home-reference.png`)
 
-บันทึกผลเทียบทีละบล็อกไว้ที่ `project/STATE.md` / รายงาน phase · ภาพหน้าจริงอยู่ที่ `project/design/built/home-reference.png`
+เทียบเมื่อ 2026-11-03 ที่ความกว้าง 1024px (เท่าภาพแบบ) · ภาพหน้าจริง: `project/design/built/home-reference.png` · ตรวจเพิ่มที่ 1440px และ 375px
+
+| # | บล็อกในแบบ | หน้าจริง | ต่างตรงไหน · เพราะอะไร |
+|---|---|---|---|
+| 1 | header | `partials/site-header.php` | โลโก้ใหม่ (สี่เหลี่ยม O M C) แทน wordmark ในภาพ — brief ข้อ 5 · **1024–1199px เมนูยุบเป็นปุ่ม ☰ (drawer)** แบบแสดงเมนูเต็มที่ 1024 แต่ 7 เมนูไทย + เบอร์ + ปุ่ม ที่พื้นที่กด 44px ไม่พอ — เมนูเต็มตั้งแต่ 1200px · เม็ดเบอร์โทรแสดงตั้งแต่ 1360px |
+| 2 | hero | `blocks/hero` | ไม่มีภาพผู้หญิง → mockup แล็ปท็อป + มือถือ HTML/CSS + caption "ข้อมูลสมมติ" · พาดหัวเขียนใหม่ (ตัด "ธุรกิจชั้นนำเลือกใช้" / "ไม่จำกัด") · ปุ่มส้มเข้มทึบแทน gradient ส้มสด (contrast) · จอ < 640px ซ่อนมือถือจำลอง |
+| 3 | แถบโลโก้ลูกค้า | `blocks/trust_bar` | ไม่แสดง — ไม่มีโลโก้ที่ยืนยันได้ |
+| 4 | แถบตัวเลข 10+ ปี … 24/7 | `blocks/stats` | ไม่แสดง — ไม่มีหลักฐาน |
+| 5 | โซลูชันครบ 8 การ์ด | `blocks/feature_grid` (columns 8) | ตรงแบบที่ ≥1100px · 1024px เป็น 4×2 · ไอคอนส้มเข้มบนกรอบส้มอ่อน (contrast) · "ความปลอดภัยระดับองค์กร" → "ความปลอดภัยของข้อมูล" |
+| 6 | แถบ AI & Data | `blocks/split` (band, bars) | โครงเดียวกัน (กราฟิก · หัวข้อ · รายการ) · ภาพ "AI" 3D → กราฟแท่ง CSS · เนื้อหาพูดเรื่องข้อมูลและรายงาน ไม่อ้าง AI (รอยืนยัน) |
+| 7 | — | `blocks/plan_cards` | **เพิ่ม** — brief ฉบับ 3 ระบุ "Compensation preview" ในหน้าแรก แต่แบบไม่มี |
+| 8 | ธุรกิจหลากหลายประเภท 6 การ์ด | `blocks/industry_grid` | ไอคอนบนพื้นไล่สีแทนภาพถ่าย (ยังไม่มีภาพจริง) · 6 คอลัมน์ที่ ≥1100px, 1024px เป็น 3×2 |
+| 9 | — | `blocks/dashboard_showcase` | **เพิ่ม** — brief ระบุ "Real system/dashboard" · แท็บ ภาพรวม/สายงาน/คอมมิชชัน |
+| 10 | รีวิว + เกี่ยวกับ OMC (คู่กัน) | `blocks/testimonials` + `blocks/about_teaser` | รีวิวไม่แสดง (ไม่มีของจริง) → about ใช้สองคอลัมน์เต็มแถว · แผงโลโก้แทนภาพอาคาร · ตัด "มากกว่า 10 ปี" |
+| 11 | แถบ CTA | `blocks/cta_band` | ตรงแบบ · ปลายขวาเป็นส้มเข้มแทนส้มสด (ตัวหนังสือขาวต้องผ่าน 4.5:1) |
+| 12 | — (ไม่มีในแบบ) | `partials/site-footer.php` | **เพิ่ม** footer พื้นน้ำเงินหมึก — กฎเหล็กข้อ 20 |
 
 ## ลำดับชั้นของสีแบรนด์ (design.md 7.3)
 
