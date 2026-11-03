@@ -34,3 +34,23 @@
 **ราคาที่จ่าย:** ต้องแก้ในโปรเจคนี้ (จะแก้ตอนสร้างระบบแอดมินบน branch) และทุกโปรเจคที่ใช้ 3.20.0 มีช่องโหว่เดียวกัน
 **ข้อเสนอ:** แก้ที่ repo มาตรฐาน: (1)(2) ใช้คู่ username+IP · (3) โหลด `is_active/role/deleted_at` ใหม่ใน AuthMiddleware ทุก request · (4) dummy hash · (5) `parse_url` เทียบ scheme+host ตรงตัว หรือ redirect เฉพาะ path
 **ตรวจด้วยเครื่องได้ไหม:** ได้บางข้อ — grep หา `OR ip_address` และ `str_contains($referer`
+
+## [ ] 2026-11-03 · ก่อนช่วง A — allowlist ใน `.claude/settings.json` ของมาตรฐานกว้างเกินไป (security review อัตโนมัติ)
+
+**เกิดอะไร:** permission แบบ wildcard ท้ายคำสั่งเปิดช่องให้รันคำสั่งอันตรายโดยไม่ถาม
+1. **HIGH** `Bash(git fetch*)` — ต่อ flag อย่าง `--upload-pack=<cmd>` ได้ = รันคำสั่งใดก็ได้
+2. **MEDIUM** `Bash(git config core.hooksPath*)` · `git log*` · `git diff*` · `git branch*` — `--output=<file>` เขียนไฟล์ทับได้ · ชี้ hooksPath ไปที่อื่น = hijack hook · `git branch -D` ลบ branch ได้
+3. **MEDIUM** hook `guard-commit.php` / `guard-git.php` กรองด้วย `if: Bash(git commit *)` / `Bash(git push *)` → `git -c x=y commit`, `git -C . push`, `VAR=1 git push` หลุดประตู
+4. **MEDIUM** `Bash(./vendor/bin/phpstan*)` · `Bash(composer install*)` — `--configuration`/`--working-dir`/scripts รันโค้ดใดก็ได้
+**กฎข้อไหนเกี่ยวข้อง:** `.claude/settings.json` (ของกลาง — แก้ในโปรเจคไม่ได้ ถูก updater ทับ)
+**ข้อเสนอ:** allow แบบตรงตัว (`git fetch` · `git diff` · `composer install --no-scripts`) · ตัด `if` ของ hook ให้สคริปต์กรองเอง · เพิ่ม deny `Bash(git -c*)` `Bash(git -C*)` `Bash(git * --output*)` `Bash(git * --upload-pack*)`
+**ตรวจด้วยเครื่องได้ไหม:** ได้ — `check.php` ตรวจ allow ที่ลงท้าย `*` บนคำสั่งที่รับ flag อันตราย
+
+## [ ] 2026-11-03 · ก่อนช่วง A — AI ทำรหัส FTP หลุดลง log สาธารณะของ GitHub Actions (~3 นาที)
+
+**เกิดอะไร:** workflow ตรวจ FTP แบบอ่านอย่างเดียวที่ AI เขียน เรียก `pwd` ของ lftp ซึ่งพิมพ์ URL `ftp://user:pass@host` โดย **เข้ารหัส `@` เป็น `%40`** → GitHub masking จับไม่ได้ (เทียบแค่ข้อความตรงตัว) · repo เป็น public จึง log อ่านได้ทุกคน · ลบ log + run + branch แล้วภายในไม่กี่นาที แต่ถือว่ารหัสรั่วแล้ว ต้องเปลี่ยนรหัส FTP
+**กฎข้อไหนเกี่ยวข้อง:** `standard/security.md` — secret · ไม่มีกฎเรื่อง CI log
+**ทำไมกฎไม่ช่วย:** มาตรฐานไม่มีข้อห้ามพิมพ์ผลจากเครื่องมือที่อาจสะท้อน credential ใน CI และไม่ได้บังคับให้ repo เป็น private
+**ราคาที่จ่าย:** ต้องเปลี่ยนรหัส FTP และอัปเดต secret ใน GitHub
+**ข้อเสนอ:** (1) กฎ: ห้าม echo/pwd/ls จากคำสั่งที่รับ credential ใน CI · พิมพ์ได้เฉพาะผล yes/no (2) `setup.php` เตือนถ้า repo บน GitHub เป็น public
+**ตรวจด้วยเครื่องได้ไหม:** ได้บางส่วน — grep workflow หา `pwd` / `lftp` / `echo "$` ที่อยู่ใน step ที่มี secrets
