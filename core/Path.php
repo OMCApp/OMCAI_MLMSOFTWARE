@@ -35,6 +35,18 @@ final class Path
         $base = str_replace('\\', '/', dirname($script));
         $base = rtrim($base, '/');
 
+        /*
+         * ‼️ กรณีตั้ง document root ที่ public/ ไม่ได้ (เช่น http://IP/~user/ระบบ/)
+         *    .htaccess ที่ root ของโปรเจค rewrite ทุก request เข้า public/ ภายใน
+         *    SCRIPT_NAME จึงเป็น /ระบบ/public/index.php แต่ URL ที่ผู้ใช้เห็นคือ /ระบบ/...
+         *    ถ้าไม่ตัด /public ออก ทุกลิงก์จะมี /public ติดไป และ current() จับ route ไม่ได้
+         */
+        $uri = (string) ($_SERVER['REQUEST_URI'] ?? '');
+
+        if (str_ends_with($base, '/public') && !str_starts_with($uri, $base . '/') && $uri !== $base) {
+            $base = substr($base, 0, -strlen('/public'));
+        }
+
         self::$base = ($base === '' || $base === '.') ? '' : $base;
 
         return self::$base;

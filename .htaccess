@@ -1,0 +1,24 @@
+# ‼️ ใช้เฉพาะเมื่อตั้ง document root ที่ public/ ไม่ได้ (เช่น staging ที่ http://IP/~omcai/mlmsoftware/)
+#    ส่งทุก request เข้า public/ ภายใน — ซอร์สโค้ด, .env, standard/, project/ จึงเปิดจากเบราว์เซอร์ไม่ได้
+#    บน production ให้ตั้ง document root ที่ public/ ตามมาตรฐาน แล้วไฟล์นี้จะไม่ถูกใช้
+
+Options -Indexes
+
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # request ที่ rewrite เข้า public/ แล้ว ไม่ต้องทำซ้ำ
+    RewriteCond %{ENV:REDIRECT_STATUS} !^$
+    RewriteRule ^ - [L]
+
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# ถ้าไม่มี mod_rewrite ห้ามเปิดอะไรเลย ดีกว่าเปิดซอร์สโค้ด
+<IfModule !mod_rewrite.c>
+    Require all denied
+</IfModule>

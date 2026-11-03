@@ -17,6 +17,7 @@ use Core\Path;
 use Core\Router;
 use Core\Security;
 use Core\Session;
+use Core\Staging;
 
 $root = dirname(__DIR__);
 
@@ -50,6 +51,29 @@ Session::start($config['session']);
 Session::rotateInput();
 
 Lang::configure($config, $config['paths']['lang']);
+
+// ‼️ ต้องอยู่ก่อนทุกอย่างที่แสดงเนื้อหา — staging ห้ามถูก index และต้องใส่รหัสก่อนเข้า
+Staging::guard($config);
+
+// ------------------------------------------------------- health check ของ CI
+//
+// ตอบแค่ว่าระบบขึ้นและต่อฐานข้อมูลได้ไหม ห้ามคืนรายละเอียดอื่น
+
+if (Path::current() === '/_health') {
+    header('Content-Type: text/plain; charset=utf-8');
+    header('Cache-Control: no-store');
+
+    try {
+        Database::selectOne('SELECT 1 AS ok');
+        echo "ok\n";
+    } catch (Throwable $e) {
+        Logger::exception($e);
+        http_response_code(503);
+        echo "db unavailable\n";
+    }
+
+    exit;
+}
 
 // ------------------------------------------------------------- maintenance
 
@@ -86,6 +110,13 @@ if (Path::current() === '/_migrate') {
 
         Logger::info('migrate_ok', ['count' => count($done), 'files' => $done]);
         echo $done === [] ? "up-to-date\n" : 'migrated ' . count($done) . "\n";
+
+        /* ‼️ ปิดโหมดปรับปรุงที่นี่ — CI ลบไฟล์บน runner ได้อย่างเดียว ลบบน server ไม่ได้
+              ถ้า migration ล้มเหลว ไม่ถึงบรรทัดนี้ ระบบจึงค้างในโหมดปรับปรุงซึ่งปลอดภัยกว่า */
+        if (is_file($config['paths']['maintenance'])) {
+            unlink($config['paths']['maintenance']);
+            echo "maintenance off\n";
+        }
     } catch (Throwable $e) {
         // ห้ามคืนรายละเอียด error ของฐานข้อมูลกลับไปใน response
         $reference = Logger::exception($e);

@@ -97,6 +97,12 @@ return [
         'default_theme' => 'light',
     ],
 
+    // ‼️ ใช้เฉพาะ environment ที่ไม่ใช่ production — ตั้ง STAGING_PASS แล้วทุกหน้าต้องใส่รหัสก่อนเข้า
+    'staging' => [
+        'user' => $get('STAGING_USER', 'omc'),
+        'pass' => $get('STAGING_PASS'),
+    ],
+
     'session' => [
         'secure'       => $get('APP_HTTPS', 'false') === 'true',
         'idle_timeout' => (int) $get('SESSION_IDLE_TIMEOUT', '0'),

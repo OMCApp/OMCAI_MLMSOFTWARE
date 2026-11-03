@@ -20,6 +20,11 @@ final class Auth
     private const MAX_ATTEMPTS    = 5;
     /** จำนวนครั้งที่ผิดได้ต่อ IP รวมทุก username — กันการไล่ลองรหัสเดียวกับหลายบัญชี */
     private const MAX_IP_ATTEMPTS = 20;
+    /**
+     * จำนวนครั้งที่ผิดได้ต่อ username รวมทุก IP — กันการเดารหัสแบบกระจายหลาย IP
+     * ตั้งสูงไว้จงใจ: ต่ำเกินไปคนนอกจะใช้ล็อกเจ้าของบัญชีได้ง่าย
+     */
+    private const MAX_USER_ATTEMPTS = 50;
     private const LOCK_MINUTES    = 15;
 
     public static function id(): ?int
@@ -213,6 +218,20 @@ final class Auth
             return true;
         }
 
+        $row = Database::selectOne(
+            'SELECT COUNT(*) AS total
+             FROM login_attempts
+             WHERE username = :username
+               AND attempted_at > (NOW() - INTERVAL :minutes MINUTE)',
+            ['username' => mb_substr($username, 0, 100), 'minutes' => self::LOCK_MINUTES]
+        );
+
+        if ((int) ($row['total'] ?? 0) >= self::MAX_USER_ATTEMPTS) {
+            Logger::warning('login_user_cap_reached', ['username' => mb_substr($username, 0, 100)]);
+
+            return true;
+        }
+
         /* ‼️ ล็อกที่คู่ username + IP เท่านั้น ห้ามล็อกที่ username อย่างเดียว
               ไม่งั้นคนนอกยิงรหัสผิดใส่ชื่อแอดมินจนเจ้าของบัญชีตัวจริงเข้าไม่ได้ */
         $row = Database::selectOne(
@@ -268,8 +287,21 @@ final class Auth
         return $hash ??= password_hash('timing-equaliser', PASSWORD_DEFAULT);
     }
 
+    /**
+     * IP ของผู้ใช้ — IPv6 ยุบเหลือ /64
+     *
+     * ‼️ ผู้ใช้ IPv6 หนึ่งคนได้ทั้งบล็อก /64 สลับที่อยู่ได้หลายล้านค่า
+     *    ถ้านับทีละที่อยู่ การจำกัดต่อ IP ไม่มีผลเลย
+     */
     public static function ip(): string
     {
-        return mb_substr((string) ($_SERVER['REMOTE_ADDR'] ?? ''), 0, 45);
+        $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+        $packed = filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6) !== false ? @inet_pton($ip) : false;
+
+        if ($packed !== false && strlen($packed) === 16) {
+            $ip = (string) inet_ntop(substr($packed, 0, 8) . str_repeat("\0", 8)) . '/64';
+        }
+
+        return mb_substr($ip, 0, 45);
     }
 }

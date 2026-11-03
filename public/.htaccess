@@ -4,6 +4,10 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    # PHP แบบ CGI/FPM ไม่ได้รับ header Authorization เอง — ส่งต่อให้ Core\Staging อ่าน
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
     # ทุก request ที่ไม่ใช่ไฟล์หรือโฟลเดอร์จริง ให้เข้า front controller
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
