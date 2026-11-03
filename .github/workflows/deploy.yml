@@ -27,3 +27,5 @@ jobs:
             **/.git*/**
             **/node_modules/**
             .github/**
+            docs/**
+            tools/**

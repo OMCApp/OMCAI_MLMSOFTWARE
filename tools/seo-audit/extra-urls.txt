@@ -1,0 +1,23 @@
+# URLs not in the live sitemap that may still be indexed or linked
+# (old TheGem-era pages from the 2024 DB dump, WP system URLs, common variants)
+/mlm-software/
+/mlm-system/
+/mlmsoftware/
+/contact-us/
+/contact-us-2/
+/homepage-business-solutions/
+/pages/
+/index.php/
+/feed/
+/comments/feed/
+/blog/page/2/
+/blog/page/3/
+/author/tee/
+/author/breeze/
+/category/ข่าวขายตรง/
+/category/ประกัน/
+/?s=mlm
+/wp-login.php
+/xmlrpc.php
+http://mlmsoftware.omc.co.th/
+https://www.mlmsoftware.omc.co.th/

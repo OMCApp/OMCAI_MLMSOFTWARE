@@ -1,0 +1,1331 @@
+/* สไตล์ทั้งระบบอยู่ไฟล์นี้ไฟล์เดียว
+   ค่าธีมทั้งหมดมาจาก project/DESIGN.md · ห้ามสร้างไฟล์ CSS แยกต่อหน้า
+   ห้ามเขียนค่าสีหรือระยะห่างดิบ — ใช้ var(--...) เท่านั้น */
+
+/* TOKENS:BEGIN */
+/* generate จาก project/DESIGN.md — ห้ามแก้ด้วยมือ
+   แก้ค่าที่ DESIGN.md แล้วรัน: php scripts/design-sync.php */
+
+:root {
+  --color-brand-primary: #3F3F46;
+  --color-brand-on-primary: #FFFFFF;
+  --color-surface-page: #FFFFFF;
+  --color-surface-card: #FAFAFA;
+  --color-surface-raised: #F4F4F5;
+  --color-text-strong: #18181B;
+  --color-text-normal: #3F3F46;
+  --color-text-muted: #6B6B74;
+  --color-border-normal: #E4E4E7;
+  --color-border-strong: #8B8B92;
+  --color-state-success: #3F3F46;
+  --color-state-warning: #3F3F46;
+  --color-state-danger: #3F3F46;
+  --color-state-info: #3F3F46;
+  --color-focus: #18181B;
+  --color-overlay: rgb(0 0 0 / .45);
+  --font-heading: "system-ui";
+  --font-body: "system-ui";
+  --font-mono: "ui-monospace";
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.375rem;
+  --text-2xl: 1.75rem;
+  --text-3xl: 2.25rem;
+  --text-display: 4rem;
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-bold: 600;
+  --leading-tight: 1.3;
+  --leading-normal: 1.6;
+  --leading-loose: 1.8;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-full: 999px;
+  --icon-sm: 16px;
+  --icon-base: 20px;
+  --icon-lg: 32px;
+  --icon-xl: 48px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,.05);
+  --shadow-md: 0 2px 6px rgba(0,0,0,.06);
+  --shadow-lg: 0 8px 20px rgba(0,0,0,.08);
+  --duration-fast: 120ms;
+  --duration-normal: 200ms;
+  --duration-slow: 320ms;
+  --ease-standard: cubic-bezier(.2,0,0,1);
+  --ease-enter: cubic-bezier(0,0,0,1);
+  --table-row-height: 44px;
+  --table-cell-padding: 0 12px;
+  --table-head-background: transparent;
+  --table-head-padding: 8px 12px;
+  --table-font-size: 0.875rem;
+  --choice-size: 20px;
+  --choice-mark: 10px;
+  --choice-arrow-wide: 10px;
+  --choice-arrow-tall: 6px;
+  --badge-radius: 4px;
+  --badge-type-border-style: dashed;
+  --badge-status-border-style: solid;
+  --hero-min-height: 560px;
+  --hero-min-height-mobile: 420px;
+  --hero-gap: 48px;
+  --hero-image-ratio: 3 / 4;
+  --hero-scrim: linear-gradient(to top, rgb(0 0 0 / .72) 0%, rgb(0 0 0 / .45) 42%, rgb(0 0 0 / .08) 100%);
+  --hero-on-image: #FFFFFF;
+  --product-card-image-ratio: 3 / 4;
+  --product-card-gap: 16px;
+  --product-card-grid-gap: 32px;
+  --product-card-name-size: 1.0625rem;
+  --product-card-meta-size: 0.9375rem;
+  --prose-max-width: 68ch;
+  --prose-paragraph-gap: 16px;
+  --prose-heading-gap: 36px;
+  --news-item-image-ratio: 16 / 9;
+  --news-item-image-width: 320px;
+  --news-item-gap: 24px;
+  --news-item-divider-style: 1px solid var(--color-border-normal);
+  --layout-max-width: 1280px;
+  --layout-form-width: 760px;
+  --layout-field-min-width: 220px;
+  --layout-tile-min-width: 260px;
+  --layout-aside-width: 320px;
+  --layout-page-media-width: 360px;
+  --layout-page-media-height: 200px;
+  --layout-sidebar-width: 240px;
+  --layout-sidebar-collapsed: 60px;
+  --layout-breakpoint: 768px;
+}
+
+/* โหมดตามที่ผู้ใช้เลือก — PHP เขียน data-theme ที่ <html> เพื่อไม่ให้หน้ากะพริบตอนโหลด */
+:root[data-theme="dark"] {
+  --color-brand-primary: #A1A1AA;
+  --color-brand-on-primary: #18181B;
+  --color-surface-page: #18181B;
+  --color-surface-card: #212126;
+  --color-surface-raised: #27272E;
+  --color-text-strong: #FAFAFA;
+  --color-text-normal: #D4D4D8;
+  --color-text-muted: #A1A1AA;
+  --color-border-normal: #3F3F46;
+  --color-border-strong: #75757E;
+  --color-state-success: #A1A1AA;
+  --color-state-warning: #A1A1AA;
+  --color-state-danger: #A1A1AA;
+  --color-state-info: #A1A1AA;
+  --color-focus: #FAFAFA;
+  --color-overlay: rgb(0 0 0 / .65);
+}
+
+/* ยังไม่เคยเลือก — ตามค่าของเครื่อง */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-brand-primary: #A1A1AA;
+    --color-brand-on-primary: #18181B;
+    --color-surface-page: #18181B;
+    --color-surface-card: #212126;
+    --color-surface-raised: #27272E;
+    --color-text-strong: #FAFAFA;
+    --color-text-normal: #D4D4D8;
+    --color-text-muted: #A1A1AA;
+    --color-border-normal: #3F3F46;
+    --color-border-strong: #75757E;
+    --color-state-success: #A1A1AA;
+    --color-state-warning: #A1A1AA;
+    --color-state-danger: #A1A1AA;
+    --color-state-info: #A1A1AA;
+    --color-focus: #FAFAFA;
+    --color-overlay: rgb(0 0 0 / .65);
+  }
+}
+
+/* TOKENS:END */
+
+@layer reset, base, layout, components, utilities;
+
+@layer reset {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  /* ‼️ [hidden] ของเบราว์เซอร์คือ display:none ที่ specificity ต่ำสุด
+     component ไหนตั้ง display:flex/grid ไว้ จะทับมันทั้งหมด
+     ผลคือ JS ตั้ง element.hidden = true สำเร็จจริง ตัวนับถูก แต่ของยังโผล่บนหน้า
+     เป็นบั๊กที่ตรวจจากโค้ดไม่เห็นเลย เห็นได้ทางเดียวคือเปิดหน้าดู
+     !important ในชั้นล่างชนะ declaration ปกติของชั้นที่สูงกว่า ซึ่งคือสิ่งที่ต้องการตรงนี้พอดี */
+  [hidden] { display: none !important; }
+
+  /* ‼️ ไอคอนต้องมีขนาดของตัวเองทุกขนาดที่ view เรียกใช้
+     empty-state.php เรียก icon('...', 'icon-lg') มาตั้งแต่ต้น แต่ไม่มีคลาสนี้ใน CSS
+     ไอคอนของสถานะว่างจึงเล็กเท่าไอคอนในปุ่ม ดูเหมือนไอคอนหลุดมา
+     เป็น typo ที่ไม่มีอะไรจับได้เลย เพราะ CSS ที่ไม่มีอยู่ไม่เคยรายงาน error */
+  .icon    { width: var(--icon-base); height: var(--icon-base); flex-shrink: 0; }
+  .icon-sm { width: var(--icon-sm);   height: var(--icon-sm); }
+  .icon-lg { width: var(--icon-lg);   height: var(--icon-lg); }
+  .icon-xl { width: var(--icon-xl);   height: var(--icon-xl); }
+  body, h1, h2, h3, h4, p, figure, blockquote, dl, dd, fieldset { margin: 0; }
+  fieldset, legend { padding: 0; border: 0; }
+  ul[class], ol[class] { list-style: none; padding: 0; margin: 0; }
+  img, picture, svg { max-width: 100%; display: block; }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  table { border-collapse: collapse; width: 100%; }
+}
+
+@layer base {
+  /* ‼️ ต้องผูก color-scheme กับธีมที่ "ระบบ" เลือก ไม่ใช่ธีมของ "เครื่อง"
+     ถ้าปล่อยเป็น `light dark` เฉยๆ native control (select, ปฏิทิน, แถบเลื่อน)
+     จะตามธีมของ OS ผลคือผู้ใช้เลือกโหมดสว่างแต่ <select> เป็นกล่องดำบนพื้นครีม อ่านไม่ออก
+     โปรเจคที่ธีมเริ่มต้นสวนกับ OS จะเจอทันทีตั้งแต่หน้าแรก */
+  html { color-scheme: light dark; }
+  :root[data-theme="light"] { color-scheme: light; }
+  :root[data-theme="dark"]  { color-scheme: dark; }
+
+  body {
+    background: var(--color-surface-page);
+    color: var(--color-text-normal);
+    font-family: var(--font-body), system-ui, sans-serif;
+    font-size: var(--text-base);
+    line-height: var(--leading-normal);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-heading), system-ui, sans-serif;
+    line-height: var(--leading-tight);
+    color: var(--color-text-strong);
+  }
+
+  h1 { font-size: var(--text-2xl); }
+  h2 { font-size: var(--text-xl); }
+  h3 { font-size: var(--text-lg); }
+
+  a { color: var(--color-brand-primary); }
+
+  /* focus ต้องเห็นชัดทุกจุดที่กดได้ — ห้าม outline:none โดยไม่ใส่แบบอื่นแทน */
+  :focus-visible {
+    outline: 2px solid var(--color-focus);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* ผู้ใช้บางคนเวียนหัวจากการเคลื่อนไหว */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: .01ms !important;
+      transition-duration: .01ms !important;
+    }
+  }
+}
+
+@layer layout {
+  .shell { display: flex; flex: 1; min-height: 0; }
+
+  .sidebar {
+    width: var(--layout-sidebar-width);
+    flex-shrink: 0;
+    background: var(--color-surface-card);
+    border-inline-end: 1px solid var(--color-border-normal);
+    display: flex;
+    flex-direction: column;
+
+    /* ‼️ ไม่มี transition บน width โดยตั้งใจ
+       การเคลื่อน width ทำให้เบราว์เซอร์คำนวณ layout ใหม่ทุกเฟรมแล้วกระตุก
+       และการพับเมนูคือสิ่งที่ผู้ใช้ทำซ้ำหลายสิบครั้งต่อวัน ทรานซิชันจึงกลายเป็นความหน่วง
+       เคลื่อนได้เฉพาะ transform และ opacity เท่านั้น */
+  }
+
+  /* พับแล้วต้องย่อ ไม่ใช่ปิดหาย — ผู้ใช้ยังกดใช้งานได้ทุกเมนู */
+  .sidebar[data-collapsed="true"] { width: var(--layout-sidebar-collapsed); }
+  .sidebar[data-collapsed="true"] .nav-label,
+  .sidebar[data-collapsed="true"] .brand-name { display: none; }
+
+  .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-5);
+    border-block-end: 1px solid var(--color-border-normal);
+    background: var(--color-surface-card);
+  }
+
+  .content {
+    flex: 1;
+    padding: var(--space-6) var(--space-5);
+    width: 100%;
+  }
+
+  /* ‼️ คอลัมน์ของ "หน้า" — ความกว้างเป็นเรื่องของหน้า ไม่ใช่ของ component
+     ห้ามใส่ max-width หรือ fit-content ทีละ component เด็ดขาด
+     ปล่อยให้ component คุมเองแล้วจะได้ตารางที่ยืดจนปุ่มห่างจากข้อมูล 400px
+     หรือได้ที่ว่างโล่งข้างขวาข้างเดียวเพราะหัวเพจกว้างเต็มแต่การ์ดแคบและชิดซ้าย
+     ทั้งสองอาการไม่มีใครสั่งให้เกิด เป็นผลข้างเคียงของการไม่มีใครคุมความกว้างของหน้า */
+  .page {
+    width: 100%;
+    margin-inline: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  .page[data-width="form"] { max-width: var(--layout-form-width); }
+  .page[data-width="list"] { max-width: var(--layout-max-width); }
+  .page[data-width="wide"] { max-width: 100%; }
+
+  /* ‼️ split — การ์ดหรือสรุปด้านข้างคู่กับเนื้อหาหลัก (มีตั้งแต่ 3.17.0)
+     เป็นข้อยกเว้นของ "หนึ่งหน้ามีคอลัมน์เดียว" ที่ต้องเลือกโดยตั้งใจ ไม่ใช่ค่าเริ่มต้น
+     ใช้เมื่อแบบของหน้ากำหนดมา หรือเมื่อด้านข้างช่วยตัดสินใจเรื่องในเนื้อหาหลักจริง (สรุปของสิ่งที่กำลังแก้)
+     ยังเป็นความกว้างเดียวของหน้า — แบ่งพื้นที่ภายในด้วย .split-layout ไม่ใช่ให้ component คุมความกว้างเอง */
+  .page[data-width="split"] { max-width: var(--layout-max-width); }
+
+  .split-layout {
+    display: grid;
+    grid-template-columns: minmax(0, var(--layout-aside-width)) minmax(0, 1fr);
+    gap: var(--space-8);
+    align-items: start;
+  }
+
+  .split-aside { display: flex; flex-direction: column; gap: var(--space-4); }
+  .split-main  { display: flex; flex-direction: column; gap: var(--space-6); min-width: 0; }
+
+  /* จอแคบ ด้านข้างขึ้นก่อนเนื้อหาหลัก — มันคือบริบทของสิ่งที่กำลังทำ */
+  @media (max-width: 900px) {
+    .split-layout { grid-template-columns: minmax(0, 1fr); }
+  }
+
+  /* ---------------------------------------------------------------- หัวเพจ */
+
+  /* ‼️ ทุกหน้าเปิดด้วยหัวเพจ มาจาก layout กลางเหมือน footer
+     ไม่มีหัวเพจ = ทุกอย่างในหน้ามีน้ำหนักเท่ากัน ไม่มีจุดเริ่มให้สายตา */
+  .page-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-4);
+  }
+
+  .page-head-text { display: flex; flex-direction: column; gap: var(--space-2); }
+
+  .page-lead {
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+    max-width: 70ch;
+  }
+
+  /* ปุ่มหลักของหน้าอยู่ที่นี่ ห้ามไปปนกับแถบตัวกรอง — ปนกันแล้วเส้นฐานไม่ตรงกัน */
+  .page-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+
+  /* ภาพหรือไอคอนข้างหัวเพจ — ขนาดมาจาก token ไม่ใช่จากไฟล์ภาพ
+     ภาพที่ไม่จำกัดความสูงจะดันเนื้อหาลงไปใต้จอแรกบนโน้ตบุ๊ก */
+  .page-head.has-media { align-items: center; }
+  .page-head.has-media .page-head-text { flex: 1 1 var(--layout-field-min-width); }
+
+  .page-media {
+    margin: 0;
+    flex: 0 1 var(--layout-page-media-width);
+    max-height: var(--layout-page-media-height);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+
+  .page-media img { display: block; width: 100%; height: 100%; max-height: var(--layout-page-media-height); object-fit: cover; }
+
+  .page-media.is-icon {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: var(--space-16);
+    height: var(--space-16);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-raised);
+    color: var(--color-brand-primary);
+  }
+
+  .page-media.is-icon svg { width: var(--space-8); height: var(--space-8); }
+
+  @media (max-width: 768px) {
+    .page-media:not(.is-icon) { flex-basis: 100%; }
+  }
+
+  /* เส้นทางนำทาง — อยู่เหนือชื่อหน้า ตัวเล็กและเงียบกว่าชื่อหน้าเสมอ */
+  .breadcrumb ol { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-2); font-size: var(--text-sm); color: var(--color-text-muted); }
+  .breadcrumb li { display: flex; align-items: center; gap: var(--space-2); }
+  .breadcrumb li + li::before { content: "/"; color: var(--color-border-strong); }
+  .breadcrumb a { color: var(--color-text-muted); }
+  .breadcrumb a:hover { color: var(--color-text-strong); }
+  .breadcrumb [aria-current="page"] { color: var(--color-text-normal); }
+
+  /* ‼️ ความกว้างของช่องกรอกต้องบอกความยาวที่คาดหวัง
+     ช่องกว้างเต็มฟอร์มที่รับได้ 3 ตัวอักษร คือการบอกผู้ใช้ผิด */
+  .field[data-width="short"]  { max-width: 12ch; }
+  .field[data-width="medium"] { max-width: 32ch; }
+  .field[data-width="full"]   { max-width: 100%; }
+
+  /* ฟอร์มเกิน 4 ช่องต้องแบ่งกลุ่ม และช่องสั้นเรียงกันเป็น grid ไม่ใช่เรียงลงมาทีละช่อง */
+  .field-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(var(--layout-field-min-width), 1fr));
+    gap: var(--space-4);
+    align-items: start;
+  }
+
+  fieldset.group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    padding: var(--space-5);
+    border: 1px solid var(--color-border-normal);
+    border-radius: var(--radius-md);
+  }
+
+  fieldset.group > legend {
+    padding-inline: var(--space-2);
+    color: var(--color-text-strong);
+    font-weight: var(--weight-medium);
+  }
+
+  /* ---------------------------------------------------- การ์ดทางเข้า (tile) */
+
+  /* ‼️ เป็น component กลาง ไม่ใช่สไตล์ของหน้าคู่มือ
+     หน้าที่ทำหน้าที่ "เลือกทางเข้า" ทุกหน้าใช้ตัวนี้ — หน้ารวมคู่มือ หน้าสรุป หน้าเลือกโมดูล
+     รายการลิงก์เปล่าไม่มีลำดับสายตา และไม่บอกว่าปลายทางเกี่ยวกับอะไร */
+  .tile-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--layout-tile-min-width), 1fr));
+    gap: var(--space-4);
+  }
+
+  .tile {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-5);
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-border-normal);
+    border-radius: var(--radius-lg);
+    color: var(--color-text-normal);
+    text-decoration: none;
+    transition: border-color var(--duration-fast) var(--ease-standard),
+                box-shadow var(--duration-fast) var(--ease-standard);
+  }
+
+  .tile:hover { border-color: var(--color-brand-primary); box-shadow: var(--shadow-md); }
+
+  .tile-icon {
+    display: inline-flex;
+    color: var(--color-brand-primary);
+  }
+
+  .tile-title {
+    color: var(--color-text-strong);
+    font-weight: var(--weight-medium);
+  }
+
+  .tile-summary {
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+  }
+
+  .site-footer {
+    padding: var(--space-4) var(--space-5);
+    border-block-start: 1px solid var(--color-border-normal);
+    color: var(--color-text-muted);
+    font-size: var(--text-sm);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    align-items: center;
+  }
+
+  .stack { display: flex; flex-direction: column; gap: var(--space-4); }
+  .row   { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; }
+  .spacer { margin-inline-start: auto; }
+
+  .centered {
+    flex: 1;
+    display: grid;
+    place-items: center;
+    padding: var(--space-6);
+  }
+
+  @media (max-width: 768px) {
+    .sidebar {
+      position: fixed;
+      inset-block: 0;
+      inset-inline-start: 0;
+      z-index: 40;
+      transform: translateX(-100%);
+      transition: transform var(--duration-normal) var(--ease-standard);
+    }
+    .sidebar[data-open="true"] { transform: translateX(0); }
+    .content { padding: var(--space-4) var(--space-3); }
+  }
+}
+
+@layer components {
+
+  /* ---------------------------------------------------------------- ปุ่ม */
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    padding: var(--space-2) var(--space-4);
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--color-text-normal);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background var(--duration-fast) var(--ease-standard);
+  }
+
+  .btn:hover { background: var(--color-surface-raised); }
+  .btn:disabled, .btn[aria-disabled="true"] { opacity: .5; cursor: not-allowed; }
+
+  .btn-primary {
+    background: var(--color-brand-primary);
+    color: var(--color-brand-on-primary);
+  }
+  .btn-primary:hover { filter: brightness(1.08); background: var(--color-brand-primary); }
+
+  .btn-secondary { border-color: var(--color-border-strong); }
+
+  .btn-danger {
+    background: var(--color-state-danger);
+    color: var(--color-brand-on-primary);
+  }
+
+  /* ปุ่มไอคอนล้วน — ต้องมี aria-label และ tooltip เสมอ */
+  .btn-icon {
+    min-width: 44px;
+    padding: var(--space-2);
+  }
+
+  /* กันกดซ้ำ — กดแล้ว disable ทันทีพร้อมแสดงว่ากำลังทำงาน */
+  .btn[data-busy="true"] { pointer-events: none; opacity: .6; }
+
+  /* ---------------------------------------------------------------- ฟอร์ม */
+
+  .field { display: flex; flex-direction: column; gap: var(--space-1); }
+
+  .field label { color: var(--color-text-strong); font-weight: var(--weight-medium); }
+  .field .hint { color: var(--color-text-muted); font-size: var(--text-sm); }
+
+  .field input,
+  .field select,
+  .field textarea {
+    min-height: 44px;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-page);
+  }
+
+  .field[data-invalid="true"] input,
+  .field[data-invalid="true"] select,
+  .field[data-invalid="true"] textarea { border-color: var(--color-state-danger); }
+
+  /* ---------------------------------------------- ติ๊กถูก / ตัวเลือกเดียว
+
+     ‼️ ก่อน 3.20.0 ไม่มีสไตล์ของ checkbox กับ radio เลยทั้งไฟล์
+        ผลคือทุกโปรเจคได้กล่องสีฟ้าของ Windows ซึ่งไม่ตามธีมและไม่ตามโหมดมืด
+        appearance: none ต้องมาคู่กับการวาดเองเสมอ ไม่งั้นช่องจะหายไปทั้งอัน */
+
+  .choice { display: flex; align-items: flex-start; gap: var(--space-2); cursor: pointer; }
+
+  /* พื้นที่กดต้องถึง 44px ทั้งแถว ไม่ใช่แค่ตัวกล่อง 18px */
+  .choice { min-height: 44px; padding-block: var(--space-2); }
+
+  .field input[type="checkbox"],
+  .field input[type="radio"] {
+    appearance: none;
+    flex: none;
+    width: var(--choice-size);
+    height: var(--choice-size);
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--color-border-strong);
+    background: var(--color-surface-page);
+    display: grid;
+    place-content: center;
+  }
+
+  .field input[type="checkbox"] { border-radius: var(--radius-sm); }
+  .field input[type="radio"] { border-radius: 50%; }
+
+  .field input[type="checkbox"]:checked,
+  .field input[type="radio"]:checked,
+  .field input[type="checkbox"]:indeterminate {
+    border-color: var(--color-brand-primary);
+    background: var(--color-brand-primary);
+  }
+
+  /* เครื่องหมายวาดด้วย clip-path ไม่ใช่ไฟล์ภาพ — เปลี่ยนสีตามโหมดได้และไม่ต้องโหลดอะไรเพิ่ม */
+  .field input[type="checkbox"]::before,
+  .field input[type="radio"]::before {
+    content: "";
+    width: var(--choice-mark);
+    height: var(--choice-mark);
+    transform: scale(0);
+    background: var(--color-brand-on-primary);
+  }
+
+  .field input[type="checkbox"]::before {
+    clip-path: polygon(14% 44%, 0 65%, 40% 100%, 100% 16%, 84% 0, 39% 70%);
+  }
+
+  .field input[type="radio"]::before { border-radius: 50%; }
+
+  /* ‼️ ครึ่งๆ กลางๆ (indeterminate) ต้องต่างจากทั้งติ๊กและไม่ติ๊ก
+     หัวตารางที่เลือกบางแถวต้องบอกได้ว่า "บางอัน" ไม่ใช่ "ทั้งหมด" */
+  .field input[type="checkbox"]:indeterminate::before {
+    clip-path: polygon(0 38%, 100% 38%, 100% 62%, 0 62%);
+    transform: scale(1);
+  }
+
+  .field input[type="checkbox"]:checked::before,
+  .field input[type="radio"]:checked::before { transform: scale(1); }
+
+  .field input[type="checkbox"]:disabled,
+  .field input[type="radio"]:disabled { opacity: .5; cursor: not-allowed; }
+
+  .choice-text { display: flex; flex-direction: column; gap: 2px; }
+  .choice-text .hint { font-size: var(--text-sm); }
+
+  /* กลุ่มตัวเลือกใช้ fieldset เพื่อให้ screen reader อ่านหัวข้อกลุ่มก่อนอ่านตัวเลือก */
+  .choice-group { display: flex; flex-direction: column; border: 0; margin: 0; padding: 0; }
+  .choice-group > legend { color: var(--color-text-strong); font-weight: var(--weight-medium); padding: 0; }
+
+  /* error อยู่ใต้ช่องที่ผิด ไม่กองรวมบนสุด */
+  .field .error { color: var(--color-state-danger); font-size: var(--text-sm); }
+
+  .required-mark { color: var(--color-state-danger); }
+
+  /* dropdown ที่ค้นได้ — JS สร้างครอบ <select> เดิม (components.md ข้อ 3ก)
+     ‼️ select ตัวจริงต้องยังโฟกัสได้ ห้าม display:none ห้าม visibility:hidden
+        ไม่งั้นฟอร์มที่มี required แล้ว validate ไม่ผ่านจะส่งไม่ได้โดยไม่มีข้อความให้ผู้ใช้เห็น */
+  /* ‼️ นอกฟอร์ม (เช่นตัวสลับภาษาบนแถบบน) ต้องกว้างตามเนื้อหา ไม่ใช่ยืดเต็มที่ว่าง
+     ของเดิมเป็น <select> ที่กว้างตามตัวเลือกยาวสุด — ยืดเต็มเมื่อไหร่แถบบนเพี้ยนทันที */
+  .combobox { position: relative; display: inline-flex; flex-direction: column; }
+
+  .field .combobox { display: flex; }
+
+  .combobox select {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .combobox-input { position: relative; padding-inline-end: var(--space-8); }
+
+  /* ลูกศรวาดเอง — ของเดิมเป็นลูกศรของ OS ซึ่งไม่ตามธีมและโหมดมืด */
+  .combobox::after {
+    content: "";
+    position: absolute;
+    inset-inline-end: var(--space-3);
+    inset-block-start: 50%;
+    width: var(--choice-arrow-wide);
+    height: var(--choice-arrow-tall);
+    translate: 0 -50%;
+    background: var(--color-text-muted);
+    clip-path: polygon(0 0, 100% 0, 50% 100%);
+    pointer-events: none;
+  }
+
+  .combobox[data-open="true"]::after { rotate: 180deg; }
+
+  /* select ที่ JS ยังไม่ครอบ (เช่น JS พัง) ต้องไม่หลุดธีมไปทั้งกล่อง
+     ‼️ ตัวรายการที่กางออกมายังเป็นของ OS อยู่ดี — นี่คือทางสำรอง ไม่ใช่สิ่งที่ตั้งใจให้ผู้ใช้เห็น */
+  .field select {
+    appearance: none;
+    padding-inline-end: var(--space-8);
+  }
+
+  .combobox-list {
+    position: absolute;
+    inset-block-start: calc(100% + var(--space-1));
+    inset-inline: 0;
+    z-index: 20;
+    max-height: 18rem;
+    overflow-y: auto;
+    margin: 0;
+    padding: var(--space-1);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-raised);
+    box-shadow: var(--shadow-md);
+    list-style: none;
+  }
+
+  .combobox-option,
+  .combobox-empty,
+  .combobox-more {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 44px;
+    justify-content: center;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
+  }
+
+  .combobox-option { cursor: pointer; }
+
+  /* ไฮไลต์ด้วยพื้นหลัง ไม่ใช่สีตัวอักษรอย่างเดียว — คนตาบอดสีต้องเห็นว่าอยู่แถวไหน */
+  .combobox-option[aria-selected="true"] {
+    background: var(--color-brand-primary);
+    color: var(--color-brand-on-primary);
+  }
+
+  .combobox-option[aria-selected="true"] .combobox-hint { color: inherit; opacity: .85; }
+  .combobox-option:hover { background: var(--color-surface-page); }
+
+  .combobox-hint { color: var(--color-text-muted); font-size: var(--text-sm); }
+
+  .combobox-empty,
+  .combobox-more { color: var(--color-text-muted); font-size: var(--text-sm); }
+
+  .combobox-more { cursor: pointer; text-align: center; }
+
+  /* ---------------------------------------------------------------- ตาราง */
+
+  .table-wrap { overflow-x: auto; }
+
+  /* ‼️ ค่ารูปทรงของตารางมาจาก component.table ใน DESIGN.md ไม่ใช่เขียนดิบที่นี่
+     เดิมเขียนดิบ ผลคือเอาดีไซน์จากภายนอกเข้ามาแล้วสีเปลี่ยนตาม แต่แถวยังสูงเท่าเดิม */
+  .table { font-size: var(--table-font-size); }
+
+  .table th, .table td {
+    padding: var(--table-cell-padding);
+    height: var(--table-row-height);
+    border-block-end: 1px solid var(--color-border-normal);
+    text-align: start;
+    vertical-align: middle;
+  }
+
+  .table thead th {
+    background: var(--table-head-background);
+    padding: var(--table-head-padding);
+    height: auto;
+    color: var(--color-text-strong);
+    font-weight: var(--weight-medium);
+    white-space: nowrap;
+  }
+
+  .table th a { color: inherit; text-decoration: none; display: inline-flex; gap: var(--space-1); }
+  .table .num { text-align: end; font-variant-numeric: tabular-nums; }
+  .table tbody tr:hover { background: var(--color-surface-raised); }
+  .table .actions { display: flex; gap: var(--space-1); justify-content: end; }
+
+  /* บนมือถือยุบเป็นการ์ด ห้าม scroll แนวนอน */
+  @media (max-width: 768px) {
+    .table thead { display: none; }
+    .table tbody tr {
+      display: block;
+      border: 1px solid var(--color-border-normal);
+      border-radius: var(--radius-lg);
+      padding: var(--space-3);
+      margin-block-end: var(--space-3);
+    }
+    .table td {
+      display: flex;
+      justify-content: space-between;
+      gap: var(--space-3);
+      border: 0;
+      padding: var(--space-1) 0;
+    }
+    .table td::before {
+      content: attr(data-label);
+      color: var(--color-text-muted);
+      font-size: var(--text-sm);
+    }
+    .table td[data-primary]::before { content: none; }
+    .table td[data-primary] { font-weight: var(--weight-bold); color: var(--color-text-strong); }
+  }
+
+  /* ---------------------------------------------------------------- สถานะ */
+
+  .empty-state, .error-state {
+    text-align: center;
+    padding: var(--space-12) var(--space-4);
+    color: var(--color-text-muted);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    align-items: center;
+  }
+
+  .empty-state h3, .error-state h3 { color: var(--color-text-strong); }
+
+  .skeleton {
+    background: var(--color-surface-raised);
+    border-radius: var(--radius-sm);
+    height: 1em;
+    animation: pulse 1.4s ease-in-out infinite;
+  }
+
+  @keyframes pulse { 50% { opacity: .5; } }
+
+  /* ---------------------------------------------------------------- toast */
+
+  /* ต้องลอย ห้ามแทรกในหน้า เพราะแบบแทรกจะดัน component อื่นเลื่อนตำแหน่ง */
+  .toasts {
+    position: fixed;
+    inset-block-end: var(--space-4);
+    inset-inline-end: var(--space-4);
+    z-index: 60;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    max-width: min(380px, calc(100vw - var(--space-8)));
+  }
+
+  .toast {
+    display: flex;
+    gap: var(--space-3);
+    align-items: start;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border-normal);
+    background: var(--color-surface-card);
+    box-shadow: var(--shadow-lg);
+    animation: toast-in var(--duration-normal) var(--ease-enter);
+  }
+
+  /* ‼️ ไม่ใช้แถบสีหนาข้างซ้าย โดยตั้งใจ
+     มันคือลายเซ็นที่จำได้ทันทีว่าเป็น UI ที่ AI สร้าง และซ้ำซ้อนด้วย
+     เพราะมาตรฐานบังคับให้แต่ละแบบต่างกันทั้งสีและไอคอนอยู่แล้ว
+     ปล่อยให้ไอคอนทำหน้าที่สื่อความหมาย ส่วนกรอบอยู่เป็นกลาง */
+  .toast .toast-icon { flex-shrink: 0; }
+
+  .toast[data-type="success"] .toast-icon { color: var(--color-state-success); }
+  .toast[data-type="warning"] .toast-icon { color: var(--color-state-warning); }
+  .toast[data-type="danger"]  .toast-icon { color: var(--color-state-danger); }
+  .toast[data-type="info"]    .toast-icon { color: var(--color-state-info); }
+
+  .toast .ref { color: var(--color-text-muted); font-size: var(--text-sm); }
+
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(var(--space-2)); }
+  }
+
+  /* ---------------------------------------------------------------- modal */
+
+  dialog {
+    border: 1px solid var(--color-border-normal);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-card);
+    color: var(--color-text-normal);
+    padding: 0;
+    max-width: min(560px, calc(100vw - var(--space-8)));
+    width: 100%;
+
+    /* ‼️ ต้องเป็น fit-content ห้ามปล่อยเป็น auto
+       เบราว์เซอร์วาง <dialog> แบบ modal เป็น absolute พร้อม inset: 0
+       height: auto จึงยืดเต็มความสูงที่มี แล้วโดน max-height ของ UA หนีบไว้
+       ผลคือกล่องที่มีข้อความสองบรรทัด สูง 774px บนจอ 812px
+       เนื้อหากองอยู่ด้านบน ที่เหลือเป็นพื้นว่าง — ดูเหมือนแผงเต็มจอ ไม่ใช่กล่องยืนยัน
+       มองจากโค้ดไม่เห็นเลย เห็นตอนวัดความสูงจริงเทียบกับความสูงของเนื้อหา */
+    height: fit-content;
+  }
+
+  dialog::backdrop { background: var(--color-overlay); }
+
+  .dialog-head, .dialog-foot {
+    padding: var(--space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .dialog-head { border-block-end: 1px solid var(--color-border-normal); }
+  .dialog-foot { border-block-start: 1px solid var(--color-border-normal); justify-content: end; }
+  .dialog-body { padding: var(--space-4); display: flex; flex-direction: column; gap: var(--space-4); }
+
+  @media (max-width: 768px) {
+    /* ‼️ max-height กับ margin ต้องสั่งด้วย ไม่งั้นไม่เต็มจอจริงตามสเปค
+       UA ตั้ง max-height: calc(100% - 38px) และ margin: auto ให้ dialog แบบ modal
+       สั่งแค่ height: 100dvh จึงถูกหนีบเหลือ 774px บนจอสูง 812px
+       เหลือขอบบนล่างข้างละ 19px ซึ่งอ่านออกมาเป็น "กล่องที่พยายามเต็มจอแต่ไม่สุด" */
+    dialog {
+      max-width: 100vw;
+      height: 100dvh;
+      max-height: 100dvh;
+      margin: 0;
+      border-radius: 0;
+    }
+  }
+
+  /* กล่องยืนยัน — เล็กกว่า modal ปกติ และไม่เต็มจอบนมือถือ
+     กล่องที่มีข้อความสองบรรทัดแล้วกินเต็มจอ ทำให้ผู้ใช้เสียบริบทว่ากดมาจากแถวไหน */
+  dialog.dialog-sm {
+    max-width: min(420px, calc(100vw - var(--space-8)));
+  }
+
+  @media (max-width: 768px) {
+    /* กล่องยืนยันไม่เต็มจอ — ต้องคืนค่า margin กับ max-height ที่ dialog ปกติสั่งไว้ด้วย */
+    dialog.dialog-sm {
+      height: fit-content;
+      max-height: calc(100dvh - var(--space-6));
+      margin: auto;
+      max-width: calc(100vw - var(--space-6));
+      border-radius: var(--radius-lg);
+    }
+  }
+
+  /* ฟอร์มของปุ่มที่ต้องยืนยัน — อยู่ในแถวตารางจึงต้องไม่ดันความสูงของแถว */
+  .confirm-form { display: inline-flex; }
+
+  /* ------------------------------------------------------------ แนบไฟล์ */
+
+  .upload { gap: var(--space-2); }
+
+  /* ‼️ กรอบลากวางถูกสร้างโดย app.js — ถ้า JS ไม่ทำงาน ผู้ใช้จะเห็น input ปกติ
+     ซึ่งใช้งานได้จริง ดีกว่ากรอบสวยๆ ที่ลากแล้วไม่เกิดอะไร */
+  .upload-zone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+
+    /* ‼️ <button> หดตามเนื้อหาโดยปริยาย ต้องสั่งความกว้างเอง
+       ไม่สั่งแล้วได้กรอบกว้าง 42px ที่ข้อความไหลลงเป็นแนวตั้ง
+       และดันกล่อง modal จนเลื่อนแนวนอนได้ ซึ่งผิดกฎ "หน้าห้ามเลื่อนแนวนอน" */
+    width: 100%;
+    min-height: calc(var(--space-16) + var(--space-12));
+    padding: var(--space-5);
+    border: 1px dashed var(--color-border-strong);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-raised);
+    color: var(--color-text-muted);
+    text-align: center;
+    cursor: pointer;
+    transition: border-color var(--duration-fast) var(--ease-standard),
+                background var(--duration-fast) var(--ease-standard);
+  }
+
+  .upload-zone:hover,
+  .upload-zone:focus-visible { border-color: var(--color-brand-primary); }
+
+  /* สถานะตอนลากผ่าน — ต้องเห็นชัดว่าปล่อยได้แล้ว ไม่งั้นผู้ใช้ไม่รู้ว่าวางตรงไหน */
+  .upload-zone[data-dragging="true"] {
+    border-color: var(--color-brand-primary);
+    background: var(--color-surface-card);
+    border-style: solid;
+  }
+
+  .upload-list { display: flex; flex-direction: column; gap: var(--space-2); margin-block-start: var(--space-3); }
+
+  .upload-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border-normal);
+    border-radius: var(--radius-md);
+  }
+
+  .upload-item[data-invalid="true"] { border-color: var(--color-state-danger); }
+
+  /* ชื่อไฟล์ยาวต้องหดได้ ไม่ใช่ดันปุ่มลบตกขอบ */
+  .upload-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .upload-size { color: var(--color-text-muted); font-size: var(--text-sm); font-variant-numeric: tabular-nums; }
+  .upload-why  { color: var(--color-state-danger); font-size: var(--text-sm); }
+  .upload-thumb { width: var(--space-10); height: var(--space-10); object-fit: cover; border-radius: var(--radius-sm); flex: none; }
+
+  /* แถบความคืบหน้า — เขียนเป็น element ของเราเอง ไม่ใช้ <progress> ของ OS
+     ด้วยเหตุผลเดียวกับ control อื่นในข้อ 5.12 คือจัดสไตล์ข้ามเบราว์เซอร์ไม่ได้จริง */
+  .upload-progress {
+    height: var(--space-2);
+    border-radius: var(--radius-full);
+    background: var(--color-surface-raised);
+    overflow: hidden;
+    margin-block-start: var(--space-3);
+  }
+
+  /* ‼️ ขยับด้วย transform: scaleX() ห้ามขยับ width
+     design.md หมวด motion เขียนไว้เองว่า "เคลื่อนแค่ transform และ opacity เท่านั้น"
+     เคลื่อน width ทำให้เบราว์เซอร์คำนวณ layout ใหม่ทุกเฟรมแล้วกระตุก
+     ซึ่งเห็นชัดที่สุดตอนอัปโหลดไฟล์ใหญ่ เพราะแถบขยับถี่ๆ ตลอดเวลาที่รอ
+
+     JS สั่งความคืบหน้าด้วย el.style.transform = 'scaleX(0.42)' */
+  .upload-progress > i {
+    display: block;
+    height: 100%;
+    width: 100%;
+    transform: scaleX(0);
+    transform-origin: 0 50%;
+    background: var(--color-brand-primary);
+    transition: transform var(--duration-fast) var(--ease-standard);
+  }
+
+  /* ------------------------------------------------------------- tooltip */
+
+  /* ‼️ tooltip ของ OS คือจุดที่ระบบหลุดคาแรกเตอร์ เหมือน select ในข้อ 5.12
+     มันขึ้นช้าประมาณ 1 วินาที · ใช้ฟอนต์และสีของ Windows · ไม่ตามธีมที่ระบบเลือก
+     และกฎบังคับว่าปุ่มไอคอนล้วน "ทุกตัว" ต้องมี tooltip จึงเจอทุกหน้า
+
+     ‼️ ห้ามใส่ข้อมูลที่จำเป็นไว้ใน tooltip — บนมือถือไม่มี hover
+        ตัวนี้จึงขึ้นตอน focus ด้วย เพื่อให้คีย์บอร์ดและจอสัมผัสยังเห็น */
+  .tooltip {
+    position: fixed;
+    z-index: 60;
+    max-width: var(--layout-field-min-width);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    background: var(--color-text-strong);
+    color: var(--color-surface-page);
+    font-size: var(--text-sm);
+    line-height: var(--leading-tight);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--duration-fast) var(--ease-standard);
+  }
+
+  .tooltip[data-shown="true"] { opacity: 1; }
+
+  /* ---------------------------------------------------------------- เมนู */
+
+  .nav { display: flex; flex-direction: column; gap: var(--space-1); padding: var(--space-3); }
+
+  .nav a {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    min-height: 44px;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    color: var(--color-text-normal);
+    text-decoration: none;
+  }
+
+  .nav a:hover { background: var(--color-surface-raised); }
+
+  .nav a[aria-current="page"] {
+    background: var(--color-brand-primary);
+    color: var(--color-brand-on-primary);
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-3);
+    color: var(--color-text-strong);
+    font-weight: var(--weight-bold);
+  }
+
+  /* ‼️ เส้นแบ่งเป็นของ sidebar ไม่ใช่ของ .brand
+     layout auth เอา .brand ไปวางบนหน้าเข้าสู่ระบบด้วย ซึ่งไม่มี sidebar
+     ปล่อยไว้จะได้เส้นใต้สั้นๆ ค้างอยู่ใต้ชื่อร้านโดยไม่มีใครสั่ง */
+  .sidebar .brand { border-block-end: 1px solid var(--color-border-normal); }
+
+  /* ‼️ โหมดแถบบน — เว็บสาธารณะใช้ sidebar ไม่ได้ มันกินพื้นที่มือถือและไม่มีใครทำกัน
+     มาจาก APP_NAV_STYLE ที่ layout อ่าน ซึ่งตรงกับ layout.nav ใน DESIGN.md */
+  .shell[data-nav="header"] { flex-direction: column; }
+  .shell[data-nav="header"] .brand { border: 0; padding: 0; }
+  .shell[data-nav="header"] .brand-name { letter-spacing: .18em; font-weight: var(--weight-medium); }
+  .shell[data-nav="header"] .nav { flex-direction: row; gap: var(--space-5); padding: 0; }
+  .shell[data-nav="header"] .nav a { padding: var(--space-2) 0; background: none; }
+  .shell[data-nav="header"] .nav a[aria-current] { text-decoration: underline; text-underline-offset: var(--space-2); }
+  .shell[data-nav="header"] .nav svg { display: none; }
+
+  /* จอแคบ เมนูตกลงมาเป็นแถวที่สอง ไม่ใช่ซ่อนหาย — การซ่อนเมนูบนมือถือคือการทำให้กดไม่ได้ */
+  @media (max-width: 640px) {
+    .shell[data-nav="header"] .topbar { flex-wrap: wrap; row-gap: var(--space-2); }
+    .shell[data-nav="header"] .nav { order: 3; width: 100%; }
+
+    /* ‼️ บนมือถือลิงก์เมนูคือปุ่ม ต้องได้พื้นที่กด 44px ตามกฎ
+       บนเดสก์ท็อปไม่ต้อง เพราะเมาส์ไม่ได้มีความคลาดเคลื่อนแบบนิ้ว */
+    .shell[data-nav="header"] .nav a,
+    .shell[data-nav="header"] .brand { min-height: 44px; display: inline-flex; align-items: center; }
+  }
+
+  /* ---------------------------------------------------------------- อื่นๆ */
+
+  .card {
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-border-normal);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+  }
+
+  /* ‼️ "ประเภท" กับ "สถานะ" ต้องต่างกันด้วยรูปทรง ไม่ใช่แค่สี (design.md 5.6)
+     เดิม .badge มีแบบเดียว ทั้งสองอย่างจึงหน้าตาเหมือนกันหมด
+     กวาดตาแล้วแยกความหมายไม่ออก ซึ่งเป็นอาการที่ feedback รอบแรกรายงานไว้ตรงๆ
+
+     รูปแบบเส้นขอบมาจาก component.badge ใน DESIGN.md เพื่อให้ดีไซน์กำหนดได้
+     ไม่ใช่ฝังไว้ที่นี่แล้วดีไซน์เปลี่ยนไม่ได้ */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: 2px var(--space-2);
+    border-radius: var(--badge-radius);
+    border: 1px var(--badge-status-border-style) var(--color-border-strong);
+    font-size: var(--text-sm);
+    white-space: nowrap;
+  }
+
+  .badge-type { border-style: var(--badge-type-border-style); }
+
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    align-items: end;
+    padding-block-end: var(--space-4);
+  }
+
+  .pagination { display: flex; gap: var(--space-1); align-items: center; flex-wrap: wrap; }
+  .pagination [aria-current="page"] { background: var(--color-brand-primary); color: var(--color-brand-on-primary); }
+
+  .support-fab {
+    position: fixed;
+    inset-block-end: var(--space-5);
+    inset-inline-start: var(--space-5);
+    z-index: 50;
+    border-radius: var(--radius-full);
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-border-strong);
+    box-shadow: var(--shadow-md);
+  }
+
+  .prose { max-width: var(--prose-max-width); display: flex; flex-direction: column; gap: var(--prose-paragraph-gap); }
+  .prose h2 { margin-block-start: var(--prose-heading-gap); font-weight: var(--weight-normal); font-size: var(--text-xl); }
+  .prose ol, .prose ul { padding-inline-start: var(--space-6); display: flex; flex-direction: column; gap: var(--space-2); }
+  .prose figure { display: flex; flex-direction: column; gap: var(--space-2); }
+  .prose figcaption { color: var(--color-text-muted); font-size: var(--text-sm); }
+
+  /* ------------------------------------------------ ส่วนเปิดหน้า (hero)
+
+     ‼️ component ชุดนี้เป็นของหน้าสาธารณะ ต่างจากที่เหลือในไฟล์ซึ่งเป็นของหลังบ้าน
+        ค่าทุกตัวมาจาก component: ใน DESIGN.md ห้ามเขียนค่าดิบเพิ่มที่นี่          */
+
+  .hero {
+    display: grid;
+    gap: var(--hero-gap);
+    align-items: center;
+    min-height: var(--hero-min-height-mobile);
+    padding-block: var(--space-12);
+  }
+
+  .hero-body { display: flex; flex-direction: column; gap: var(--space-5); }
+
+  .hero-eyebrow {
+    font-size: var(--text-sm);
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  .hero-title {
+    font-size: var(--text-3xl);
+    line-height: var(--leading-tight);
+    font-weight: var(--weight-normal);
+    color: var(--color-text-strong);
+  }
+
+  .hero-lead {
+    font-size: var(--text-lg);
+    line-height: var(--leading-normal);
+    color: var(--color-text-normal);
+    max-width: 46ch;
+  }
+
+  .hero-image {
+    inline-size: 100%;
+    block-size: auto;
+    aspect-ratio: var(--hero-image-ratio);
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+  }
+
+  @media (min-width: 768px) {
+    .hero {
+      grid-template-columns: 1fr 1fr;
+      min-height: var(--hero-min-height);
+      padding-block: var(--space-16);
+    }
+  }
+
+  /* ------------------------------------------------ แหกกรอบความกว้างของหน้า
+
+     ‼️ กฎ 5.4 บอกว่าหนึ่งหน้ามีความกว้างเดียว ซึ่งถูกสำหรับหน้าหลังบ้าน
+        แต่หน้าสาธารณะที่ทุกอย่างอยู่ในกรอบ 1120px จะไม่มีอะไรสะดุดตาเลย
+        ข้อ 5.16 จึงอนุญาตให้แหกกรอบได้ และนี่คือเครื่องมือที่ใช้แหก
+
+     ‼️ ใช้ 100vw ไม่ได้ เพราะมันรวมความกว้างของ scrollbar แล้วจะเกิด scroll แนวนอน
+        ต้องใช้ 100dvw ซึ่งไม่รวม และ fallback เป็น 100% สำหรับเบราว์เซอร์เก่า */
+  .bleed {
+    width: 100%;
+    width: 100dvw;
+    margin-inline: calc(50% - 50dvw);
+  }
+
+  /* ------------------------------------------------ ส่วนเปิดแบบเต็มจอ ข้อความทับภาพ */
+
+  .hero-full { position: relative; display: grid; align-items: end; min-height: 82svh; padding: 0; }
+  .hero-full > .hero-media { grid-area: 1 / 1; width: 100%; height: 100%; object-fit: cover; }
+
+  /* ‼️ ชั้นไล่สีคั่นระหว่างภาพกับตัวอักษร ไม่ใช่ของตกแต่ง
+     ภาพถ่ายมีทั้งส่วนสว่างและมืด วางตัวอักษรลงไปตรงๆ แล้ววัด contrast ไม่ผ่านเป็นเรื่องปกติ */
+  .hero-full::after {
+    content: "";
+    grid-area: 1 / 1;
+    background: var(--hero-scrim);
+  }
+
+  .hero-full > .hero-body {
+    grid-area: 1 / 1;
+    position: relative;
+    z-index: 1;
+    align-self: end;
+    max-width: var(--layout-max-width);
+    margin-inline: auto;
+    padding: var(--space-16) var(--space-6);
+    width: 100%;
+  }
+
+  /* ‼️ ตัวอักษรบนภาพใช้สีคงที่ ไม่ใช่ token ของธีม
+     เพราะพื้นหลังคือภาพ ไม่ใช่พื้นของระบบ จึงไม่เปลี่ยนตามโหมดสว่าง/มืด */
+  .hero-full .hero-title,
+  .hero-full .hero-lead,
+  .hero-full .hero-eyebrow { color: var(--hero-on-image); }
+  .hero-full .hero-title { font-size: var(--text-display); line-height: var(--leading-tight); }
+  .hero-full .hero-lead { max-width: 52ch; }
+
+  /* ------------------------------------------------ ตะแกรงการ์ดสินค้า */
+
+  .product-grid {
+    display: grid;
+    gap: var(--product-card-grid-gap);
+    grid-template-columns: repeat(auto-fill, minmax(var(--layout-tile-min-width), 1fr));
+    list-style: none;
+    padding: 0;
+  }
+
+  .product-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--product-card-gap);
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .product-card-image {
+    inline-size: 100%;
+    block-size: auto;
+    aspect-ratio: var(--product-card-image-ratio);
+    object-fit: cover;
+    border-radius: var(--radius-md);
+    background: var(--color-surface-raised);
+    transition: opacity var(--duration-fast) var(--ease-standard);
+  }
+
+  .product-card:hover .product-card-image { opacity: .88; }
+
+  .product-card-name {
+    font-size: var(--product-card-name-size);
+    color: var(--color-text-strong);
+  }
+
+  .product-card-meta {
+    font-size: var(--product-card-meta-size);
+    color: var(--color-text-muted);
+  }
+
+  /* ------------------------------------------------ รายการข่าว */
+
+  .news-list { list-style: none; padding: 0; display: flex; flex-direction: column; }
+  .news-list > li + li { border-block-start: var(--news-item-divider-style); }
+
+  .news-item {
+    display: grid;
+    gap: var(--news-item-gap);
+    padding-block: var(--space-6);
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .news-item-image {
+    inline-size: 100%;
+    block-size: auto;
+    aspect-ratio: var(--news-item-image-ratio);
+    object-fit: cover;
+    border-radius: var(--radius-md);
+    background: var(--color-surface-raised);
+  }
+
+  .news-item-body { display: flex; flex-direction: column; gap: var(--space-2); }
+  .news-item-date { font-size: var(--text-sm); color: var(--color-text-muted); }
+
+  .news-item-title {
+    font-size: var(--text-xl);
+    line-height: var(--leading-tight);
+    color: var(--color-text-strong);
+  }
+
+  .news-item:hover .news-item-title { color: var(--color-brand-primary); }
+  .news-item-lead { color: var(--color-text-normal); }
+
+  @media (min-width: 620px) {
+    .news-item { grid-template-columns: var(--news-item-image-width) 1fr; align-items: start; }
+  }
+
+  /* ------------------------------------------------ ส่วนของหน้าสาธารณะ */
+
+  .page-section { padding-block: var(--space-12); }
+  .page-section + .page-section { border-block-start: 1px solid var(--color-border-normal); }
+  .page-section > h2 { font-size: var(--text-2xl); font-weight: var(--weight-normal); }
+  .page-section > .lead { color: var(--color-text-muted); margin-block-end: var(--space-8); }
+
+  .split { display: grid; gap: var(--space-10); align-items: center; }
+  .split-media { inline-size: 100%; block-size: auto; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius-lg); }
+  @media (min-width: 768px) { .split { grid-template-columns: 1fr 1fr; } }
+}
+
+@layer utilities {
+  .muted   { color: var(--color-text-muted); }
+  .strong  { color: var(--color-text-strong); }
+  .small   { font-size: var(--text-sm); }
+  .nowrap  { white-space: nowrap; }
+  .visually-hidden {
+    position: absolute;
+    width: 1px; height: 1px;
+    margin: -1px; padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}

@@ -1,0 +1,18 @@
+{
+    "name": "team/standard-app",
+    "description": "โครงมาตรฐานของทีม — PHP native + MySQL · ระบบรันได้โดยไม่ต้องมี composer",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.1"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "scripts": {
+        "check": "php scripts/check.php",
+        "design": "php scripts/design-sync.php",
+        "migrate": "php scripts/migrate.php",
+        "serve": "php server.php"
+    }
+}

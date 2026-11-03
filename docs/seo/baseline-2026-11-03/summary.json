@@ -1,0 +1,15 @@
+{
+    "crawled_at": "2026-11-03T09:46:48+00:00",
+    "base": "https://mlmsoftware.omc.co.th",
+    "urls": 95,
+    "status_200": 84,
+    "redirected": 4,
+    "errors_4xx_5xx": 7,
+    "redirect_loops": 0,
+    "missing_title": 3,
+    "missing_description": 50,
+    "missing_or_multiple_h1": 41,
+    "canonical_not_self": 4,
+    "noindex": 10,
+    "images_missing_alt": 656
+}

@@ -1,0 +1,25 @@
+# ‼️ ทุกไฟล์ต้องเป็น LF ทั้งใน repo และในโฟลเดอร์ทำงาน — บน Windows ด้วย
+#
+# ถ้าไม่มีบรรทัดนี้ git บน Windows จะแปลงเป็น CRLF ตอน checkout
+# ผลคือ clone สดๆ บนเครื่อง Windows จะ fail ทันที 20 ข้อ ทั้งที่ยังไม่ได้แตะโค้ดเลย
+#   · standard/.manifest เทียบ sha256 ไม่ตรงทั้ง 19 ไฟล์ → หาว่ามีคนแก้มาตรฐาน
+#   · design/css-in-sync เทียบ app.css กับที่ generate จาก DESIGN.md ไม่ตรง
+# แล้ว pre-commit hook จะบล็อกทุก commit ตั้งแต่วันแรก
+#
+# ‼️ scripts/hooks/pre-commit ต้องเป็น LF อยู่แล้วโดยบังคับ
+#    shell script ที่มี CRLF จะ error ว่า "bad interpreter: /bin/sh^M" แล้ว hook ไม่ทำงานเลย
+
+* text=auto eol=lf
+
+# ไฟล์ที่ห้ามให้ git แตะไบต์ข้างใน
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+*.pdf  binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary

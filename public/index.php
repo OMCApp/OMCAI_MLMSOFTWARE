@@ -1,0 +1,125 @@
+<?php
+/**
+ * ประตูเดียวเข้าระบบ — ทุก request ผ่านไฟล์นี้
+ *
+ * ‼️ document root ต้องชี้ที่โฟลเดอร์ public/ นี้เท่านั้น
+ *    ชี้ผิดแล้ว .env, storage/ และซอร์สโค้ดทั้งหมดจะโหลดได้จากเบราว์เซอร์ทันที
+ *    ตรวจด้วยการเปิด https://โดเมน/.env ในเบราว์เซอร์ — ต้องเข้าไม่ได้
+ */
+
+declare(strict_types=1);
+
+use Core\Auth;
+use Core\Database;
+use Core\Lang;
+use Core\Logger;
+use Core\Path;
+use Core\Router;
+use Core\Security;
+use Core\Session;
+
+$root = dirname(__DIR__);
+
+require $root . '/core/autoload.php';
+require $root . '/core/helpers.php';
+
+/*
+ * ‼️ ต้องโหลดที่นี่ ไม่ใช่ใน layout
+ *    เพราะ Controller render "หน้า" ก่อน "layout" เสมอ
+ *    ถ้าโหลดใน layout หน้าที่เรียก icon() จะพังทุกหน้า
+ *    และตัวจัดการ fatal error ก็ include หน้า 500 ตรงๆ โดยไม่ผ่าน layout เช่นกัน
+ */
+require $root . '/app/Views/partials/icons.php';
+
+// ----------------------------------------------------------------- ตั้งค่า
+
+$config = require $root . '/config/config.php';
+$GLOBALS['__config'] = $config;
+
+// production ห้ามแสดง stack trace ให้ผู้ใช้เห็นเด็ดขาด
+ini_set('display_errors', $config['debug'] ? '1' : '0');
+error_reporting(E_ALL);
+
+Logger::configure($config['paths']['log'], $config['debug']);
+Logger::register();
+
+Database::configure($config['db']);
+Security::headers($config['https']);
+
+Session::start($config['session']);
+Session::rotateInput();
+
+Lang::configure($config, $config['paths']['lang']);
+
+// ------------------------------------------------------------- maintenance
+
+if (is_file($config['paths']['maintenance']) && !str_starts_with(Path::current(), '/_migrate')) {
+    http_response_code(503);
+    header('Retry-After: 120');
+    include $root . '/app/Views/pages/errors/maintenance.php';
+    exit;
+}
+
+// ------------------------------------------------ route ลับสำหรับ migration
+//
+// ‼️ นี่คือปลายทางที่แก้โครงสร้างฐานข้อมูลได้ เปิดอยู่บนอินเทอร์เน็ต
+//    ต้องปิดกั้นให้แน่นที่สุด — รายละเอียดใน standard/security.md ข้อ 11
+
+if (Path::current() === '/_migrate') {
+    $expected = (string) $config['migrate_token'];
+    $given    = isset($_GET['token']) ? (string) $_GET['token'] : '';
+
+    Logger::warning('migrate_endpoint_called', ['ip' => Auth::ip()]);
+
+    // token ไม่ตรง → ตอบ 404 ไม่ใช่ 403 เพื่อไม่ให้รู้ว่ามี endpoint นี้อยู่
+    if ($expected === '' || $given === '' || !hash_equals($expected, $given)) {
+        http_response_code(404);
+        exit;
+    }
+
+    require $root . '/scripts/lib/Migrator.php';
+
+    header('Content-Type: text/plain; charset=utf-8');
+
+    try {
+        $done = (new Migrator(Database::pdo(), $root . '/database/migrations'))->run();
+
+        Logger::info('migrate_ok', ['count' => count($done), 'files' => $done]);
+        echo $done === [] ? "up-to-date\n" : 'migrated ' . count($done) . "\n";
+    } catch (Throwable $e) {
+        // ห้ามคืนรายละเอียด error ของฐานข้อมูลกลับไปใน response
+        $reference = Logger::exception($e);
+
+        http_response_code(500);
+        echo "migration failed: {$reference}\n";
+    }
+
+    exit;
+}
+
+// -------------------------------------------------------------------- CSRF
+
+$method = strtoupper((string) ($_SERVER['REQUEST_METHOD'] ?? 'GET'));
+
+if ($method === 'POST' && isset($_POST['_method'])) {
+    $spoofed = strtoupper((string) $_POST['_method']);
+    $method  = in_array($spoofed, ['PUT', 'PATCH', 'DELETE'], true) ? $spoofed : $method;
+}
+
+if (!Security::verifyRequest($method)) {
+    Logger::warning('csrf_failed', ['path' => Path::current(), 'ip' => Auth::ip()]);
+
+    http_response_code(419);
+    Session::flash('danger', __('error.csrf'));
+
+    header('Location: ' . Path::url(Path::current()));
+    exit;
+}
+
+// ------------------------------------------------------------------- route
+
+$router = new Router();
+
+require $root . '/config/routes.php';
+
+$router->dispatch();

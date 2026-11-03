@@ -1,0 +1,31 @@
+# ตั้งค่า phpstan — เครื่องมือเสริม ไม่ได้ติดมากับโปรเจค
+#
+# ‼️ ติดตั้งเมื่อต้องการ: composer require --dev phpstan/phpstan
+#    ลงแล้ว scripts/check.php จะเรียกมันเองทุกครั้ง (structure/static-analysis)
+#    ไม่ลงก็ข้ามไป ไม่มีอะไรพัง
+#
+# ‼️ bootstrapFiles ชี้ไปที่ autoloader ของเราเอง ไม่ใช่ของ composer
+#    เพราะ map namespace → โฟลเดอร์ มีที่เดียวคือ core/autoload.php
+#    ถ้าประกาศซ้ำใน composer.json ด้วย วันที่แก้ที่หนึ่งอีกที่จะค้าง
+#    แล้ว phpstan จะรายงาน class not found ทั้งโปรเจคโดยไม่มีอะไรผิดจริง
+
+parameters:
+    level: 3
+    paths:
+        - app
+        - core
+        - config
+        - scripts
+    bootstrapFiles:
+        - core/autoload.php
+    excludePaths:
+        analyseAndScan:
+            # ‼️ ชั้น View ทั้งชั้นอยู่นอกขอบเขต ไม่ใช่เพราะขี้เกียจแก้
+            #    เทมเพลตรับตัวแปรจาก Controller ผ่าน extract() ซึ่ง phpstan มองไม่เห็นโดยธรรมชาติ
+            #    ผลคือได้ "Variable $rows might not be defined" ทุกบรรทัดที่ทำงานถูกต้องอยู่แล้ว
+            #    ซึ่งเป็นเสียงรบกวนที่กลบของจริง ไม่ใช่การค้นพบ
+            #
+            #    ชั้นนี้มีตัวตรวจของตัวเองใน check.php อยู่แล้ว —
+            #    partial-input-contract · partial-generic-var · view-no-query ·
+            #    output-escape · no-hardcoded-text · raw-path · inline-style
+            - app/Views

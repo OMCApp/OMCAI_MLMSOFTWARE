@@ -1,0 +1,9 @@
+# Local / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Secrets
+.env
+config/local.php
