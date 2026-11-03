@@ -22,7 +22,7 @@ declare(strict_types=1);
     </button>
 
     <?php if ($manualForPage !== null): ?>
-        <a class="btn btn-secondary" href="<?= e(url('/manual/' . $manualForPage)) ?>">
+        <a class="btn btn-secondary" href="<?= e(url('/admin/manual/' . $manualForPage)) ?>">
             <?= icon('help') ?><?= e(__('support.type_how_to')) ?>
         </a>
     <?php else: ?>
@@ -31,12 +31,12 @@ declare(strict_types=1);
         </button>
     <?php endif; ?>
 
-    <a class="btn" href="<?= e(url('/manual')) ?>">
+    <a class="btn" href="<?= e(url('/admin/manual')) ?>">
         <?= icon('book') ?><?= e(__('support.open_manual')) ?>
     </a>
 </div>
 
-<form class="dialog-body" method="POST" action="<?= e(url('/support')) ?>"
+<form class="dialog-body" method="POST" action="<?= e(url('/admin/support')) ?>"
       enctype="multipart/form-data" data-support-step="form" hidden>
     <?= csrf_field() ?>
     <input type="hidden" name="type" value="bug" data-support-type-input>

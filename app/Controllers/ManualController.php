@@ -80,7 +80,7 @@ final class ManualController extends Controller
             'title'          => $meta['title'],
             'pageLead'       => $meta['summary'],
             'pageBreadcrumb' => [
-                ['label' => __('manual.title'), 'url' => '/manual'],
+                ['label' => __('manual.title'), 'url' => '/admin/manual'],
                 ['label' => $meta['title']],
             ],
             'slug'       => $slug,

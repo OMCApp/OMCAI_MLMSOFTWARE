@@ -25,7 +25,7 @@ final class AuthMiddleware
 
         Session::flash('warning', __('auth.session_expired'));
 
-        header('Location: ' . Path::url('/login'), true, 302);
+        header('Location: ' . Path::url('/admin/login'), true, 302);
         exit;
     }
 }

@@ -32,7 +32,7 @@ $currentTheme = theme();
     </div>
 
     <div class="row spacer">
-        <form method="POST" action="<?= e(url('/theme')) ?>">
+        <form method="POST" action="<?= e(url('/admin/theme')) ?>">
             <?= csrf_field() ?>
             <input type="hidden" name="theme" value="<?= e($currentTheme === 'dark' ? 'light' : 'dark') ?>">
             <button type="submit" class="btn btn-icon"
@@ -41,7 +41,7 @@ $currentTheme = theme();
             </button>
         </form>
 
-        <form method="POST" action="<?= e(url('/language')) ?>">
+        <form method="POST" action="<?= e(url('/admin/language')) ?>">
             <?= csrf_field() ?>
             <label class="visually-hidden" for="locale-select"><?= e(__('ui.language')) ?></label>
             <select id="locale-select" name="locale" data-auto-submit>

@@ -27,7 +27,7 @@ declare(strict_types=1);
 
             <div class="tile-grid">
                 <?php foreach ($items as $item): ?>
-                    <a class="tile" href="<?= e(url('/manual/' . $item['slug'])) ?>">
+                    <a class="tile" href="<?= e(url('/admin/manual/' . $item['slug'])) ?>">
                         <span class="tile-icon"><?= icon((string) ($item['icon'] ?? 'book')) ?></span>
                         <span class="tile-title"><?= e((string) $item['title']) ?></span>
                         <?php if (($item['summary'] ?? '') !== ''): ?>

@@ -35,7 +35,7 @@ return [
         'icon'   => 'logout',
         'order'  => 20,
         'roles'  => [],
-        'routes' => ['/login'],
+        'routes' => ['/admin/login'],
     ],
 
     'reading-tables' => [
@@ -43,7 +43,7 @@ return [
         'icon'   => 'view',
         'order'  => 30,
         'roles'  => [],
-        'routes' => ['/dashboard'],
+        'routes' => ['/admin'],
     ],
 
     'reporting-an-issue' => [

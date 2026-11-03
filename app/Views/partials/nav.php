@@ -13,8 +13,8 @@ use Core\Auth;
 $here = current_path();
 
 $links = [
-    ['path' => '/dashboard', 'icon' => 'dashboard', 'label' => __('common.view'), 'roles' => []],
-    ['path' => '/manual', 'icon' => 'book', 'label' => __('ui.manual'), 'roles' => []],
+    ['path' => '/admin', 'icon' => 'dashboard', 'label' => __('common.view'), 'roles' => []],
+    ['path' => '/admin/manual', 'icon' => 'book', 'label' => __('ui.manual'), 'roles' => []],
     ['path' => '/admin/audit-logs', 'icon' => 'history', 'label' => __('state.reference'), 'roles' => ['admin']],
     ['path' => '/admin/support-requests', 'icon' => 'inbox', 'label' => __('support.title'), 'roles' => ['admin']],
 ];
@@ -26,7 +26,8 @@ $links = [
         } ?>
         <a href="<?= e(url($link['path'])) ?>"
            title="<?= e($link['label']) ?>"
-           <?php if (str_starts_with($here, $link['path'])): ?>aria-current="page"<?php endif; ?>>
+           <?php /* /admin คือหน้าแรกของหลังบ้าน — ทุกหน้าขึ้นต้นด้วย /admin จึงต้องเทียบตรงตัว */ ?>
+           <?php if ($link['path'] === '/admin' ? $here === '/admin' : str_starts_with($here, $link['path'])): ?>aria-current="page"<?php endif; ?>>
             <?= icon($link['icon']) ?>
             <span class="nav-label"><?= e($link['label']) ?></span>
         </a>

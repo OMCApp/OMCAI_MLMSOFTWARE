@@ -57,7 +57,7 @@ $navStyle = config('ui.nav') === 'header' ? 'header' : 'sidebar';
                 </button>
             <?php else: ?>
                 <?php /* ‼️ โหมดแถบบน แบรนด์กับเมนูอยู่บนแถบเดียวกัน ไม่มีปุ่มพับเพราะไม่มีอะไรให้พับ */ ?>
-                <a class="brand" href="<?= e(url('/')) ?>">
+                <a class="brand" href="<?= e(url('/admin')) ?>">
                     <span class="brand-name"><?= e((string) config('name')) ?></span>
                 </a>
 
@@ -70,7 +70,7 @@ $navStyle = config('ui.nav') === 'header' ? 'header' : 'sidebar';
                ทำให้คนคิดว่ามีหัวเพจแล้ว จึงไม่ทำหัวเพจจริง ซึ่งเกิดขึ้นมาแล้ว */
             ?>
             <div class="row spacer">
-                <form method="POST" action="<?= e(url('/theme')) ?>">
+                <form method="POST" action="<?= e(url('/admin/theme')) ?>">
                     <?= csrf_field() ?>
                     <input type="hidden" name="theme" value="<?= e($currentTheme === 'dark' ? 'light' : 'dark') ?>">
                     <button type="submit" class="btn btn-icon"
@@ -79,7 +79,7 @@ $navStyle = config('ui.nav') === 'header' ? 'header' : 'sidebar';
                     </button>
                 </form>
 
-                <form method="POST" action="<?= e(url('/language')) ?>" class="row">
+                <form method="POST" action="<?= e(url('/admin/language')) ?>" class="row">
                     <?= csrf_field() ?>
                     <label class="visually-hidden" for="locale-select"><?= e(__('ui.language')) ?></label>
                     <select id="locale-select" name="locale" data-auto-submit>
@@ -92,7 +92,7 @@ $navStyle = config('ui.nav') === 'header' ? 'header' : 'sidebar';
                 </form>
 
                 <?php if (Auth::check()): ?>
-                    <form method="POST" action="<?= e(url('/logout')) ?>">
+                    <form method="POST" action="<?= e(url('/admin/logout')) ?>">
                         <?= csrf_field() ?>
                         <button type="submit" class="btn btn-icon"
                                 aria-label="<?= e(__('auth.logout')) ?>" title="<?= e(__('auth.logout')) ?>">
