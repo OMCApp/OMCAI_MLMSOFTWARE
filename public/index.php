@@ -91,7 +91,8 @@ if (is_file($config['paths']['maintenance']) && !str_starts_with(Path::current()
 
 if (Path::current() === '/_migrate') {
     $expected = (string) $config['migrate_token'];
-    $given    = isset($_GET['token']) ? (string) $_GET['token'] : '';
+    // header ก่อน — token ใน query string ไปค้างใน access log ของ web server
+    $given    = (string) ($_SERVER['HTTP_X_MIGRATE_TOKEN'] ?? (isset($_GET['token']) ? $_GET['token'] : ''));
 
     Logger::warning('migrate_endpoint_called', ['ip' => Auth::ip()]);
 

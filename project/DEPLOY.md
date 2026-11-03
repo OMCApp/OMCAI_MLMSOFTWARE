@@ -18,7 +18,7 @@
 3. Set `RewriteBase` in both `.htaccess` files from the path in `APP_URL`.
 4. Upload `storage/maintenance.flag` and `.env` with lftp. The site shows 503 from here on.
 5. Sync the files (FTP-Deploy-Action, plain FTP; see NOTES.md).
-6. Call `/_migrate?token=…`. It runs the migrations and **removes the maintenance flag** on success.
+6. Call `/_migrate` with header `X-Migrate-Token`. It runs the migrations and **removes the maintenance flag** on success.
 7. Verify: `/_health` returns 200, `/` returns 401 (login required), the noindex header is present, and `.env`, `app/`, `core/`, `config/` and `database/` are not reachable.
 
 ## GitHub Secrets

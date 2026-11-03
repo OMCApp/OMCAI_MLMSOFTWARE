@@ -71,6 +71,8 @@ jobs:
           for n in S1:FTP_SERVER_DIR S2:APP_URL S3:MIGRATE_TOKEN S4:DB_NAME S5:DB_USER S6:STAGING_PASS; do
             v="${n%%:*}"; if [ -z "${!v}" ]; then echo "::error::secret ${n#*:} is not set"; missing=1; fi
           done
+          # Basic Auth has no lockout — a long random password is what makes guessing impractical
+          if [ -n "$S6" ] && [ "${#S6}" -lt 20 ]; then echo "::error::STAGING_PASS must be at least 20 characters"; missing=1; fi
           exit $missing
 
       - name: Build .env from secrets
@@ -168,7 +170,8 @@ jobs:
           APP_URL: ${{ secrets.APP_URL }}
           MIGRATE_TOKEN: ${{ secrets.MIGRATE_TOKEN }}
         run: |
-          code=$(curl -s -o out.txt -w "%{http_code}" --get --data-urlencode "token=${MIGRATE_TOKEN}" "${APP_URL%/}/_migrate")
+          # Token goes in a header, not the URL, so it never lands in the web server's access log
+          code=$(curl -s -o out.txt -w "%{http_code}" -H "X-Migrate-Token: ${MIGRATE_TOKEN}" "${APP_URL%/}/_migrate")
           cat out.txt
           if [ "$code" != "200" ]; then
             echo "::error::migration failed (HTTP $code) — site stays in maintenance mode"
