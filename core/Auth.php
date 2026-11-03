@@ -16,8 +16,11 @@ namespace Core;
 
 final class Auth
 {
-    private const MAX_ATTEMPTS  = 5;
-    private const LOCK_MINUTES  = 15;
+    /** จำนวนครั้งที่ผิดได้ต่อคู่ username + IP ก่อนล็อกคู่นั้น */
+    private const MAX_ATTEMPTS    = 5;
+    /** จำนวนครั้งที่ผิดได้ต่อ IP รวมทุก username — กันการไล่ลองรหัสเดียวกับหลายบัญชี */
+    private const MAX_IP_ATTEMPTS = 20;
+    private const LOCK_MINUTES    = 15;
 
     public static function id(): ?int
     {
@@ -36,6 +39,42 @@ final class Auth
     public static function check(): bool
     {
         return self::id() !== null;
+    }
+
+    /**
+     * อ่านผู้ใช้ปัจจุบันจากฐานข้อมูลใหม่แล้วปรับ session ให้ตรง
+     *
+     * ‼️ AuthMiddleware เรียกทุก request — ไม่งั้นผู้ใช้ที่ถูกปิดใช้งาน ถูกลบ หรือถูกลดสิทธิ์
+     *    ยังใช้สิทธิ์เดิมต่อได้จนกว่า session จะหมดอายุ
+     *
+     * @return bool false เมื่อบัญชีไม่มีสิทธิ์เข้าแล้ว (ล้าง session ให้แล้ว)
+     */
+    public static function refresh(): bool
+    {
+        $id = self::id();
+
+        if ($id === null) {
+            return false;
+        }
+
+        $user = Database::selectOne(
+            'SELECT role, is_active FROM users WHERE id = :id AND deleted_at IS NULL LIMIT 1',
+            ['id' => $id]
+        );
+
+        if ($user === null || (int) $user['is_active'] !== 1) {
+            Logger::info('session_revoked', ['user_id' => $id, 'ip' => self::ip()]);
+            Session::destroy();
+            Session::start();
+
+            return false;
+        }
+
+        if ((string) $user['role'] !== self::role()) {
+            Session::put('role', (string) $user['role']);
+        }
+
+        return true;
     }
 
     /** ใช้ซ่อนเมนูเท่านั้น — การกันจริงต้องอยู่ที่ Middleware */
@@ -69,10 +108,14 @@ final class Auth
 
         $hash = (string) ($user['password_hash'] ?? '');
 
-        // เทียบเสมอแม้ไม่เจอผู้ใช้ เพื่อให้เวลาที่ใช้ใกล้เคียงกัน
+        /* ‼️ ต้องเรียก password_verify() ทุกครั้ง แม้ไม่เจอผู้ใช้ — เทียบกับ hash หลอกแทน
+              ไม่งั้นเวลาตอบที่ต่างกันบอกคนนอกได้ว่า username ไหนมีอยู่จริง */
+        $verified = password_verify($password, $hash !== '' ? $hash : self::dummyHash());
+
         $valid = $user !== null
+            && $hash !== ''
             && (int) $user['is_active'] === 1
-            && password_verify($password, $hash);
+            && $verified;
 
         if (!$valid) {
             self::recordFailure($username, $ip);
@@ -161,9 +204,23 @@ final class Auth
         $row = Database::selectOne(
             'SELECT COUNT(*) AS total
              FROM login_attempts
-             WHERE (username = :username OR ip_address = :ip)
+             WHERE ip_address = :ip
                AND attempted_at > (NOW() - INTERVAL :minutes MINUTE)',
-            ['username' => $username, 'ip' => $ip, 'minutes' => self::LOCK_MINUTES]
+            ['ip' => $ip, 'minutes' => self::LOCK_MINUTES]
+        );
+
+        if ((int) ($row['total'] ?? 0) >= self::MAX_IP_ATTEMPTS) {
+            return true;
+        }
+
+        /* ‼️ ล็อกที่คู่ username + IP เท่านั้น ห้ามล็อกที่ username อย่างเดียว
+              ไม่งั้นคนนอกยิงรหัสผิดใส่ชื่อแอดมินจนเจ้าของบัญชีตัวจริงเข้าไม่ได้ */
+        $row = Database::selectOne(
+            'SELECT COUNT(*) AS total
+             FROM login_attempts
+             WHERE username = :username AND ip_address = :ip
+               AND attempted_at > (NOW() - INTERVAL :minutes MINUTE)',
+            ['username' => mb_substr($username, 0, 100), 'ip' => $ip, 'minutes' => self::LOCK_MINUTES]
         );
 
         return (int) ($row['total'] ?? 0) >= self::MAX_ATTEMPTS;
@@ -196,9 +253,19 @@ final class Auth
     private static function clearFailures(string $username, string $ip): void
     {
         Database::run(
-            'DELETE FROM login_attempts WHERE username = :username OR ip_address = :ip',
-            ['username' => $username, 'ip' => $ip]
+            // ‼️ ลบเฉพาะคู่ username + IP นี้ — ลบตาม IP หรือ username อย่างเดียว
+            //    เท่ากับให้ login สำเร็จครั้งเดียวล้างประวัติเดารหัสของบัญชีอื่นได้
+            'DELETE FROM login_attempts WHERE username = :username AND ip_address = :ip',
+            ['username' => mb_substr($username, 0, 100), 'ip' => $ip]
         );
+    }
+
+    /** hash ที่ถูกต้องตายตัว ใช้ให้ password_verify() ใช้เวลาเท่ากันตอนไม่เจอผู้ใช้ */
+    private static function dummyHash(): string
+    {
+        static $hash = null;
+
+        return $hash ??= password_hash('timing-equaliser', PASSWORD_DEFAULT);
     }
 
     public static function ip(): string
