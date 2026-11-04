@@ -64,9 +64,12 @@ final class SiteResolver
             return ['kind' => 'redirect', 'code' => (int) $rule['code'], 'location' => $this->redirects->target($rule, $query)];
         }
 
+        // ภาษาจาก prefix ของ URL (/en/ · /zh/) — บทความ หมวด และบล็อกจับจากส่วนที่เหลือ · หน้าจับจาก path เต็ม
+        [$locale, $rest] = LocaleService::split($path);
+
         // 5. บทความ
-        if (preg_match('#^/(\d{4})/(\d{2})/(\d{2})/([^/]+)/$#u', $path, $m) === 1) {
-            $found = $this->posts->resolve($m[1], $m[2], $m[3], $m[4], $preview);
+        if (preg_match('#^/(\d{4})/(\d{2})/(\d{2})/([^/]+)/$#u', $rest, $m) === 1) {
+            $found = $this->posts->resolve($m[1], $m[2], $m[3], $m[4], $preview, $locale);
 
             if (isset($found['redirect'])) {
                 return ['kind' => 'redirect', 'code' => 301, 'location' => $found['redirect'] . ($query !== '' ? '?' . $query : '')];
@@ -84,17 +87,17 @@ final class SiteResolver
         }
 
         // 6. หมวด
-        if (preg_match('#^/category/([^/]+)/(?:page/(\d+)/)?$#u', $path, $m) === 1) {
-            $category = $this->categories->findBySlug($m[1]);
+        if (preg_match('#^/category/([^/]+)/(?:page/(\d+)/)?$#u', $rest, $m) === 1) {
+            $category = $this->categories->findBySlug($m[1], $locale);
 
             if ($category !== null) {
-                return $this->listing('category', CategoryService::path($category), $m[2] ?? '', $query, $category);
+                return $this->listing('category', CategoryService::path($category), $m[2] ?? '', $query, $category, $locale);
             }
         }
 
         // 7. บล็อก
-        if (preg_match('#^/blog/(?:page/(\d+)/)?$#', $path, $m) === 1) {
-            return $this->listing('blog', '/blog/', $m[1] ?? '', $query, null);
+        if (preg_match('#^/blog/(?:page/(\d+)/)?$#', $rest, $m) === 1) {
+            return $this->listing('blog', LocaleService::localize('/blog/', $locale), $m[1] ?? '', $query, null, $locale);
         }
 
         // 8. หน้า
@@ -129,7 +132,7 @@ final class SiteResolver
      * @param  array<string, mixed>|null $category
      * @return array<string, mixed>
      */
-    private function listing(string $kind, string $base, string $pageParam, string $query, ?array $category): array
+    private function listing(string $kind, string $base, string $pageParam, string $query, ?array $category, string $locale): array
     {
         if ($pageParam === '1') {
             return ['kind' => 'redirect', 'code' => 301, 'location' => $base . ($query !== '' ? '?' . $query : '')];
@@ -137,7 +140,12 @@ final class SiteResolver
 
         $page    = $pageParam === '' ? 1 : (int) $pageParam;
         $perPage = max(1, min((int) SettingService::get('blog.per_page', 10), 50));
-        $result  = $this->posts->listing(max(1, $page), $perPage, $category !== null ? (int) $category['id'] : null);
+        $result  = $this->posts->listing(max(1, $page), $perPage, $category !== null ? (int) $category['id'] : null, $locale);
+
+        // ‼️ ภาษาที่ยังไม่มีบทความเผยแพร่ไม่มีหน้ารวมบทความ (404 noindex) — ห้ามมี URL ว่างให้ index
+        if ($locale !== LocaleService::DEFAULT && $result['total'] === 0) {
+            return ['kind' => 'not_found', 'log' => true];
+        }
 
         if ($page < 1 || ($page > 1 && $page > $result['pages'])) {
             return ['kind' => 'not_found', 'log' => true];
@@ -145,6 +153,7 @@ final class SiteResolver
 
         return [
             'kind'     => $kind,
+            'locale'   => $locale,
             'base'     => $base,
             'page'     => $page,
             'perPage'  => $perPage,

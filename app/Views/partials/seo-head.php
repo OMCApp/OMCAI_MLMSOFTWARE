@@ -20,6 +20,10 @@ $seoHeadMeta = (array) ($seoHeadMeta ?? []);
 <?php if (($seoHeadMeta['canonical'] ?? null) !== null): ?>
     <link rel="canonical" href="<?= e((string) $seoHeadMeta['canonical']) ?>">
 <?php endif; ?>
+<?php /* hreflang — ทุกภาษาของหน้านี้รวมตัวเอง + x-default (ไทย) · ชุดเดียวกับ sitemap */ ?>
+<?php foreach ((array) ($seoHeadMeta['alternates'] ?? []) as $seoHeadAlternate): ?>
+    <link rel="alternate" hreflang="<?= e((string) $seoHeadAlternate['hreflang']) ?>" href="<?= e((string) $seoHeadAlternate['href']) ?>">
+<?php endforeach; ?>
 <?php foreach ((array) ($seoHeadMeta['og'] ?? []) as $seoHeadProperty => $seoHeadContent): ?>
     <meta property="<?= e((string) $seoHeadProperty) ?>" content="<?= e((string) $seoHeadContent) ?>">
 <?php endforeach; ?>

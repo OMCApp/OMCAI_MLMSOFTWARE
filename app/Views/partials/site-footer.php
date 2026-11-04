@@ -21,7 +21,7 @@ $siteFooterLogo    = (array) ($siteFooterBrand['logo_dark_size'] ?? ['width' => 
 <footer class="site-footer-public">
     <div class="container site-footer-grid">
         <div class="site-footer-brand">
-            <a class="site-footer-logo" href="<?= e(url('/')) ?>">
+            <a class="site-footer-logo" href="<?= e(url((string) ($site['home'] ?? '/'))) ?>">
                 <img src="<?= e(asset((string) ($siteFooterBrand['logo_dark'] ?? '/assets/images/brand/omc-logo-dark.svg'))) ?>"
                      alt="<?= e(__('site.home_link')) ?>" loading="lazy"
                      width="<?= e((string) (int) ($siteFooterLogo['width'] ?? 300)) ?>"
@@ -30,6 +30,7 @@ $siteFooterLogo    = (array) ($siteFooterBrand['logo_dark_size'] ?? ['width' => 
             <?php if ((string) ($siteFooterBrand['about'] ?? '') !== ''): ?>
                 <p class="site-footer-about"><?= e((string) $siteFooterBrand['about']) ?></p>
             <?php endif; ?>
+            <?php $langSwitchItems = (array) ($site['languages'] ?? []); $langSwitchClass = 'is-footer'; include __DIR__ . '/lang-switch.php'; ?>
         </div>
 
         <?php foreach ($siteFooterColumns as $siteFooterIndex => $siteFooterColumn): ?>
