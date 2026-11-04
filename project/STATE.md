@@ -3,12 +3,13 @@
 
 - **ช่วง:** C — ลงมือทีละ phase
 - **โหมด:** เร็ว (ผู้ใช้สั่ง "ทำให้เสร็จเลย ไม่ต้องถามจุกจิก")
-- **Phase:** 1 🔨 · 2 🔨 · 3 🔨 (CMS — merge กับ Phase 4 แล้วบน branch ของ Phase 3) · 4 🔨 · 5 🔨
-- **ขั้นใน phase:** Phase 4 สร้างครบ รอตรวจ · Phase 3 (CMS) ทำคู่ขนาน — ต้องมีช่อง locale/translation_group ในหน้าแก้ไข
+- **Phase:** 1 🔨 · 2 🔨 · 3 🔨 · 4 🔨 · 5 🔨 · 6 🔨 (QA เสร็จ — รายงาน `QA-REPORT.md` · ผล NOT READY สำหรับ production)
+- **ขั้นใน phase:** Phase 6 ทำครบตามที่ทำได้โดยไม่มีข้อมูล/สิทธิ์ production · รออนุมัติ + เงื่อนไข production (`LAUNCH.md`)
 - **ประตูที่ผ่านแล้ว:** A ✅ (2026-11-03 — brief 3 ฉบับแทนการสัมภาษณ์) · B ✅ (2026-11-03 — ผู้ใช้อนุมัติเต็มรูปแบบล่วงหน้า + ส่งแบบอ้างอิงหน้าแรก)
 
 ## ค้างอยู่ที่
-หน้าแรกตาม Mockup ชุดที่ 2 ขึ้น staging แล้ว — รอภาพทีมจริง / ตัวเลขที่พิสูจน์ได้ / รีวิวที่ได้รับอนุญาต (QUESTIONS.md) · Phase 6 QA ต่อ · merge Phase 4 · native speaker ตรวจ EN/ZH · ตั้ง MAIL_ENABLED/MAIL_FROM ของ staging
+Phase 6 QA เสร็จ (2026-11-04, main `a1c030d` บน staging) — หน้าแรกตาม Mockup ชุดที่ 3 (ภาพผู้บริหารตะวันตก) · SEO 95 URL ผ่าน · รูปบทความ WebP
+ค้าง: **LCP มือถือ ≤ 2.5 วิ ยังไม่ถึง** (วัดซ้ำบน production HTTPS) · อนุมัติ + เงื่อนไข production (`LAUNCH.md`) · MAIL_ENABLED/MAIL_FROM · native speaker EN/ZH · login จริงบน staging (ยังไม่มีบัญชีทดสอบ) · ข้อมูลจริงจาก OMC (`QA-REPORT.md` ข้อ 8)
 
 ## ตัดสินใจอะไรไปแล้วที่ไม่ได้อยู่ในไฟล์อื่น
 - [2026-11-03] Phase 2: หลังบ้านย้ายไป `/admin` · หน้าสาธารณะทั้งหมดเป็น draft จน Phase 4 · หลัง merge Phase 1 ให้เปลี่ยน `PublicController::LAYOUT` เป็น `site` · รายละเอียดใน NOTES.md หัวข้อ Phase 2

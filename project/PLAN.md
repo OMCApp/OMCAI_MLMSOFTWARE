@@ -149,10 +149,13 @@
 - [x] รายงาน mapping เก่า→ใหม่ ทุก URL ใน baseline: `docs/migration/url-mapping.md` (`tools/migration/url-mapping.php` ยิงจริงผ่านแอป) — 95 URL: 200 = 44 · 301→200 = 4 · 410 = 2 · รอ Phase 4 เผยแพร่หน้า = 45 · **404 จริง = 0**
 - [x] tests: ส่วน "Phase 5" ใน `php tests/run.php` (ทุกบทความ: 200 · H1 เดียว = title · canonical · title/description · BlogPosting datePublished · รูป alt/ขนาด/ไฟล์มีจริง · หมวด · /blog/ แบ่งหน้า · sitemap-posts · feed) — 1401 ผ่าน
 
-## Phase 6 — QA + launch readiness  ⬜
-- [ ] crawl staging ด้วย `tools/seo-audit/crawl.php` (Basic Auth) เทียบ baseline 95 URL — ทุก URL เดิมได้ 200 หรือ 301 ไปที่ถูก · ไม่มี 404 · ไม่มี redirect loop/chain
-- [ ] SEO regression: title/description/H1/canonical/schema ทุกหน้า · production build ไม่มี noindex
-- [ ] performance: Lighthouse mobile ทุก template · ขนาดภาพ · JS/CSS
-- [ ] security: `security.md` checklist · ฟอร์ม · อัปโหลด · สิทธิ์ · headers
-- [ ] `QA-REPORT.md` · SEO Migration Gate checklist · rollback plan · post-launch checklist (`project/LAUNCH.md`)
-- [ ] **ไม่สลับ production ใน phase นี้** — ต้องผ่าน Gate + ผู้ใช้ตั้ง document root/โดเมน
+## Phase 6 — QA + launch readiness  🔨
+- [x] 95 URL เดิมบน staging (ยิงจริง): 57 × 200 · 36 × 301 ครั้งเดียว · 2 × 410 · 404 = 0 · ไม่มี chain/loop (staging เปิดสาธารณะ ไม่ต้อง Basic Auth)
+- [x] SEO regression: `tools/seo-audit/regression.php` → `docs/seo/regression.md` — 95 URL + 153 URL ใน sitemap 3 ภาษา + hreflang 27 คู่ · 0 ปัญหาที่กั้น · คำหลักเดิมคืน 2 จุด (047) · www/http → https ใน `public/.htaccess`
+- [x] performance: รูปบทความเดิม → WebP + srcset (048) · Lighthouse 6 หน้า × 2 ฟอร์ม บน staging · desktop 88–100 · มือถือ 88–96
+- [ ] **LCP มือถือ ≤ 2.5 วินาที** — ลดอาการแล้ว ยังไม่ถึงเป้า (staging HTTP/1.1: 1.9–3.4 วินาที) · วัดซ้ำบน production HTTPS/HTTP2
+- [x] security: ไฟล์ลับ 403/404 บน staging · headers · CSRF/สิทธิ์ (test) · analytics ไม่ส่งข้อมูลส่วนบุคคล
+- [x] CMS functional (test อัตโนมัติ) รวมเปลี่ยนภาพ/ข้อความ hero จาก /admin · backup → restore ทดสอบแล้ว
+- [ ] login จริงบน staging ด้วยบัญชีทดสอบที่ได้รับอนุญาต — ยังไม่มีบัญชี
+- [x] `QA-REPORT.md` · `LAUNCH.md` (checklist + rollback)
+- [ ] **ไม่สลับ production ใน phase นี้** — ต้องได้อนุมัติ + ผู้ใช้ตั้ง document root/โดเมน/SSL (LAUNCH.md)
