@@ -50,7 +50,8 @@ return [
     'privacy_url' => '/นโยบายความเป็นส่วนตัวข/',
 
     // ปุ่มหลักบน header — ป้ายมาจาก lang (site.cta_demo) เพราะเป็นข้อความ UI ที่ใช้ทุกหน้า
-    'cta' => ['url' => '/demo/'],
+    // ‼️ ชี้ระบบ Demo ที่ลองเองได้ทันที (ผู้ใช้ยืนยัน 2026-11-04) — เปิดแท็บใหม่ · หน้า /demo/ มีปุ่มเดียวกัน + ฟอร์มนัดทีมงาน
+    'cta' => ['url' => 'https://demomlm.omc.co.th/'],
 
     /* เมนูหลัก — children ไม่ว่าง = เมนูกาง (mega menu)
        รายการแรกของ children ควรเป็นหน้ารวมของหัวข้อนั้น เพราะหัวเมนูที่กางได้เป็นปุ่ม ไม่ใช่ลิงก์ */
@@ -109,7 +110,7 @@ return [
                     ['label' => 'ฟีเจอร์', 'url' => '/features/'],
                     ['label' => 'แผนรายได้', 'url' => '/compensation-plans/'],
                     ['label' => 'ราคา / ขอใบเสนอราคา', 'url' => '/pricing/'],
-                    ['label' => 'ขอ Demo', 'url' => '/demo/'],
+                    ['label' => 'ทดลองใช้ Demo', 'url' => '/demo/'],
                 ],
             ],
             [
@@ -208,7 +209,7 @@ return [
                         ['label' => 'Features', 'url' => '/features/'],
                         ['label' => 'Compensation plans', 'url' => '/compensation-plans/'],
                         ['label' => 'Pricing / request a quote', 'url' => '/pricing/'],
-                        ['label' => 'Book a demo', 'url' => '/demo/'],
+                        ['label' => 'Try the demo', 'url' => '/demo/'],
                     ]],
                     ['heading' => 'Solutions', 'links' => [
                         ['label' => 'MLM software Thailand', 'url' => '/mlm-software-thailand/'],
@@ -293,7 +294,7 @@ return [
                         ['label' => '功能', 'url' => '/features/'],
                         ['label' => '奖金制度', 'url' => '/compensation-plans/'],
                         ['label' => '价格与报价', 'url' => '/pricing/'],
-                        ['label' => '预约演示', 'url' => '/demo/'],
+                        ['label' => '试用演示', 'url' => '/demo/'],
                     ]],
                     ['heading' => '方案', 'links' => [
                         ['label' => '泰国MLM软件', 'url' => '/mlm-software-thailand/'],

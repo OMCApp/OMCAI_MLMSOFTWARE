@@ -44,7 +44,7 @@ return [
         'menu_open'       => 'Open menu',
         'menu_close'      => 'Close menu',
         'home_link'       => 'OMC MLM Software home',
-        'cta_demo'        => 'Book a free demo',
+        'cta_demo'        => 'Try the demo',
         'call_us'         => 'Call us',
         'footer_contact'  => 'Contact us',
         'phone'           => 'Phone',

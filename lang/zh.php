@@ -44,7 +44,7 @@ return [
         'menu_open'       => '打开菜单',
         'menu_close'      => '关闭菜单',
         'home_link'       => 'OMC MLM Software 首页',
-        'cta_demo'        => '预约免费演示',
+        'cta_demo'        => '在线试用演示',
         'call_us'         => '致电我们',
         'footer_contact'  => '联系我们',
         'phone'           => '电话',
