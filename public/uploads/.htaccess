@@ -1,0 +1,13 @@
+# Images uploaded from the CMS (App\Services\MediaService) — served directly and cached.
+# Defence in depth: uploads are allowlisted images with random names, but never execute anything here.
+Options -Indexes -ExecCGI
+<FilesMatch "\.(?i:php\d?|phtml|phar|pl|py|cgi|sh|shtml|html?|svg|js)$">
+    Require all denied
+</FilesMatch>
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set Cache-Control "public, max-age=31536000, immutable"
+</IfModule>

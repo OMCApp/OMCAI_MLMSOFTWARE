@@ -8,13 +8,21 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Core\Database;
+use App\Models\Concerns\AdminSearch;
 use Core\Model;
 
 final class Faq extends Model
 {
+    use AdminSearch;
+
+    protected array $searchColumns = ['question', 'answer'];
+    protected array $filterColumns = ['status', 'group_key', 'locale'];
+
+    public const SORTABLE = ['id', 'sort', 'group_key', 'status', 'updated_at'];
+
     protected string $table = 'faqs';
 
-    protected array $fillable = ['question', 'answer', 'group_key', 'sort', 'status'];
+    protected array $fillable = ['question', 'answer', 'group_key', 'locale', 'sort', 'status'];
 
     public const STATUSES = ['draft', 'published'];
 

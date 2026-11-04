@@ -11,10 +11,18 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Core\Database;
+use App\Models\Concerns\AdminSearch;
 use Core\Model;
 
 final class Post extends Model
 {
+    use AdminSearch;
+
+    protected array $searchColumns = ['title', 'slug', 'excerpt'];
+    protected array $filterColumns = ['status', 'locale', 'category_id'];
+
+    public const SORTABLE = ['id', 'title', 'status', 'published_at', 'updated_at'];
+
     protected string $table = 'posts';
 
     protected array $fillable = [
@@ -23,6 +31,18 @@ final class Post extends Model
         'og_image_id', 'legacy_url',
     ];
 
+    /**
+     * locale / translation_group มาจาก migration ของ Phase 4 — เขียนได้เฉพาะเมื่อมีคอลัมน์แล้ว
+     * (allowlist ของ base Model ใส่คอลัมน์ที่ยังไม่มีไม่ได้ ไม่งั้น INSERT พัง)
+     */
+    public function __construct()
+    {
+        foreach (['locale', 'translation_group'] as $column) {
+            if (\Core\Database::hasColumn($this->table, $column)) {
+                $this->fillable[] = $column;
+            }
+        }
+    }
     public const STATUSES = ['draft', 'published'];
     public const ROBOTS   = ['index', 'noindex'];
 

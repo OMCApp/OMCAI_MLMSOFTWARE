@@ -192,8 +192,9 @@ final class SchemaService
             }
 
             foreach ($block['data']['items'] as $item) {
-                $question = trim((string) ($item['question'] ?? ''));
-                $answer   = trim(strip_tags((string) ($item['answer'] ?? '')));
+                // q/a = คีย์ที่ partial blocks/faq.php แสดงจริง (CMS บันทึกแบบนี้) · question/answer = รูปเดิม
+                $question = trim((string) ($item['q'] ?? $item['question'] ?? ''));
+                $answer   = trim(strip_tags((string) ($item['a'] ?? $item['answer'] ?? '')));
 
                 if ($question === '' || $answer === '') {
                     continue;

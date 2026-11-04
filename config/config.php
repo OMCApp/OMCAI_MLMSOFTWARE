@@ -112,7 +112,8 @@ return [
     ],
 
     'session' => [
-        'secure'       => $get('APP_HTTPS', 'false') === 'true',
+        // ‼️ ค่าเดียวกับ 'https' ข้างบน — เดิม default ต่างกัน (production ไม่ตั้ง APP_HTTPS = https แต่ cookie ไม่ Secure)
+        'secure'       => $get('APP_HTTPS', $appEnv === 'production' ? 'true' : 'false') === 'true',
         'idle_timeout' => (int) $get('SESSION_IDLE_TIMEOUT', '0'),
     ],
 

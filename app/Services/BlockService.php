@@ -58,6 +58,18 @@ final class BlockService
                 $block['privacy_url'] = SiteService::privacyUrl();
             }
 
+            /* ‼️ ตัวเลข / โลโก้ลูกค้า / รีวิว มาจากแหล่งที่ "ยืนยันแล้ว" เท่านั้น (Phase 3 · BRIEF ห้ามของปลอม)
+                  บล็อกที่บันทึกจาก CMS ไม่มีรายการเหล่านี้ — เติมที่นี่ · ไม่มีของจริง = partial ไม่วาดอะไร */
+            if ($block['type'] === 'stats' && empty($block['items'])) {
+                $block['items'] = SettingService::verifiedStats();
+            }
+            if ($block['type'] === 'trust_bar' && empty($block['logos'])) {
+                $block['logos'] = SettingService::verifiedLogos();
+            }
+            if ($block['type'] === 'testimonials' && empty($block['items'])) {
+                $block['items'] = (new SocialProofService())->testimonialItems();
+            }
+
             $out[] = $block;
         }
 

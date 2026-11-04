@@ -2593,6 +2593,105 @@
     .device-phone, .mock-chart-dot { animation: none; }
   }
 
+  /* ---------------------------------------------------------------- CMS หลังบ้าน (Phase 3)
+     ‼️ ใช้ token เท่านั้น — หลังบ้านมีโหมดมืด ทุกสีต้องมาจาก token ที่มีค่าทั้งสองโหมด */
+
+  .cms-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+  .cms-list > li { padding: var(--space-2) 0; border-bottom: 1px solid var(--color-border-normal); }
+  .cms-list > li:last-child { border-bottom: 0; }
+  .cms-menu > li[data-depth="1"] { padding-inline-start: var(--space-8); }
+
+  .cms-block { border-inline-start: 2px solid var(--color-brand-primary); }
+  .cms-block-head { padding: 0 var(--space-2); }
+  .cms-block-bar { justify-content: flex-start; }
+  .cms-block-tools { align-items: end; }
+  .cms-block-add { align-items: end; flex-wrap: wrap; }
+  .cms-diff { padding-block: var(--space-3); border-bottom: 1px solid var(--color-border-normal); }
+  .cms-diff[data-changed="true"] { border-inline-start: 2px solid var(--color-state-warning); padding-inline-start: var(--space-3); }
+  .cms-rows { display: flex; flex-direction: column; gap: var(--space-3); }
+  .cms-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(var(--layout-field-min-width), 1fr));
+    gap: var(--space-3);
+    align-items: end;
+    padding: var(--space-3);
+    background: var(--color-surface-tint);
+    border-radius: var(--radius-md);
+  }
+
+  .snippet {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-4);
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border-normal);
+    border-radius: var(--radius-md);
+    max-width: var(--layout-form-width);
+  }
+  .snippet-url { font-size: var(--text-xs); color: var(--color-text-muted); overflow-wrap: anywhere; }
+  .snippet-title { font-size: var(--text-lg); color: var(--color-brand-link); }
+  .snippet-desc { font-size: var(--text-sm); color: var(--color-text-normal); }
+  .counter[data-over="true"] { color: var(--color-state-warning); font-weight: var(--weight-medium); }
+
+  .editor-toolbar { gap: var(--space-1); flex-wrap: wrap; }
+  .code-input { font-family: var(--font-mono); font-size: var(--text-sm); }
+
+  .media-grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(var(--layout-tile-min-width), 1fr));
+    gap: var(--space-4);
+  }
+  .media-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-2);
+    background: var(--color-surface-card);
+    border: 1px solid var(--color-border-normal);
+    border-radius: var(--radius-md);
+  }
+  .media-card:hover { border-color: var(--color-brand-primary); }
+  .media-card a { display: flex; flex-direction: column; gap: var(--space-2); color: var(--color-text-normal); text-decoration: none; }
+  .media-card img {
+    width: 100%;
+    height: auto;
+    aspect-ratio: var(--product-card-image-ratio);
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-tint);
+  }
+  .media-card-name { font-size: var(--text-sm); overflow-wrap: anywhere; }
+
+  .badge[data-type="warning"] { border-color: var(--color-state-warning); color: var(--color-text-strong); }
+
+  .cms-dl { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--space-2) var(--space-4); margin: 0; }
+  .cms-dl dt { color: var(--color-text-muted); }
+  .cms-dl dd { margin: 0; overflow-wrap: anywhere; white-space: pre-line; }
+  .cms-note { margin: 0; white-space: pre-line; overflow-wrap: anywhere; }
+  .cms-pre {
+    margin: 0;
+    padding: var(--space-3);
+    max-height: var(--layout-page-media-height);
+    overflow: auto;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    background: var(--color-surface-tint);
+    border-radius: var(--radius-sm);
+  }
+
+  @media (max-width: 768px) {
+    .cms-dl { grid-template-columns: 1fr; }
+    .cms-dl dd { padding-bottom: var(--space-2); }
+    .cms-menu > li[data-depth="1"] { padding-inline-start: var(--space-4); }
+  }
+
 }
 
 @layer utilities {
