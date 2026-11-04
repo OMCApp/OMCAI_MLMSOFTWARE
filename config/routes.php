@@ -38,9 +38,16 @@ $router->registerMiddleware([
 // ---------------------------------------------------------------- ไฟล์สำหรับ crawler
 
 $router->get('/sitemap.xml', 'SeoController@sitemapIndex');
-$router->get('/sitemap-{section:[a-z]+}.xml', 'SeoController@sitemap');
+// sitemap แยกภาษา: sitemap-pages.xml (ไทย) · sitemap-pages-en.xml · sitemap-posts-zh.xml …
+$router->get('/sitemap-{section:[a-z]+(?:-[a-z]+)?}.xml', 'SeoController@sitemap');
 $router->get('/robots.txt', 'SeoController@robots');
 $router->get('/feed', 'SeoController@feed');
+// feed ของภาษาอื่น (/en/feed/) — รายการภาษามาจาก config/locales.php · 404 ถ้าภาษานั้นยังไม่มีบทความ
+$router->get('/{locale:' . \App\Services\LocaleService::prefixPattern() . '}/feed', 'SeoController@feed');
+
+// ฟอร์ม lead ของเว็บสาธารณะ (ทุกภาษาส่งมาที่เดียว — ภาษาอ่านจาก path ของหน้าที่ส่ง)
+// ‼️ CSRF ตรวจที่ public/index.php ก่อนถึงที่นี่ · honeypot + rate limit + validate ใน App\Services\LeadService
+$router->post('/lead', 'LeadController@store');
 
 // ‼️ หน้าดูตัวอย่าง design system ระหว่างที่ยังไม่มี CMS (Phase 1)
 //    ประกาศเฉพาะ environment ที่ไม่ใช่ production — production ได้ 404 จาก Router เพราะ route ไม่มีอยู่

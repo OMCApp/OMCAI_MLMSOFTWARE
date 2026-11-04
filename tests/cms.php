@@ -186,7 +186,7 @@ foreach ($router->all() as $route) {
     $logCount = static fn (): int => substr_count((string) @file_get_contents($root . '/storage/logs/app.log'), $logLine);
     $before   = $logCount();
     $noCsrf   = $http('POST', $path, ['jar' => 'p3admin', 'post' => $fields]);
-    $check(in_array($noCsrf['status'], [302, 419], true) && $logCount() === $before + 1 && rtrim($location($noCsrf), '/') === rtrim($path, '/'),
+    $check(in_array($noCsrf['status'], [302, 303, 419], true) && $logCount() === $before + 1 && rtrim($location($noCsrf), '/') === rtrim($path, '/'),
         "{$label} without CSRF → rejected (as admin)", $noCsrf['status'] . ' ' . $location($noCsrf));
 
     if (in_array($label, $publicAdmin, true)) {

@@ -35,6 +35,7 @@
   --font-heading: "Prompt";
   --font-body: "IBM Plex Sans Thai";
   --font-mono: "ui-monospace";
+  --font-zh: "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Noto Sans SC", sans-serif;
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-base: 1rem;
@@ -2694,6 +2695,121 @@
     .cms-menu > li[data-depth="1"] { padding-inline-start: var(--space-4); }
   }
 
+}
+
+/* ================================================================ Phase 4 — หน้าใน · ภาษา · บทความ */
+@layer components {
+
+  /* ---------------------------------------------------------------- ภาษาจีน
+     ‼️ ฟอนต์ self-host ไม่มีตัวอักษรจีน — ใช้ฟอนต์ระบบ (token --font-zh ใน DESIGN.md) ไม่โหลด CJK webfont (หนักหลาย MB) */
+  :lang(zh) body,
+  :lang(zh) h1, :lang(zh) h2, :lang(zh) h3, :lang(zh) h4,
+  :lang(zh) .hero-site-title, :lang(zh) .hero-page-title, :lang(zh) .btn,
+  :lang(zh) .site-nav-link, :lang(zh) .site-footer-heading, :lang(zh) .stat-value {
+    font-family: var(--font-zh);
+  }
+  :lang(zh) .hero-site-title, :lang(zh) .hero-page-title { letter-spacing: .01em; }
+
+  /* ---------------------------------------------------------------- ส่วนเปิดของหน้าใน (hero variant "page") */
+  .hero-page {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(180deg, var(--color-surface-tint) 0%, var(--color-surface-page) 100%);
+    border-block-end: 1px solid var(--color-border-normal);
+  }
+  .hero-page-glow {
+    position: absolute;
+    top: -55%;
+    inset-inline-end: -8%;
+    width: 46%;
+    aspect-ratio: 1;
+    border-radius: var(--radius-full);
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--color-brand-accent) 16%, transparent), transparent);
+    pointer-events: none;
+  }
+  .hero-page-inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+    padding-block: var(--space-8) var(--space-12);
+  }
+  .hero-page-title {
+    max-width: 24ch;
+    color: var(--color-text-strong);
+    font-size: clamp(var(--text-2xl), 3vw, var(--text-4xl));
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-tight);
+  }
+  .hero-page-lead { max-width: 62ch; color: var(--color-text-normal); font-size: var(--text-lg); line-height: var(--leading-normal); }
+  .hero-page .check-list { max-width: 62ch; }
+  @media (min-width: 768px) { .hero-page-inner { padding-block: var(--space-10) var(--space-16); } }
+
+  /* ---------------------------------------------------------------- ตัวสลับภาษา (TH | EN | 中文) */
+  .lang-switch { display: inline-flex; align-items: center; gap: var(--space-1); white-space: nowrap; }
+  .lang-switch-icon { flex: none; color: var(--color-text-muted); }
+  .lang-switch-list { display: inline-flex; flex-direction: row; flex-wrap: nowrap; align-items: center; gap: 0; margin: 0; padding: 0; list-style: none; }
+  .lang-switch-list li { display: inline-flex; align-items: center; margin: 0; }
+  .lang-switch-list li + li::before { content: ""; display: inline-block; width: 1px; height: 1em; margin-inline: var(--space-1); background: var(--color-border-strong); vertical-align: middle; opacity: .5; }
+  .lang-switch-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: var(--space-10);
+    min-height: var(--space-10);
+    padding-inline: var(--space-2);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-normal);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    text-decoration: none;
+    transition: color var(--duration-fast) var(--ease-standard), background-color var(--duration-fast) var(--ease-standard);
+  }
+  .lang-switch-link:hover { color: var(--color-brand-primary); background: var(--color-brand-accent-soft); }
+  .lang-switch-link[aria-current="true"] { color: var(--color-brand-primary); font-weight: var(--weight-bold); }
+  .lang-switch-link:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
+  .lang-switch-link:lang(zh) { font-family: var(--font-zh); }
+
+  .lang-switch.is-drawer { display: none; }
+  .lang-switch.is-header .lang-switch-icon { display: none; }
+  /* header จอ 1200–1599: เมนู + ตัวสลับภาษา + เบอร์ + ปุ่ม Demo ไม่พอที่ — ซ่อนเม็ดเบอร์โทร (ยังอยู่ใน footer และหน้า Contact) ปุ่ม Demo ต้องเห็นเสมอ */
+  @media (min-width: 1200px) and (max-width: 1599.98px) {
+    .site-actions .site-phone { display: none; }
+  }
+  @media (max-width: 1199.98px) {
+    .lang-switch.is-header { display: none; }
+    .lang-switch.is-drawer { display: inline-flex; justify-content: center; }
+  }
+
+  .lang-switch.is-footer .lang-switch-icon { color: var(--color-brand-logo); }
+  .lang-switch.is-footer .lang-switch-link { color: var(--color-brand-on-ink); opacity: .82; }
+  .lang-switch.is-footer .lang-switch-link:hover { opacity: 1; background: color-mix(in srgb, var(--color-brand-on-ink) 10%, transparent); color: var(--color-brand-on-ink); }
+  .lang-switch.is-footer .lang-switch-link[aria-current="true"] { opacity: 1; color: var(--color-brand-logo); }
+
+  /* ---------------------------------------------------------------- บทความ */
+  .post { display: flex; flex-direction: column; gap: var(--space-6); max-width: var(--layout-form-width); }
+  .post-meta { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-5); margin: 0; color: var(--color-text-muted); font-size: var(--text-sm); }
+  .post-meta-item { display: inline-flex; align-items: center; gap: var(--space-2); }
+  .post-meta-item .icon { color: var(--color-brand-primary); }
+  .post-cover { margin: 0; }
+  .post-cover img { display: block; width: 100%; height: auto; border-radius: var(--radius-lg); box-shadow: var(--shadow-md); }
+  .post-body img { height: auto; border-radius: var(--radius-md); }
+  .post-back a { display: inline-flex; align-items: center; gap: var(--space-1); min-height: 44px; font-weight: var(--weight-medium); }
+  .post-related { margin-block: var(--space-12) var(--space-8); }
+  .post-related h2 { margin-block-end: var(--space-5); font-size: var(--text-2xl); }
+
+  /* การ์ดบทความที่มีภาพเด่นจาก media library */
+  .news-item-image { object-fit: cover; aspect-ratio: var(--news-item-image-ratio); }
+
+  /* ---------------------------------------------------------------- micro-interaction ของการ์ดลิงก์ */
+  @media (prefers-reduced-motion: no-preference) {
+    .news-item { transition: transform var(--duration-normal) var(--ease-standard), box-shadow var(--duration-normal) var(--ease-standard); }
+    .news-item:hover { transform: translateY(-2px); }
+  }
+
+  /* ฟอร์ม: ช่องที่ผิดเห็นได้โดยไม่พึ่งสีอย่างเดียว (มีข้อความใต้ช่องเสมอ) */
+  .lead-form [aria-invalid="true"] { border-color: var(--color-state-danger); outline: 1px solid var(--color-state-danger); }
 }
 
 @layer utilities {

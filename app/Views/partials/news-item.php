@@ -10,6 +10,7 @@
  * ตัวแปรที่รับ
  *   $newsItems  [['image' => ..., 'alt' => ..., 'date' => ..., 'title' => ..., 'lead' => ..., 'url' => ...], ...]
  *               'image' ไม่บังคับ — ข่าวที่ไม่มีภาพยังต้องแสดงได้
+ *               'cover' ไม่บังคับ — [src (path เต็ม encode แล้ว), alt, width, height] ภาพเด่นของบทความจาก media library
  */
 
 declare(strict_types=1);
@@ -23,7 +24,12 @@ $newsItems = (array) ($newsItems ?? []);
         <?php foreach ($newsItems as $newsItem): ?>
             <li>
                 <a class="news-item" href="<?= e(url((string) $newsItem['url'])) ?>">
-                    <?php if (($newsItem['image'] ?? '') !== ''): ?>
+                    <?php if (is_array($newsItem['cover'] ?? null)): ?>
+                        <img class="news-item-image" src="<?= e(url((string) $newsItem['cover']['src'])) ?>"
+                             alt="<?= e((string) ($newsItem['cover']['alt'] ?? '')) ?>"
+                             width="<?= e((string) (int) ($newsItem['cover']['width'] ?? 1200)) ?>" height="<?= e((string) (int) ($newsItem['cover']['height'] ?? 675)) ?>"
+                             loading="lazy" decoding="async">
+                    <?php elseif (($newsItem['image'] ?? '') !== ''): ?>
                         <img class="news-item-image"
                              src="<?= e(asset('/assets/images/' . (string) $newsItem['image'])) ?>"
                              alt="<?= e((string) ($newsItem['alt'] ?? '')) ?>"

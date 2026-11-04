@@ -26,7 +26,7 @@ $siteHeaderLogo    = (array) ($siteHeaderBrand['logo_size'] ?? ['width' => 760, 
 ?>
 <header class="site-header" data-site-header>
     <div class="site-header-inner container-wide">
-        <a class="site-logo" href="<?= e(url('/')) ?>">
+        <a class="site-logo" href="<?= e(url((string) ($site['home'] ?? '/'))) ?>">
             <img src="<?= e(asset((string) ($siteHeaderBrand['logo'] ?? '/assets/images/brand/omc-logo-horizontal.svg'))) ?>"
                  alt="<?= e(__('site.home_link')) ?>"
                  width="<?= e((string) (int) ($siteHeaderLogo['width'] ?? 760)) ?>"
@@ -92,10 +92,12 @@ $siteHeaderLogo    = (array) ($siteHeaderBrand['logo_size'] ?? ['width' => 760, 
                     </a>
                 <?php endif; ?>
                 <?php $siteButton = $siteHeaderCta; include __DIR__ . '/site-button.php'; ?>
+                <?php $langSwitchItems = (array) ($site['languages'] ?? []); $langSwitchClass = 'is-drawer'; include __DIR__ . '/lang-switch.php'; ?>
             </div>
         </nav>
 
         <div class="site-actions">
+            <?php $langSwitchItems = (array) ($site['languages'] ?? []); $langSwitchClass = 'is-header'; include __DIR__ . '/lang-switch.php'; ?>
             <?php if (($siteHeaderContact['phone'] ?? '') !== ''): ?>
                 <a class="site-phone" href="<?= e(url('tel:' . ($siteHeaderContact['phone_e164'] ?? $siteHeaderContact['phone']))) ?>">
                     <?= icon('phone') ?>

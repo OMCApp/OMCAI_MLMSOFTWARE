@@ -27,10 +27,11 @@ final class PostService
         $at = (string) ($post['published_at'] ?? '');
 
         if ($at === '') {
-            return '/blog/';
+            return LocaleService::localize('/blog/', (string) ($post['locale'] ?? LocaleService::DEFAULT));
         }
 
-        return '/' . date('Y/m/d', (int) strtotime($at)) . '/' . $post['slug'] . '/';
+        return LocaleService::prefix((string) ($post['locale'] ?? LocaleService::DEFAULT))
+            . '/' . date('Y/m/d', (int) strtotime($at)) . '/' . $post['slug'] . '/';
     }
 
     /** @param array<string, mixed> $row */
@@ -47,12 +48,12 @@ final class PostService
      * @return array{post: array<string,mixed>}|array{redirect: string}|null
      *         redirect = slug ถูกแต่วันที่ผิด → 301 ไป URL ที่ถูก (เหมือน WordPress เดิม)
      */
-    public function resolve(string $year, string $month, string $day, string $slug, bool $preview): ?array
+    public function resolve(string $year, string $month, string $day, string $slug, bool $preview, string $locale = LocaleService::DEFAULT): ?array
     {
         $date    = $year . '-' . $month . '-' . $day;
         $visible = array_values(array_filter(
             $this->posts->findBySlug($slug),
-            static fn (array $row): bool => $preview || self::isLive($row)
+            static fn (array $row): bool => (string) ($row['locale'] ?? LocaleService::DEFAULT) === $locale && ($preview || self::isLive($row))
         ));
 
         if ($visible === []) {
@@ -82,18 +83,34 @@ final class PostService
     /**
      * @return array{posts: array<int, array<string,mixed>>, total: int, pages: int}
      */
-    public function listing(int $page, int $perPage, ?int $categoryId = null): array
+    public function listing(int $page, int $perPage, ?int $categoryId = null, string $locale = LocaleService::DEFAULT): array
     {
-        $total = $this->posts->countPublished($categoryId);
-        $posts = $this->posts->latestPublished($perPage, ($page - 1) * $perPage, $categoryId);
+        $total = $this->posts->countPublished($categoryId, $locale);
+        $posts = $this->posts->latestPublished($perPage, ($page - 1) * $perPage, $categoryId, $locale);
 
         return ['posts' => $posts, 'total' => $total, 'pages' => (int) max(1, ceil($total / max(1, $perPage)))];
     }
 
-    /** @return array<int, array<string, mixed>> */
-    public function latest(int $limit): array
+    /** @return array<int, array<string, mixed>> บทความหมวดเดียวกัน ล่าสุดก่อน (ไม่รวมตัวเอง) */
+    public function related(array $post, int $limit = 3): array
     {
-        return $this->posts->latestPublished($limit);
+        if (($post['category_id'] ?? null) === null) {
+            return [];
+        }
+
+        return $this->posts->relatedPublished((int) $post['id'], (int) $post['category_id'], $limit);
+    }
+
+    /** ภาษานี้มีบทความเผยแพร่แล้วอย่างน้อยหนึ่งเรื่องหรือไม่ — /en/blog/ /en/feed/ มีได้เมื่อเป็นจริงเท่านั้น */
+    public function hasPublished(string $locale): bool
+    {
+        return $this->posts->countPublished(null, $locale) > 0;
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    public function latest(int $limit, string $locale = LocaleService::DEFAULT): array
+    {
+        return $this->posts->latestPublished($limit, 0, null, $locale);
     }
 
     /** @return array<int, array<string, mixed>> */

@@ -74,3 +74,21 @@
 - `public/index.php` ตอบ CSRF ล้มเหลวด้วย `http_response_code(419)` + `Location` → PHP เปลี่ยนเป็น 302 เอง รหัส 419 จึงไม่เคยถึง client · ชุดทดสอบต้องตรวจจาก log `csrf_failed` แทน
 - partial ที่ include ใน layout (เช่น `nav.php`) ตั้งตัวแปรชื่อ `$content` แล้วทับเนื้อหาของหน้าเงียบๆ (Array to string) — `partial-generic-var` ของ check.php ไม่จับชื่อ `$content`/`$leads` · ควรเพิ่ม `$content` ในรายการชื่อต้องห้าม
 - regex ใน Phase 2 ใช้ `#` เป็น delimiter แล้วมี `#` ใน character class (`'#^[^/\s?#]+$#u'`) → preg_match คืน false ทุกครั้ง (validate slug ไม่เคยทำงาน) · check.php ไม่จับ
+
+## [ ] 2026-11-04 · ช่วง C Phase 4 — `partials/field.php` ไม่ล้าง `$fieldValue` ทำให้ฟอร์มคืนค่าที่กรอกไม่ได้
+
+**เกิดอะไร:** `$fieldValue = $fieldValue ?? old($fieldName)` แล้วไม่ล้างตอนจบ — ช่องแรกตั้งค่าเป็น `''` ช่องถัดไปทุกช่องจึงได้ `''` ไม่ใช่ old() ของตัวเอง · ฟอร์มที่ validate ไม่ผ่านคืนค่าได้แค่ช่องแรก (ขัดกฎ "คืนค่าที่กรอกไว้")
+**ข้อเสนอ:** ล้าง `$fieldValue = null` ท้าย partial ในมาตรฐาน (แก้ในโปรเจคนี้แล้ว) · error ควรผูก `aria-describedby` + `aria-invalid` ด้วย (เดิมผูกแค่ hint)
+**ตรวจด้วยเครื่องได้ไหม:** ได้ — test ฟอร์มสองช่องขึ้นไปที่กรอกผิดแล้วดูว่าค่าทุกช่องกลับมา
+
+## [ ] 2026-11-04 · ช่วง C Phase 4 — `lang/*.php` มี key บนสุด `site` ซ้ำสองก้อน (Phase 1 + Phase 2) ก้อนหลังทับก้อนแรกเงียบๆ
+
+**เกิดอะไร:** ป้าย header/footer ของ Phase 1 (`site.cta_demo` ฯลฯ) ไม่ถูกโหลดเลย แสดง key ดิบ · `check.php` lang-parity ไม่จับเพราะทั้งสองไฟล์ซ้ำเหมือนกัน
+**ข้อเสนอ:** check.php ตรวจ key ซ้ำใน array literal ของไฟล์ภาษา (token_get_all หา `'x' =>` ซ้ำในระดับเดียวกัน)
+**ตรวจด้วยเครื่องได้ไหม:** ได้
+
+## [ ] 2026-11-04 · ช่วง C Phase 4 — CSRF ล้มเหลวส่งกลับ path ของ POST ซึ่งไม่มีหน้า GET
+
+**เกิดอะไร:** `public/index.php` ตอบ 419 + `Location: <path ของ POST>` → ฟอร์มสาธารณะ (`/lead/`) ได้ 404 แทนกลับหน้าเดิม · แก้ในโปรเจคให้กลับ referer (host เดียวกัน) ด้วย 303
+**ข้อเสนอ:** ใช้แบบเดียวกันในมาตรฐาน
+**ตรวจด้วยเครื่องได้ไหม:** ได้ — test ส่ง token ปลอมแล้วดู Location

@@ -1,31 +1,353 @@
 <?php
 /**
- * Simplified Chinese strings for the Phase 3 admin keys — to be merged into lang/zh.php (created by Phase 4).
+ * Simplified Chinese translations
  *
- * Why a separate file: lang/zh.php does not exist on the Phase 3 branch, and creating it here would clash with
- * Phase 4's file at merge. check.php (i18n/keys-match) requires every lang/*.php to have the same keys, so after
- * merging both branches, copy these groups into lang/zh.php:
- *   · the whole 'cms' group
- *   · audit.action_backup_create / action_backup_download / action_backup_delete
- *   · manual.group.content / manual.group.sales
- *
- * tools/ is not deployed (deploy.yml excludes it).
+ * Keys must match lang/th.php exactly — verify with: php scripts/check.php lang
+ * No HTML tags allowed here; placeholders are escaped by the helper.
  */
 
 declare(strict_types=1);
 
 return [
-    'audit' => [
-        'action_backup_create'   => '创建备份',
-        'action_backup_download' => '下载备份',
-        'action_backup_delete'   => '删除备份',
+
+    'date' => [
+        'year_offset'  => 0,
+        'months_short' => [
+            '1月', '2月', '3月', '4月', '5月', '6月',
+            '7月', '8月', '9月', '10月', '11月', '12月',
+        ],
+        'today'      => '今天',
+        'this_week'  => '本周',
+        'this_month' => '本月',
+        'six_months' => '6 个月',
+        'one_year'   => '1 年',
+        'from'       => '开始日期',
+        'to'         => '结束日期',
     ],
+
+    // ---- Public site: layout (header · menu · footer) and block UI strings
+    // ‼️ Page content (headings, paragraphs, menu labels) does not live here — it lives in the CMS / config/site.php
+    'site' => [
+        'lang_switch' => '选择语言',
+        'related_posts' => '相关文章',
+        'post_by' => '作者：:name',
+        'post_category' => '分类',
+        'back_to_blog' => '全部文章',
+        'post_cta_title' => '正在寻找直销系统？',
+        'post_cta_text' => '与 OMC 团队沟通，免费预约 MLM 软件演示。',
+        'post_cta_demo' => '免费预约演示',
+        'post_cta_call' => '致电 +66 99 109 5544',
+        'read_more' => '阅读全文',
+        'list_empty' => '暂无文章。',
+        'skip_to_content' => '跳至主要内容',
+        'nav_label'       => '主菜单',
+        'menu_open'       => '打开菜单',
+        'menu_close'      => '关闭菜单',
+        'home_link'       => 'OMC MLM Software 首页',
+        'cta_demo'        => '预约免费演示',
+        'call_us'         => '致电我们',
+        'footer_contact'  => '联系我们',
+        'phone'           => '电话',
+        'email'           => '电子邮箱',
+        'line'            => 'LINE',
+        'address'         => '地址',
+        'facebook'        => 'Facebook',
+        'legal_nav'       => '网站政策',
+        'copyright'       => '版权所有',
+        'learn_more'      => '了解详情',
+        'previous'        => '上一个',
+        'next'            => '下一个',
+        'slide_of'        => '第 :n 项，共 :total 项',
+        'step'            => '第 :n 步',
+        'yes'             => '有',
+        'no'              => '没有',
+        'view_plan'       => '查看 :name 方案',
+        'trust_label'     => '正在使用我们系统的企业',
+        'testimonials_label' => '客户评价',
+        'home'            => '首页',
+        'blog'            => '文章',
+        'page_n'          => '第 :page 页',
+        'pagination'      => '分页',
+        'newer'           => '较新',
+        'older'           => '较早',
+        'gone_title'      => '此页面已下线',
+        'gone_body'       => '此页面已不再提供。您可以从首页开始浏览，或阅读我们的最新文章。',
+        'preview_notice'  => '预览模式 — 此页面尚未发布，公众暂时无法看到',
+        'preview_empty'   => '此页面暂无内容',
+    ],
+
+    // ---- Dashboard mockup (dashboard_showcase / hero blocks) — sample data, always disclosed
+    'showcase' => [
+        'caption'        => '系统界面示例 — 数据仅供演示',
+        'app_title'      => '业务概览',
+        'sales_today'    => '今日销售额',
+        'members_total'  => '会员总数',
+        'commission_due' => '待发放佣金',
+        'new_members'    => '新会员',
+        'sales_trend'    => '近 7 天销售额',
+        'team_tree'      => '下线团队',
+        'menu_members'   => '会员',
+        'menu_orders'    => '订单',
+        'menu_wallet'    => '钱包',
+        'menu_reports'   => '报表',
+        'tab_overview'   => '概览',
+        'tab_team'       => '下线团队',
+        'tab_commission' => '佣金',
+        'rank'           => '级别',
+        'bonus'          => '奖金',
+        'status_paid'    => '已发放',
+        'status_pending' => '待发放',
+    ],
+
+    // ---- Lead form (lead_form block) — stored values are English keys (iron rule 11)
+    'lead' => [
+        'group_contact'   => '联系方式',
+        'group_business'  => '关于您的企业',
+        'name'            => '姓名',
+        'company'         => '公司 / 品牌名称',
+        'business_type'   => '业务类型',
+        'phone'           => '电话号码',
+        'email'           => '电子邮箱',
+        'line_id'         => 'LINE ID',
+        'contact_hint'    => '请至少填写电话号码或电子邮箱其中一项',
+        'has_system'      => '您目前是否已有 MLM 系统？',
+        'need'            => '您需要哪种系统？',
+        'member_estimate' => '预计会员人数',
+        'message'         => '补充说明',
+        'message_hint'    => '例如您采用的奖金制度、产品数量或计划上线时间',
+        'honeypot'        => '此栏请留空',
+        'choose'          => '请选择',
+        'submit'          => '提交',
+        'privacy_note'    => '我们仅会使用这些信息就您的咨询与您联系。',
+        'privacy_link'    => '隐私政策',
+        'error_form' => '表单无效，请刷新页面后重试。',
+        'error_name' => '请填写姓名。',
+        'error_contact' => '请至少填写电话、邮箱或 LINE ID 其中一项。',
+        'error_email' => '邮箱格式不正确。',
+        'error_phone' => '电话号码格式不正确。',
+        'error_option' => '请从选项中选择。',
+        'error_length' => '内容过长。',
+        'error_summary' => '尚未提交，请检查标出的栏位。',
+        'throttled' => '提交过于频繁，请稍后再试或致电 +66 99 109 5544。',
+        'sent' => '信息已提交。',
+        'mail_subject' => '新线索（:form）来自 :name',
+        'mail_intro' => '有访客在网站提交了表单，详情如下。',
+        'source_page' => '提交页面',
+        'referrer' => '来源',
+        'utm' => '推广来源（UTM）',
+        'locale' => '页面语言',
+        'forms' => [
+            'demo' => '预约演示',
+            'quote' => '报价申请',
+            'consult' => '咨询',
+            'contact' => '联系',
+            'migration' => '系统迁移',
+        ],
+        'business_types'  => [
+            'supplements'     => '营养保健品',
+            'cosmetics'       => '化妆品 / 护肤品',
+            'health_wellness' => '健康与美容',
+            'distributor'     => '批发 / 分销商',
+            'franchise'       => '特许经营',
+            'international'   => '跨国业务',
+            'startup'         => '正在创办新业务',
+            'other'           => '其他',
+        ],
+        'has_system_options' => [
+            'yes' => '已有，希望更换或迁移系统',
+            'no'  => '还没有',
+        ],
+        'needs' => [
+            'ready'     => '成品系统，可定制调整',
+            'custom'    => '完全定制开发的系统',
+            'migration' => '从现有系统迁移',
+            'consult'   => '先进行咨询',
+        ],
+        'member_ranges' => [
+            'under_1k' => '1,000 人以下',
+            '1k_10k'   => '1,000 – 10,000 人',
+            '10k_50k'  => '10,000 – 50,000 人',
+            'over_50k' => '50,000 人以上',
+            'unknown'  => '尚不确定',
+        ],
+    ],
+
+    'common' => [
+        'save'        => '保存',
+        'cancel'      => '取消',
+        'delete'      => '删除',
+        'edit'        => '编辑',
+        'view'        => '查看详情',
+        'create'      => '新增',
+        'search'      => '搜索',
+        'filter'      => '筛选',
+        'clear'       => '清除筛选',
+        'export'      => '导出 CSV',
+        'back'        => '返回',
+        'confirm'     => '确认',
+        'close'       => '关闭',
+        'loading'     => '加载中',
+        'per_page'    => '每页显示',
+        'showing'     => '显示第 :from-:to 条，共 :total 条',
+        'required'    => '必填',
+        'optional'    => '选填',
+        'yes'         => '是',
+        'no'          => '否',
+        'actions'     => '操作',
+        'created_at'  => '创建时间',
+        'updated_at'  => '最后更新',
+    ],
+
+    'state' => [
+        'empty_title'    => '暂无记录',
+        'empty_hint'     => '点击新增按钮开始使用',
+        'no_result'      => '没有符合筛选条件的记录',
+        'no_result_hint' => '请尝试清除筛选条件后重新搜索',
+        'error_title'    => '出现错误',
+        'error_hint'     => '请重试',
+        'retry'          => '重试',
+        'reference'      => '参考编号',
+    ],
+
+    'flash' => [
+        'created' => '已添加 :name',
+        'updated' => '已保存对 :name 的修改',
+        'deleted' => '已删除 :name',
+        'failed'  => '操作未能完成',
+    ],
+
+    'confirm' => [
+        'delete_title' => '删除 :name ？',
+        'delete_body'  => '此记录将从系统中隐藏，但之后仍可恢复',
+    ],
+
+    'auth' => [
+        'login'            => '登录',
+        'logout'           => '退出登录',
+        'username'         => '用户名',
+        'password'         => '密码',
+        'remember'         => '记住我',
+        'failed'           => '用户名或密码错误',
+        'throttled'        => '尝试次数过多，请等待 :minutes 分钟',
+        'logged_out'       => '您已退出登录',
+        'session_expired'  => '会话已过期，请重新登录',
+    ],
+
+    'validation' => [
+        'required'  => '请填写 :field',
+        'email'     => ':field 必须是有效的电子邮箱地址',
+        'integer'   => ':field 必须是整数',
+        'numeric'   => ':field 必须是数字',
+        'min'       => ':field 不能小于 :value',
+        'max'       => ':field 不能大于 :value',
+        'min_len'   => ':field 至少需要 :value 个字符',
+        'max_len'   => ':field 不能超过 :value 个字符',
+        'in'        => ':field 的值无效',
+        'date'      => ':field 必须是有效的日期',
+        'confirmed' => ':field 与确认内容不一致',
+        'unique'    => '该 :field 已被使用',
+    ],
+
+    'upload' => [
+        'choose'      => '选择文件',
+        'drop_here'   => '将文件拖放到此处',
+        'accepted'    => '支持 :types 格式，大小不超过 :size',
+        'too_large'   => '文件 :name 超过 :size',
+        'bad_type'    => '文件 :name 的类型不受支持',
+        'failed'      => ':name 上传失败',
+        'remove'      => '移除',
+        'drop_active' => '松开即可添加附件',
+        'uploading'   => '正在上传',
+    ],
+
+    'error' => [
+        '403_title' => '无权访问',
+        '403_body'  => '您的账号无权查看此页面。如认为有误，请联系管理员',
+        '404_title' => '页面未找到',
+        '404_body'  => '此页面可能已被移动或删除',
+        '500_title' => '系统错误',
+        '500_body'  => '系统出现问题，我们的团队已收到通知',
+        'maintenance_title' => '系统维护中',
+        'maintenance_body'  => '请稍后再来访问',
+        'csrf'      => '表单已过期，请重试',
+        'go_home'   => '返回首页',
+    ],
+
+    'audit' => [
+        'action_create'            => '创建',
+        'action_update'            => '修改',
+        'action_delete'            => '删除',
+        'action_restore'           => '恢复',
+        'action_login'             => '登录',
+        'action_login_failed'      => '登录失败',
+        'action_logout'            => '退出登录',
+        'action_permission_change' => '变更权限',
+        'action_setting_change'    => '变更设置',
+        'action_export'            => '导出数据',
+        'action_view_sensitive'    => '查看敏感数据',
+        'action_backup_create'     => '创建备份',
+        'action_backup_download'   => '下载备份',
+        'action_backup_delete'     => '删除备份',
+    ],
+
+    'ui' => [
+        'language'     => '语言',
+        'theme'        => '显示模式',
+        'theme_light'  => '浅色',
+        'theme_dark'   => '深色',
+        'menu'         => '菜单',
+        'collapse'     => '收起菜单',
+        'expand'       => '展开菜单',
+        'manual'       => '使用手册',
+        'support'      => '问题反馈',
+        'breadcrumb'   => '页面路径',
+
+        // Strings the JS side needs — passed through partials/js-lang.php
+        'cancel'       => '取消',
+        'clear'        => '清除',
+        'search'       => '搜索',
+        'no_results'   => '没有找到匹配的结果',
+        'close'        => '关闭',
+        'loading'      => '加载中',
+        'load_more'    => '显示更多',
+        'type_more'    => '请至少输入 {n} 个字符进行搜索',
+    ],
+
+    'support' => [
+        'title'          => '问题反馈',
+        'type_bug'       => '报告错误',
+        'type_feature'   => '功能建议',
+        'type_how_to'    => '使用方法',
+        'open_manual'    => '完整使用手册',
+        'still_stuck'    => '仍未解决？咨询管理员',
+        'message'        => '请描述您要反馈的问题',
+        'attachment'     => '附上屏幕截图',
+        'submit'         => '提交',
+        'received'       => '我们已收到您的反馈，谢谢',
+        'throttled'      => '提交过于频繁，请稍候',
+        'status_new'          => '新建',
+        'status_acknowledged' => '已受理',
+        'status_in_progress'  => '处理中',
+        'status_done'         => '已完成',
+        'status_rejected'     => '不予处理',
+    ],
+
     'manual' => [
+        'title'        => '使用手册',
+        'lead'         => '选择一个主题 — 每篇文章都配有截图，逐步讲解操作方法',
+        'not_found'    => '此页面暂无手册文章',
+        'no_translate' => '此文章尚未翻译为所选语言，现以默认语言显示',
+
+        // Group names must be translatable — never show raw keys from config/manuals.php
         'group' => [
+            'basics' => '快速入门',
+            'admin'  => '管理员专区',
             'content' => '网站内容',
             'sales'   => '销售',
         ],
     ],
+
+    // ---- CMS 后台 (Phase 3) — 管理界面的所有 UI 文字
     'cms' => [
         'common' => [
             'saved' => '已保存', 'saved_with_redirect' => '已保存，并已从 :from 创建 301 重定向', 'deleted' => '已删除',

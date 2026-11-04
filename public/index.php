@@ -147,10 +147,21 @@ if ($method === 'POST' && isset($_POST['_method'])) {
 if (!Security::verifyRequest($method)) {
     Logger::warning('csrf_failed', ['path' => Path::current(), 'ip' => Auth::ip()]);
 
-    http_response_code(419);
     Session::flash('danger', __('error.csrf'));
 
-    header('Location: ' . Path::url(Path::current()));
+    /* กลับไปหน้าที่ส่งฟอร์ม (referer host เดียวกันเท่านั้น — กัน open redirect) · ไม่มี → path เดิม
+       ‼️ ฟอร์มสาธารณะ (POST /lead/) ไม่มีหน้า GET ของตัวเอง — ส่งกลับ path เดิมจะได้ 404 */
+    $csrfBack  = Path::url(Path::current());
+    $csrfParts = parse_url((string) ($_SERVER['HTTP_REFERER'] ?? ''));
+    $csrfHost  = strtolower((string) ($_SERVER['HTTP_HOST'] ?? ''));
+
+    if (is_array($csrfParts) && $csrfHost !== ''
+        && strtolower(($csrfParts['host'] ?? '') . (isset($csrfParts['port']) ? ':' . $csrfParts['port'] : '')) === $csrfHost
+        && !str_starts_with((string) ($csrfParts['path'] ?? '/'), '//')) {
+        $csrfBack = (string) ($csrfParts['path'] ?? '/') . (isset($csrfParts['query']) ? '?' . $csrfParts['query'] : '');
+    }
+
+    header('Location: ' . $csrfBack, true, 303);
     exit;
 }
 

@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Services\LeadTrackingService;
+use App\Services\LocaleService;
 use App\Services\NotFoundService;
 use App\Services\PreviewService;
 use App\Services\SiteResolver;
@@ -21,6 +23,13 @@ final class SiteController extends PublicController
     {
         $path       = Path::requested();
         $query      = (string) ($_SERVER['QUERY_STRING'] ?? '');
+
+        // ภาษาของหน้ามาจาก prefix ของ URL เท่านั้น (ไม่ดู Accept-Language / IP · ไม่ redirect ตามภาษา)
+        LocaleService::use(LocaleService::localeOf($path));
+
+        // UTM ของการเข้าชมครั้งแรก — เก็บใน cookie 30 วัน ให้ lead ที่ส่งจากหน้าอื่นทีหลังยังรู้แหล่งที่มา
+        LeadTrackingService::rememberFirstTouch($_GET);
+
         $resolution = (new SiteResolver())->resolve($path, $query, PreviewService::granted());
 
         if ($resolution['kind'] === 'redirect') {
@@ -29,6 +38,15 @@ final class SiteController extends PublicController
 
         if (($resolution['system'] ?? false) === true) {
             (new ErrorController())->show(404);
+
+            return;
+        }
+
+        /* ‼️ ชั่วคราวเฉพาะ staging: หน้าแรกในฐานข้อมูลยังเป็น draft (Phase 4 กำลังเขียนเนื้อหา)
+              ให้ / แสดงหน้าแรกตัวอย่างของ design system แทน 404 — ผู้ใช้ขอเห็นเว็บที่ URL หลักของ staging
+              production ไม่เข้าเงื่อนไขนี้เด็ดขาด · หมดผลเองทันทีที่หน้า / ถูก publish */
+        if ($resolution['kind'] === 'not_found' && $path === '/' && config('env', 'production') !== 'production') {
+            (new PreviewController())->home();
 
             return;
         }

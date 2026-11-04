@@ -23,20 +23,9 @@ final class Lead extends Model
     protected array $fillable = [
         'form_key', 'name', 'company', 'business_type', 'phone', 'email', 'line_id', 'has_system',
         'need', 'member_estimate', 'message', 'source_url', 'utm', 'ip', 'status', 'assigned_to', 'notes',
+        'locale', 'landing_page', 'referrer',
     ];
 
-    /**
-     * locale / translation_group มาจาก migration ของ Phase 4 — เขียนได้เฉพาะเมื่อมีคอลัมน์แล้ว
-     * (allowlist ของ base Model ใส่คอลัมน์ที่ยังไม่มีไม่ได้ ไม่งั้น INSERT พัง)
-     */
-    public function __construct()
-    {
-        foreach (['locale'] as $column) {
-            if (\Core\Database::hasColumn($this->table, $column)) {
-                $this->fillable[] = $column;
-            }
-        }
-    }
     public const STATUSES  = ['new', 'contacted', 'qualified', 'won', 'lost'];
     public const FORM_KEYS = ['demo', 'quote', 'consult', 'contact', 'migration'];
     public const SORTABLE  = ['id', 'created_at', 'status', 'form_key'];

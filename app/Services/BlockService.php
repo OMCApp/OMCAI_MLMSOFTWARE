@@ -46,16 +46,21 @@ final class BlockService
      */
     public static function prepare(array $blocks): array
     {
-        $out = [];
+        $out   = [];
+        $years = self::yearsInBusiness();
 
         foreach ($blocks as $block) {
             if (!is_array($block) || !in_array($block['type'] ?? '', self::TYPES, true)) {
                 continue;
             }
 
+            // {years} = จำนวนปีที่ดำเนินธุรกิจ คำนวณจากวันจดทะเบียน — ไม่เขียนตัวเลขตายตัวในเนื้อหา (QUESTIONS.md)
+            $block = self::fillYears($block, $years);
+
             if ($block['type'] === 'lead_form') {
                 $block['options']     = self::leadOptions();
                 $block['privacy_url'] = SiteService::privacyUrl();
+                $block['tracking']    = LeadTrackingService::formFields($_GET, isset($_SERVER['HTTP_REFERER']) ? (string) $_SERVER['HTTP_REFERER'] : null);
             }
 
             /* ‼️ ตัวเลข / โลโก้ลูกค้า / รีวิว มาจากแหล่งที่ "ยืนยันแล้ว" เท่านั้น (Phase 3 · BRIEF ห้ามของปลอม)
@@ -74,6 +79,33 @@ final class BlockService
         }
 
         return $out;
+    }
+
+    /**
+     * จำนวนปีเต็มนับจากวันจดทะเบียนบริษัท (3 เม.ย. 2552 ผู้ใช้ยืนยัน — QUESTIONS.md) · ค่าอยู่ที่ config/site.php brand.founded
+     */
+    public static function yearsInBusiness(?\DateTimeImmutable $today = null): int
+    {
+        $founded = new \DateTimeImmutable(SiteService::founded());
+
+        return $founded->diff($today ?? new \DateTimeImmutable('today'))->y;
+    }
+
+    /**
+     * @param  array<string|int, mixed> $value
+     * @return array<string|int, mixed>
+     */
+    private static function fillYears(array $value, int $years): array
+    {
+        foreach ($value as $key => $item) {
+            if (is_array($item)) {
+                $value[$key] = self::fillYears($item, $years);
+            } elseif (is_string($item) && str_contains($item, '{years}')) {
+                $value[$key] = $item === '{years}' ? $years : str_replace('{years}', (string) $years, $item);
+            }
+        }
+
+        return $value;
     }
 
     /** @return array<string, array<string, string>> key => ข้อความที่แปลแล้ว */

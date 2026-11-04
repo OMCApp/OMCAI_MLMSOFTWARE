@@ -16,9 +16,9 @@ final class CategoryService
     }
 
     /** @return array<string, mixed>|null */
-    public function findBySlug(string $slug): ?array
+    public function findBySlug(string $slug, string $locale = LocaleService::DEFAULT): ?array
     {
-        return $this->categories->findBySlug($slug);
+        return $this->categories->findBySlug($slug, $locale);
     }
 
     /** @return array<string, mixed>|null */
@@ -41,7 +41,7 @@ final class CategoryService
 
     public static function path(array $category): string
     {
-        return '/category/' . $category['slug'] . '/';
+        return LocaleService::prefix((string) ($category['locale'] ?? LocaleService::DEFAULT)) . '/category/' . $category['slug'] . '/';
     }
 
     /**
@@ -109,10 +109,10 @@ final class CategoryService
         $errors = $this->validate($data);
 
         if (!isset($errors['slug'])) {
-            $existing = $this->categories->findBySlug((string) $data['slug']);
+            // slug ซ้ำได้ข้ามภาษา (URL ต่างกันด้วย prefix) — ห้ามซ้ำในภาษาเดียวกัน
+            $existing = $this->categories->findBySlug((string) $data['slug'], TranslationService::normalize((string) ($data['locale'] ?? '')));
 
-            if ($existing !== null && (int) $existing['id'] !== $id
-                && (string) ($existing['locale'] ?? TranslationService::default()) === (string) ($data['locale'] ?? ($existing['locale'] ?? TranslationService::default()))) {
+            if ($existing !== null && (int) $existing['id'] !== $id) {
                 $errors['slug'] = 'cms.category.error_slug_taken';
             }
         }

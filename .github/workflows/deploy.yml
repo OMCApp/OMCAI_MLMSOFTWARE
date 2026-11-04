@@ -197,10 +197,12 @@ jobs:
           fail=0
           code=$(curl -s -o /dev/null -w "%{http_code}" "$base/_health")
           [ "$code" = "200" ] && echo "health: ok" || { echo "::error::/_health returned $code"; fail=1; }
-          code=$(curl -s -o /dev/null -w "%{http_code}" "$base/")
-          [ "$code" != "401" ] && echo "staging open without login: yes ($code)" || { echo "::error::home returned 401 — staging login should be off"; fail=1; }
-          # With the password a rendered page must come back — catches a site stuck in maintenance (503)
-          # /admin/login, not /: public pages are draft shells until Phase 4 publishes them, so / is 404 by design
+          # Phase 4 published the public pages: the home page (and each language home) must render — 200, not 401/404/503
+          for p in "" en/ zh/; do
+            code=$(curl -s -o /dev/null -w "%{http_code}" "$base/$p")
+            [ "$code" = "200" ] && echo "/$p: 200" || { echo "::error::/$p returned $code (expected 200; 401 = staging login should be off)"; fail=1; }
+          done
+          # admin login page renders too (catches a broken admin bundle)
           code=$(curl -s -o /dev/null -w "%{http_code}" "$base/admin/login")
           [ "$code" = "200" ] && echo "admin login page: 200" || { echo "::error::/admin/login returned $code"; fail=1; }
           for p in _health assets/css/app.css; do

@@ -91,9 +91,9 @@ final class PageService
      * @param  array<string, mixed> $page
      * @return array<int, array{label:string, url:?string}>
      */
-    public function breadcrumbs(array $page, string $homeLabel): array
+    public function breadcrumbs(array $page, string $homeLabel, string $homeUrl = '/'): array
     {
-        if (($page['path'] ?? '') === '/') {
+        if (in_array((string) ($page['path'] ?? ''), ['/', $homeUrl], true)) {
             return [];
         }
 
@@ -111,17 +111,107 @@ final class PageService
         while ($current !== null && isset($byId[$current]) && $guard++ < 10) {
             $parent = $byId[$current];
 
-            if ($parent['status'] === 'published' && $parent['path'] !== '/') {
+            if ($parent['status'] === 'published' && !in_array($parent['path'], ['/', $homeUrl], true)) {
                 array_unshift($trail, ['label' => (string) $parent['title'], 'url' => (string) $parent['path']]);
             }
 
             $current = $parent['parent_id'] !== null ? (int) $parent['parent_id'] : null;
         }
 
-        array_unshift($trail, ['label' => $homeLabel, 'url' => '/']);
+        array_unshift($trail, ['label' => $homeLabel, 'url' => $homeUrl]);
         $trail[] = ['label' => (string) $page['title'], 'url' => null];
 
         return $trail;
+    }
+
+    /**
+     * path ของทุกภาษาของหน้านี้ที่เผยแพร่แล้วและ index ได้ — [locale => path] (รวมตัวเอง)
+     * ‼️ hreflang ต้องชี้หน้าที่ index ได้และ canonical เป็นตัวเองเท่านั้น ไม่งั้น Google ทิ้งทั้งชุด
+     *
+     * @param  array<string, mixed> $page
+     * @return array<string, string>
+     */
+    public function translationPaths(array $page): array
+    {
+        $group = (string) ($page['translation_group'] ?? '');
+
+        if ($group === '') {
+            return [];
+        }
+
+        $out = [];
+
+        foreach ($this->pages->translations($group) as $row) {
+            if (self::isLive($row) && $row['robots'] === 'index' && (string) ($row['canonical_override'] ?? '') === '') {
+                $out[(string) $row['locale']] = (string) $row['path'];
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * [locale => path] ของภาษาที่มีอยู่ — ปุ่มสลับภาษาใช้ (รวมหน้าที่ยังไม่ index ได้ เช่น /en/blog/)
+     *
+     * @param  array<string, mixed> $page
+     * @return array<string, string>
+     */
+    public function switcherPaths(array $page): array
+    {
+        $group = (string) ($page['translation_group'] ?? '');
+        $out   = [];
+
+        foreach ($group === '' ? [] : $this->pages->translations($group) as $row) {
+            if (self::isLive($row)) {
+                $out[(string) $row['locale']] = (string) $row['path'];
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * ทุกกลุ่มคำแปลที่ index ได้ — sitemap (query เดียวทั้งเว็บ)
+     *
+     * @return array<string, array<string, string>> group => [locale => path]
+     */
+    public function translationGroups(): array
+    {
+        $out = [];
+
+        foreach ($this->pages->translationIndex() as $row) {
+            $out[(string) $row['translation_group']][(string) $row['locale']] = (string) $row['path'];
+        }
+
+        return $out;
+    }
+
+    /**
+     * ชุด hreflang จาก [locale => path] — ว่างถ้ามีภาษาเดียว · x-default = ไทย (ภาษาหลักของเว็บ)
+     * ชุดเดียวกันทั้งใน <head> และ sitemap จึง reciprocal เสมอ
+     *
+     * @param  array<string, string> $paths
+     * @return list<array{hreflang:string, path:string}>
+     */
+    public static function hreflangSet(array $paths): array
+    {
+        if (count($paths) < 2) {
+            return [];
+        }
+
+        $out = [];
+
+        foreach (LocaleService::codes() as $locale) {
+            if (isset($paths[$locale])) {
+                $out[] = ['hreflang' => LocaleService::htmlLang($locale), 'path' => $paths[$locale]];
+            }
+        }
+
+        if (isset($paths[LocaleService::DEFAULT])) {
+            $out[] = ['hreflang' => 'x-default', 'path' => $paths[LocaleService::DEFAULT]];
+        }
+
+        return $out;
     }
 
     /**

@@ -22,32 +22,21 @@ final class Category extends Model
 
     protected string $table = 'categories';
 
-    protected array $fillable = ['slug', 'name', 'description', 'seo_title', 'meta_description', 'robots', 'sort'];
+    protected array $fillable = [
+        'slug', 'name', 'description', 'seo_title', 'meta_description', 'robots', 'sort', 'locale', 'translation_group',
+    ];
 
-    /**
-     * locale / translation_group มาจาก migration ของ Phase 4 — เขียนได้เฉพาะเมื่อมีคอลัมน์แล้ว
-     * (allowlist ของ base Model ใส่คอลัมน์ที่ยังไม่มีไม่ได้ ไม่งั้น INSERT พัง)
-     */
-    public function __construct()
-    {
-        foreach (['locale', 'translation_group'] as $column) {
-            if (\Core\Database::hasColumn($this->table, $column)) {
-                $this->fillable[] = $column;
-            }
-        }
-    }
     public const ROBOTS = ['index', 'noindex'];
 
-    /** @return array<string, mixed>|null */
-    public function findBySlug(string $slug): ?array
+    /** @return array<string, mixed>|null หมวดของภาษานี้ (URL /category/x/ = th · /en/category/x/ = en) */
+    public function findBySlug(string $slug, string $locale = 'th'): ?array
     {
         return Database::selectOne(
-            'SELECT * FROM categories WHERE slug = :slug AND deleted_at IS NULL LIMIT 1',
-            ['slug' => $slug]
+            'SELECT * FROM categories WHERE slug = :slug AND locale = :locale AND deleted_at IS NULL LIMIT 1',
+            ['slug' => $slug, 'locale' => $locale]
         );
     }
 
-    /** @return array<int, array<string, mixed>> */
     public function postCount(int $id): int
     {
         return (int) (Database::selectOne(
@@ -56,6 +45,7 @@ final class Category extends Model
         )['n'] ?? 0);
     }
 
+    /** @return array<int, array<string, mixed>> */
     public function allLive(): array
     {
         return Database::select('SELECT * FROM categories WHERE deleted_at IS NULL ORDER BY sort, id');

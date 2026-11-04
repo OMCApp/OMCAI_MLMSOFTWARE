@@ -30,7 +30,8 @@ final class SchemaService
     public function graph(array $context): array
     {
         $base  = SeoService::base() . '/';
-        $graph = [$this->organization($base), $this->website($base)];
+        $locale = (string) ($context['locale'] ?? LocaleService::DEFAULT);
+        $graph  = [$this->organization($base, $locale), $this->website($base, $locale)];
 
         $crumbs = $context['breadcrumbs'] ?? [];
 
@@ -69,7 +70,7 @@ final class SchemaService
     }
 
     /** @return array<string, mixed> */
-    private function organization(string $base): array
+    private function organization(string $base, string $locale): array
     {
         $org = [
             '@type' => 'Organization',
@@ -77,6 +78,12 @@ final class SchemaService
             'name'  => (string) (SettingService::get('organization.name') ?: SettingService::brand()),
             'url'   => $base,
         ];
+
+        $about = SiteService::about($locale);
+
+        if ($about !== '') {
+            $org['description'] = $about;
+        }
 
         $optional = [
             'legalName' => SettingService::get('organization.legal_name'),
@@ -106,14 +113,14 @@ final class SchemaService
     }
 
     /** @return array<string, mixed> */
-    private function website(string $base): array
+    private function website(string $base, string $locale): array
     {
         return [
             '@type'      => 'WebSite',
             '@id'        => $base . '#website',
             'url'        => $base,
             'name'       => SettingService::brand(),
-            'inLanguage' => 'th',
+            'inLanguage' => LocaleService::htmlLang($locale),
             'publisher'  => ['@id' => $base . '#organization'],
         ];
     }
@@ -154,7 +161,7 @@ final class SchemaService
             '@id'              => $canonical . '#article',
             'headline'         => mb_substr((string) $post['title'], 0, 110),
             'mainEntityOfPage' => $canonical,
-            'inLanguage'       => 'th',
+            'inLanguage'       => LocaleService::htmlLang((string) ($post['locale'] ?? LocaleService::DEFAULT)),
             'publisher'        => ['@id' => $base . '#organization'],
             'author'           => $author !== '' ? ['@type' => 'Person', 'name' => $author] : ['@id' => $base . '#organization'],
         ];

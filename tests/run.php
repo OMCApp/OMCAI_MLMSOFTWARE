@@ -246,7 +246,10 @@ foreach ($urlMap as $path) {
     $preview = $http('GET', $enc($path) . '?preview=1', ['jar' => 'admin']);
     $anonPreview = $http('GET', $enc($path) . '?preview=1');
 
-    if ($status === 'draft') {
+    if ($status === 'draft' && $path === '/') {
+        // non-production: draft home falls back to the design-system preview (SiteController) — still noindex
+        $check($public['status'] === 200 && str_contains($header($public, 'x-robots-tag'), 'noindex'), 'draft / → preview home (non-production, noindex)', (string) $public['status']);
+    } elseif ($status === 'draft') {
         $check($public['status'] === 404, "draft {$path} → 404 for public", (string) $public['status']);
         $check($anonPreview['status'] === 404, "draft {$path}?preview=1 → 404 when not logged in", (string) $anonPreview['status']);
         $check($preview['status'] === 200, "draft {$path}?preview=1 → 200 for admin", (string) $preview['status']);
@@ -417,7 +420,7 @@ $check(str_contains($posts, '<lastmod>'), 'posts sitemap has lastmod');
 $check(!str_contains($posts, 'zz-test-draft-') && !str_contains($posts, 'zz-test-future-') && !str_contains($posts, 'zz-test-noindex-'), 'posts sitemap excludes draft/future/noindex');
 $pages = $http('GET', '/sitemap-pages.xml')['body'];
 $check(str_contains($pages, $productPath), 'pages sitemap has published page');
-$check(!str_contains($pages, '/features/') && !str_contains($pages, '/sample-page/'), 'pages sitemap excludes drafts and redirected URLs');
+$check(!str_contains($pages, '/sample-page/') && !str_contains($pages, '/thank-you/'), 'pages sitemap excludes noindex and redirected URLs');
 $check(str_contains($pages, '<loc>https://mlmsoftware.omc.co.th/blog/</loc>'), 'pages sitemap includes /blog/ when posts exist');
 $cats = $http('GET', '/sitemap-categories.xml')['body'];
 $check(str_contains($cats, $enc('/category/ประกัน/')), 'categories sitemap has category with posts');
@@ -589,6 +592,238 @@ foreach (['/category/ข่าวขายตรง/', '/category/ประก�
     $res = $http('GET', $enc($catPath));
     preg_match('#<meta name="description" content="([^"]*)"#', $res['body'], $dm);
     $check(mb_strlen(html_entity_decode($dm[1] ?? '', ENT_QUOTES)) >= 50, "{$catPath} has a real meta description", $dm[1] ?? '');
+}
+
+// ------------------------------------------------------------------ Phase 4 — หน้า public 3 ภาษา + SEO + lead
+
+$section('Phase 4 — published pages in th/en/zh (lang · H1 · title/description · canonical · hreflang)');
+
+/** @var array<string, array<string, mixed>> $p4Locales */
+$p4Locales = require $root . '/config/locales.php';
+$p4Limits  = ['th' => [60, 110, 160], 'en' => [60, 110, 160], 'zh' => [32, 50, 100]];
+$p4Pages   = $pdo->query("SELECT path, locale, translation_group, robots, canonical_override FROM pages
+                          WHERE status = 'published' AND deleted_at IS NULL AND path NOT LIKE '/zz-test-%' ORDER BY locale, path")->fetchAll();
+$p4Group   = [];
+$p4Titles  = [];
+$p4Descs   = [];
+$p4Bodies  = [];
+
+foreach ($p4Pages as $row) {
+    if ($row['robots'] === 'index' && (string) $row['canonical_override'] === '') {
+        $p4Group[(string) $row['translation_group']][(string) $row['locale']] = (string) $row['path'];
+    }
+}
+
+$check(count(array_filter($p4Pages, static fn (array $r): bool => $r['locale'] === 'en')) >= 39, 'at least 39 English pages published');
+$check(count(array_filter($p4Pages, static fn (array $r): bool => $r['locale'] === 'zh')) >= 39, 'at least 39 Chinese pages published');
+
+foreach ($urlMap as $path) {
+    $liveStatus->execute(['p' => $path]);
+    $check($liveStatus->fetchColumn() === 'published', "PLAN URL published: {$path}");
+}
+
+foreach ($p4Pages as $row) {
+    $path   = (string) $row['path'];
+    $locale = (string) $row['locale'];
+    $res    = $http('GET', $enc($path));
+    $body   = $res['body'];
+    $p4Bodies[$path] = $body;
+
+    $check($res['status'] === 200, "{$path} → 200", (string) $res['status']);
+    $check(str_contains($body, '<html lang="' . $p4Locales[$locale]['html_lang'] . '"'), "{$path} <html lang> = {$p4Locales[$locale]['html_lang']}");
+    $check(substr_count($body, '<h1') === 1, "{$path} has exactly one <h1>", (string) substr_count($body, '<h1'));
+
+    preg_match('#<title>(.*?)</title>#s', $body, $t);
+    preg_match('#<meta name="description" content="([^"]*)">#', $body, $d);
+    $title = html_entity_decode($t[1] ?? '', ENT_QUOTES, 'UTF-8');
+    $desc  = html_entity_decode($d[1] ?? '', ENT_QUOTES, 'UTF-8');
+    [$maxTitle, $minDesc, $maxDesc] = $p4Limits[$locale];
+
+    $check($title !== '' && mb_strlen($title) <= $maxTitle, "{$path} title ≤ {$maxTitle} chars", mb_strlen($title) . ' ' . $title);
+
+    if ($row['robots'] === 'index') {
+        $check(mb_strlen($desc) >= $minDesc && mb_strlen($desc) <= $maxDesc, "{$path} description {$minDesc}–{$maxDesc} chars", (string) mb_strlen($desc));
+        $p4Titles[$locale][$title][] = $path;
+        $p4Descs[$locale][$desc][]   = $path;
+    } else {
+        $check(str_contains($body, '<meta name="robots" content="noindex'), "{$path} (noindex row) is noindex");
+    }
+
+    $selfCanonical = 'https://mlmsoftware.omc.co.th' . $enc($path);
+    $expected      = (string) $row['canonical_override'] !== '' ? 'https://mlmsoftware.omc.co.th' . $enc((string) $row['canonical_override']) : $selfCanonical;
+    $check(str_contains($body, '<link rel="canonical" href="' . $expected . '">'), "{$path} canonical correct (never cross-language)");
+
+    // hreflang: ชุดเดียวกันทุกหน้าในกลุ่ม (reciprocal) + ตัวเอง + x-default = ไทย
+    $set = $row['robots'] === 'index' && (string) $row['canonical_override'] === '' ? ($p4Group[(string) $row['translation_group']] ?? []) : [];
+
+    if (count($set) >= 2) {
+        foreach ($set as $altLocale => $altPath) {
+            $check(str_contains($body, '<link rel="alternate" hreflang="' . $p4Locales[$altLocale]['html_lang'] . '" href="https://mlmsoftware.omc.co.th' . $enc($altPath) . '">'),
+                "{$path} hreflang {$altLocale} → {$altPath}");
+        }
+        $check(isset($set['th']) && str_contains($body, '<link rel="alternate" hreflang="x-default" href="https://mlmsoftware.omc.co.th' . $enc($set['th']) . '">'), "{$path} hreflang x-default → Thai");
+        $check(isset($set[$locale]) && $set[$locale] === $path, "{$path} hreflang set includes itself");
+    } else {
+        $check(!str_contains($body, 'hreflang="x-default"'), "{$path} has no hreflang (no published translation / not indexable)");
+    }
+}
+
+foreach (['th', 'en', 'zh'] as $locale) {
+    $dupTitles = array_filter($p4Titles[$locale] ?? [], static fn (array $paths): bool => count($paths) > 1);
+    $dupDescs  = array_filter($p4Descs[$locale] ?? [], static fn (array $paths): bool => count($paths) > 1);
+    $check($dupTitles === [], "no duplicate <title> among indexable {$locale} pages", json_encode($dupTitles, JSON_UNESCAPED_UNICODE));
+    $check($dupDescs === [], "no duplicate meta description among indexable {$locale} pages", json_encode($dupDescs, JSON_UNESCAPED_UNICODE));
+}
+
+$section('Phase 4 — content rules (no fake claims · no 传销 · landing pages substantial)');
+$p4Forbidden = ['100,000+', '99.9%', '200+', '10+ ปี', 'J&amp;C', 'J&C', 'NUTRIPLUS', 'BEAUTÉ', 'VITA MAX', 'BIO WELLNESS', 'HERBAL LIFE', '传销'];
+foreach ($p4Bodies as $path => $body) {
+    $visible = strip_tags((string) preg_replace('#<(script|style)\b.*?</\1>#s', '', $body));
+    foreach ($p4Forbidden as $term) {
+        $check(!str_contains($visible, $term) && !str_contains($body, $term), "{$path} has no '{$term}'");
+    }
+}
+
+$p4Landing = ['/mlm-program/', '/mlm-system/', '/direct-sales-software/', '/direct-sales-system/', '/mlm-development/',
+    '/mlm-programming/', '/mlm-software-thailand/', '/mlm-migration/', '/commission-system/', '/member-system/'];
+foreach ($p4Landing as $path) {
+    foreach (['' => 3500, '/en' => 3000, '/zh' => 1000] as $prefix => $minChars) {
+        $body = $p4Bodies[$prefix . $path] ?? '';
+        preg_match('#<main\b.*?</main>#s', $body, $main);
+        $text = trim((string) preg_replace('/\s+/u', ' ', strip_tags((string) preg_replace('#<(script|style|nav|form)\b.*?</\1>#s', '', $main[0] ?? ''))));
+        $check(mb_strlen($text) >= $minChars, "landing {$prefix}{$path} has substantial copy (≥ {$minChars} chars)", (string) mb_strlen($text));
+        $check(str_contains($body, '"@type":"FAQPage"'), "landing {$prefix}{$path} has an FAQ (FAQPage JSON-LD)");
+        $check(str_contains($body, 'action="/lead/"') || str_contains($body, '/lead/"'), "landing {$prefix}{$path} has a lead form");
+    }
+    $check(preg_match('#href="/20\d\d/\d\d/\d\d/#', $p4Bodies[$path] ?? '') === 1, "landing {$path} (th) links to an old blog post");
+}
+
+$check(str_contains($p4Bodies['/'] ?? '', 'ก่อตั้งปี 2552') || str_contains($p4Bodies['/about/'] ?? '', '2552'), 'founding year 2552 shown');
+$years = (new DateTimeImmutable('2009-04-03'))->diff(new DateTimeImmutable('today'))->y;
+$check(str_contains($p4Bodies['/about/'] ?? '', $years . ' ปี'), "years in business computed ({$years})");
+$check(!str_contains(implode('', $p4Bodies), '{years}'), 'no unreplaced {years} placeholder');
+$check(str_contains($p4Bodies['/ocpb-mlm/'] ?? '', 'ไม่ใช่คำปรึกษากฎหมาย'), '/ocpb-mlm/ has the legal disclaimer');
+$check(str_contains($p4Bodies['/contact/'] ?? '', 'tel:+66991095544') && str_contains($p4Bodies['/contact/'] ?? '', 'https://line.me/ti/p/~omc54'), 'contact page has click-to-call and LINE');
+
+$section('Phase 4 — locale from URL only · no empty translated URLs');
+foreach (['en', 'zh', 'en-US,en;q=0.9', 'zh-CN,zh;q=0.9'] as $acceptLanguage) {
+    $res = $http('GET', '/', ['headers' => ['Accept-Language: ' . $acceptLanguage]]);
+    $check($res['status'] === 200 && $header($res, 'location') === '' && str_contains($res['body'], '<html lang="th"'),
+        "Accept-Language: {$acceptLanguage} on / → Thai page 200, no redirect");
+}
+foreach (['/en/blog/', '/zh/blog/', '/en/feed/', '/zh/feed/', '/en/category/ข่าวขายตรง/', '/en/2025/05/20/mlm-software-คำตอบการจัดการสต็อก/'] as $path) {
+    $res = $http('GET', $enc($path));
+    $check($res['status'] === 404 && str_contains($res['body'], 'noindex'), "{$path} → 404 noindex (no translated posts yet)", (string) $res['status']);
+}
+$thaiPost = $http('GET', $enc('/2025/05/20/mlm-software-คำตอบการจัดการสต็อก/'));
+$check(str_contains($thaiPost['body'], 'href="/en/" hreflang="en"') || str_contains($thaiPost['body'], "href=\"/en/\"\n"), 'language switcher on a Thai-only post links to /en/ home');
+$check(!str_contains($thaiPost['body'], 'hreflang="x-default"'), 'Thai-only post has no hreflang');
+$check(str_contains($thaiPost['body'], 'class="post-related"') && str_contains($thaiPost['body'], 'class="cta-band"'), 'post page has related posts and a CTA band');
+$check(preg_match('#<img[^>]+fetchpriority="high"#', $thaiPost['body']) === 1, 'post featured image is the LCP image (fetchpriority=high, not lazy)');
+$home = $p4Bodies['/'] ?? '';
+$check(substr_count($home, 'class="lang-switch') >= 3, 'header (desktop + drawer) and footer have the language switcher');
+$check(str_contains($home, 'aria-label="' . e(__('site.lang_switch')) . '"') || str_contains($home, 'class="lang-switch is-header" aria-label='), 'language switcher has an accessible label');
+
+$section('Phase 4 — sitemaps per language with hreflang alternates');
+$index = $http('GET', '/sitemap.xml')['body'];
+foreach (['pages', 'posts', 'categories', 'pages-en', 'pages-zh'] as $part) {
+    $check(str_contains($index, 'https://mlmsoftware.omc.co.th/sitemap-' . $part . '.xml'), "index lists sitemap-{$part}.xml");
+}
+$check(!str_contains($index, 'sitemap-posts-en.xml') && $http('GET', '/sitemap-posts-en.xml')['status'] === 404, 'no empty sitemap-posts-en.xml');
+$smEn = $http('GET', '/sitemap-pages-en.xml');
+$check($smEn['status'] === 200 && @simplexml_load_string($smEn['body']) !== false, 'sitemap-pages-en.xml is valid XML');
+$check(str_contains($smEn['body'], '<loc>https://mlmsoftware.omc.co.th/en/features/</loc>')
+    && str_contains($smEn['body'], '<xhtml:link rel="alternate" hreflang="zh-Hans" href="https://mlmsoftware.omc.co.th/zh/features/" />')
+    && str_contains($smEn['body'], '<xhtml:link rel="alternate" hreflang="x-default" href="https://mlmsoftware.omc.co.th/features/" />'),
+    'sitemap-pages-en.xml has reciprocal xhtml:link alternates + x-default');
+$smTh = $http('GET', '/sitemap-pages.xml')['body'];
+$check(!str_contains($smTh, '<loc>https://mlmsoftware.omc.co.th/en/') && !str_contains($smTh, '/thank-you/') && !str_contains($smTh, '/ocpb-mlm2/'), 'Thai pages sitemap: no other locale, no noindex thank-you, no canonicalised /ocpb-mlm2/');
+
+$section('Phase 4 — lead form (CSRF · honeypot · validation · rate limit · thank-you)');
+$pdo->prepare('DELETE FROM lead_attempts WHERE ip_address = :ip')->execute(['ip' => '127.0.0.1']);
+$leadPage = $http('GET', '/en/demo/?utm_source=zz-test&utm_medium=cpc&utm_campaign=p4', ['jar' => 'lead']);
+preg_match('/name="_token" value="([^"]+)"/', $leadPage['body'], $m);
+$leadToken = $m[1] ?? '';
+$check($leadToken !== '' && str_contains($leadPage['body'], 'name="utm_source" value="zz-test"'), 'lead form has CSRF token and UTM hidden fields');
+$check(str_contains($leadPage['body'], 'id="lead-form"') && str_contains($leadPage['body'], 'name="website"'), 'lead form anchor + honeypot field');
+$leadBase = ['_token' => $leadToken, 'form_key' => 'demo', 'source_path' => '/en/demo/', 'website' => ''];
+
+$res = $http('POST', '/lead/', ['jar' => 'lead', 'post' => $leadBase + ['name' => 'zz-test lead ' . $stamp, 'email' => 'zz-test@example.com',
+    'business_type' => 'supplements', 'need' => 'custom', 'member_estimate' => '1k_10k', 'has_system' => 'no', 'message' => 'hello', 'utm_campaign' => 'p4']]);
+$check($res['status'] === 303 && $header($res, 'location') === '/en/thank-you/', 'valid lead → 303 /en/thank-you/', $res['status'] . ' ' . $header($res, 'location'));
+$lead = $pdo->prepare("SELECT * FROM leads WHERE name = :n");
+$lead->execute(['n' => 'zz-test lead ' . $stamp]);
+$leadRow = $lead->fetch();
+$check($leadRow !== false && $leadRow['locale'] === 'en' && $leadRow['landing_page'] === '/en/demo/' && $leadRow['status'] === 'new', 'lead stored with locale + landing page');
+$leadUtm = json_decode((string) ($leadRow['utm'] ?? ''), true);
+$check(($leadUtm['first']['source'] ?? '') === 'zz-test' && ($leadUtm['current']['campaign'] ?? '') === 'p4', 'lead has first-touch UTM (cookie) and current UTM', (string) ($leadRow['utm'] ?? ''));
+$auditLead = $pdo->prepare("SELECT COUNT(*) FROM audit_logs WHERE table_name = 'leads' AND record_id = :id AND action = 'create'");
+$auditLead->execute(['id' => $leadRow['id'] ?? 0]);
+$check((int) $auditLead->fetchColumn() === 1, 'lead create is audited');
+$thanks = $http('GET', '/en/thank-you/');
+$check($thanks['status'] === 200 && str_contains($thanks['body'], '<meta name="robots" content="noindex'), '/en/thank-you/ is noindex');
+
+$res = $http('POST', '/lead/', ['jar' => 'lead', 'post' => $leadBase + ['name' => '', 'email' => 'not-an-email', 'business_type' => 'bogus']]);
+$check($res['status'] === 303 && $header($res, 'location') === '/en/demo/#lead-form', 'invalid lead → back to the form', $header($res, 'location'));
+$back = $http('GET', '/en/demo/', ['jar' => 'lead']);
+$check(str_contains($back['body'], 'id="f-name-error"') && str_contains($back['body'], 'aria-invalid="true"') && str_contains($back['body'], 'value="not-an-email"'),
+    'errors shown under fields (aria-describedby) with old input kept');
+$check(str_contains($back['body'], e(__('lead.error_option'))) || str_contains($back['body'], 'Please choose one of the options'), 'option outside LEAD_OPTIONS rejected');
+
+$beforeCount = (int) $pdo->query('SELECT COUNT(*) FROM leads')->fetchColumn();
+$res = $http('POST', '/lead/', ['jar' => 'lead', 'post' => ['_token' => $leadToken, 'form_key' => 'demo', 'source_path' => '/en/demo/', 'name' => 'zz-test bot', 'email' => 'bot@example.com', 'website' => 'http://spam.example']]);
+$check($res['status'] === 303 && $header($res, 'location') === '/en/thank-you/', 'honeypot filled → looks successful');
+$check((int) $pdo->query('SELECT COUNT(*) FROM leads')->fetchColumn() === $beforeCount, 'honeypot lead not stored');
+
+$res = $http('POST', '/lead/', ['jar' => 'lead-nocsrf', 'post' => ['_token' => 'forged', 'form_key' => 'demo', 'source_path' => '/en/demo/', 'name' => 'zz-test csrf', 'email' => 'x@example.com'],
+    'headers' => ['Referer: ' . $base . '/en/demo/']]);
+$check($res['status'] === 303 && $header($res, 'location') === '/en/demo/', 'CSRF failure → back to the page, not stored', $res['status'] . ' ' . $header($res, 'location'));
+$check((int) $pdo->query('SELECT COUNT(*) FROM leads')->fetchColumn() === $beforeCount, 'forged-token lead not stored');
+
+$throttled = false;
+for ($i = 0; $i < App\Services\LeadService::MAX_ATTEMPTS + 2; $i++) {
+    $res = $http('POST', '/lead/', ['jar' => 'lead', 'post' => $leadBase + ['name' => '']]);
+    if ($res['status'] === 303) {
+        $after = $http('GET', '/en/demo/', ['jar' => 'lead']);
+        if (str_contains($after['body'], e(__('lead.throttled'))) || str_contains($after['body'], 'Too many submissions')) {
+            $throttled = true;
+            break;
+        }
+    }
+}
+$check($throttled, 'rate limit per IP kicks in (lead_attempts)');
+$pdo->prepare('DELETE FROM lead_attempts WHERE ip_address = :ip')->execute(['ip' => '127.0.0.1']);
+$pdo->prepare("DELETE FROM leads WHERE name LIKE 'zz-test%'")->execute();
+
+$section('Phase 4 — Thai URLs unchanged (docs/migration/url-mapping.md baseline)');
+preg_match_all('/^\| \d+ \| `(https?:\/\/[^`]+)` \| [^|]+ \| ([^|]+) \| ([^|]*) \|/mu', (string) file_get_contents($root . '/docs/migration/url-mapping.md'), $rows, PREG_SET_ORDER);
+$check(count($rows) === 95, 'url-mapping.md has 95 baseline URLs', (string) count($rows));
+foreach ($rows as [, $oldUrl, $newStatus, $redirect]) {
+    $parts = parse_url($oldUrl);
+    if (($parts['host'] ?? '') !== 'mlmsoftware.omc.co.th' || ($parts['scheme'] ?? '') !== 'https') {
+        continue; // host/scheme variants — server level
+    }
+    $path  = (string) ($parts['path'] ?? '/');
+    $url   = $enc($path) . (isset($parts['query']) ? '?' . $parts['query'] : '');
+    $res   = $http('GET', $url);
+    $newStatus = trim($newStatus);
+    if (str_starts_with($newStatus, '301')) {
+        $target = trim((string) preg_replace('/^301 → /u', '', trim($redirect)));
+        $check($res['status'] === 301 && rawurldecode(explode('?', $header($res, 'location'))[0]) === $target, "{$path} still 301 → {$target}", $res['status'] . ' ' . $header($res, 'location'));
+        $res  = $http('GET', $enc($target));
+        $path = $target;
+    }
+    if ($newStatus === '410') {
+        $check($res['status'] === 410, "{$path} still 410");
+        continue;
+    }
+    $check($res['status'] === 200, "{$path} → 200 (old URL intact)", (string) $res['status']);
+    if (str_contains($header($res, 'content-type'), 'text/html') && !isset($parts['query'])) {
+        $check(substr_count($res['body'], '<h1') === 1, "{$path} one H1");
+        $canon = $path === '/ocpb-mlm2/' ? '/ocpb-mlm/' : $path;
+        $check(str_contains($res['body'], '<link rel="canonical" href="https://mlmsoftware.omc.co.th' . $enc($canon) . '">'), "{$path} canonical unchanged");
+        $check(str_contains($res['body'], '<html lang="th"'), "{$path} stays Thai");
+    }
 }
 
 // ------------------------------------------------------------------ environment / noindex

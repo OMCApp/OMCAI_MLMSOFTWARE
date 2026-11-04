@@ -81,6 +81,12 @@ return [
         'canonical_url' => rtrim($get('CANONICAL_URL', 'https://mlmsoftware.omc.co.th'), '/'),
     ],
 
+    // อีเมลแจ้งเตือน lead ใหม่ (App\Services\MailService ใช้ mail() ของ PHP) — ปิด/ไม่มีผู้ส่ง = ไม่ส่ง แค่บันทึก log
+    'mail' => [
+        'enabled' => $get('MAIL_ENABLED', 'false') === 'true',
+        'from'    => $get('MAIL_FROM', ''),
+    ],
+
     'db' => [
         'host' => $get('DB_HOST', '127.0.0.1'),
         'port' => (int) $get('DB_PORT', '3306'),
@@ -93,7 +99,7 @@ return [
     //    ทำวันแรกแทบไม่มีต้นทุน ส่วนที่แพงคือย้อนกลับมาทำทีหลัง
     'locales'        => array_values(array_filter(array_map(
         'trim',
-        explode(',', $get('APP_LOCALES', 'th,en'))
+        explode(',', $get('APP_LOCALES', implode(',', array_keys((array) require __DIR__ . '/locales.php'))))
     ))),
     'default_locale' => $get('APP_DEFAULT_LOCALE', 'th'),
 

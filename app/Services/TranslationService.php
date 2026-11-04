@@ -4,8 +4,7 @@
  *
  * ‼️ รายการภาษา (รหัส · prefix ของ URL · ป้าย) มาจาก config/locales.php ที่เดียว — ห้ามเขียนรหัสภาษาตายตัวใน CMS
  *    ภาษาแรกของไฟล์คือภาษาหลัก (อยู่ที่ราก URL)
- * ‼️ คอลัมน์ locale / translation_group ของ pages · posts · categories มาจาก migration ของ Phase 4
- *    ที่นี่ตรวจว่ามีคอลัมน์ก่อนเสมอ (Database::hasColumn) — ยังไม่มี = ทุกแถวเป็นภาษาหลัก ไม่มีคำแปล
+ * ‼️ คอลัมน์ locale / translation_group ของ pages · posts · categories มาจาก migration 020 (Phase 4)
  * ‼️ ชื่อตารางที่รับมาต้องอยู่ใน TABLES — ใช้ประกอบ SQL จึงห้ามรับจากผู้ใช้
  */
 
@@ -19,71 +18,51 @@ final class TranslationService
 {
     private const TABLES = ['pages', 'posts', 'categories'];
 
-    /** @var array<string, array{prefix:string, label:string, hreflang?:string}>|null */
-    private static ?array $registry = null;
-
-    /** @return array<string, array{prefix:string, label:string, hreflang?:string}> */
-    public static function registry(): array
-    {
-        if (self::$registry === null) {
-            $file = dirname(__DIR__, 2) . '/config/locales.php';
-            $data = is_file($file) ? (array) require $file : [];
-            self::$registry = [];
-
-            foreach ($data as $code => $info) {
-                if (is_string($code) && preg_match('/^[a-z]{2}(-[a-z0-9]+)?$/i', $code) === 1) {
-                    self::$registry[$code] = [
-                        'prefix' => rtrim((string) ($info['prefix'] ?? ''), '/'),
-                        'label'  => (string) ($info['label'] ?? $code),
-                    ];
-                }
-            }
-
-            if (self::$registry === []) {
-                self::$registry = ['th' => ['prefix' => '', 'label' => 'th']];
-            }
-        }
-
-        return self::$registry;
-    }
+    /* ‼️ ทะเบียนภาษาคือ config/locales.php ผ่าน LocaleService (Phase 4) — ที่นี่แค่ส่งต่อ ห้ามอ่าน config เอง */
 
     /** @return array<int, string> รหัสภาษาทั้งหมด (ภาษาหลักก่อน) */
     public static function locales(): array
     {
-        return array_keys(self::registry());
+        return LocaleService::codes();
     }
 
     public static function default(): string
     {
-        return (string) array_key_first(self::registry());
+        return LocaleService::DEFAULT;
     }
 
+    /** ชื่อภาษาเต็ม (ภาษาไทย · English · 简体中文) — ป้ายใน CMS */
     public static function label(string $locale): string
     {
-        return self::registry()[$locale]['label'] ?? $locale;
+        return LocaleService::name($locale);
     }
 
     public static function prefix(string $locale): string
     {
-        return self::registry()[$locale]['prefix'] ?? '';
+        return rtrim(LocaleService::prefix($locale), '/');
     }
 
     /** @return array<string, string> รหัส => ป้าย สำหรับ select */
     public static function options(): array
     {
-        return array_map(static fn (array $info): string => $info['label'], self::registry());
+        $out = [];
+
+        foreach (self::locales() as $code) {
+            $out[$code] = self::label($code);
+        }
+
+        return $out;
     }
 
+    /** ตารางที่มีคำแปล (คอลัมน์ locale/translation_group มาจาก migration 020 ของ Phase 4) */
     public static function enabled(string $table): bool
     {
-        return in_array($table, self::TABLES, true)
-            && Database::hasColumn($table, 'locale')
-            && Database::hasColumn($table, 'translation_group');
+        return in_array($table, self::TABLES, true);
     }
 
     public static function normalize(?string $locale): string
     {
-        return is_string($locale) && isset(self::registry()[$locale]) ? $locale : self::default();
+        return is_string($locale) && LocaleService::exists($locale) ? $locale : self::default();
     }
 
     /** path ตรงกับภาษาหรือไม่ — ภาษาที่มี prefix ต้องขึ้นต้นด้วย prefix/ · ภาษาหลักห้ามขึ้นต้นด้วย prefix ของภาษาอื่น */
@@ -95,8 +74,10 @@ final class TranslationService
             return str_starts_with($path, $prefix . '/');
         }
 
-        foreach (self::registry() as $info) {
-            if ($info['prefix'] !== '' && str_starts_with($path, $info['prefix'] . '/')) {
+        foreach (self::locales() as $code) {
+            $other = self::prefix($code);
+
+            if ($other !== '' && str_starts_with($path, $other . '/')) {
                 return false;
             }
         }

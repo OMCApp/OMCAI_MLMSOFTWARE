@@ -48,3 +48,12 @@ The site stays in maintenance (503) when a migration fails. That is intentional:
 ## Production cutover
 
 Handled separately through the SEO Migration Gate (see PLAN). The old WordPress files and DB stay untouched and backed up until the gate's rollback window is over.
+
+## Production (mlmsoftware.omc.co.th) — deployed by the owner (2026-11-04)
+The owner deploys production manually; CI only deploys staging. Before uploading:
+1. Wait until Phase 3 + 4 are merged and the staging SEO regression report passes (every baseline URL 200/301/410 as mapped).
+2. Document root must point at `public/` (no root `.htaccess` needed in production).
+3. Create `.env` with `APP_ENV=production`, production DB credentials, `APP_URL=https://mlmsoftware.omc.co.th`, a new `MIGRATE_TOKEN`, and `APP_KEY`. Leave `STAGING_PASS` empty.
+4. Upload files (same exclude list as `deploy.yml`) and the `public/wp-content/uploads/` images, then run `/_migrate` with header `X-Migrate-Token`.
+5. Check: `/robots.txt` says `Allow`, no `X-Robots-Tag: noindex` header on `/`, and canonical tags point to https://mlmsoftware.omc.co.th.
+6. Keep the WordPress backup ready for rollback.

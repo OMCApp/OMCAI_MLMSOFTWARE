@@ -24,21 +24,55 @@ final class Page extends Model
 
     protected array $fillable = [
         'parent_id', 'path', 'title', 'template', 'blocks', 'seo_title', 'meta_description',
-        'canonical_override', 'robots', 'og_image_id', 'status', 'published_at', 'sort',
+        'canonical_override', 'robots', 'og_image_id', 'status', 'published_at', 'sort', 'locale', 'translation_group',
     ];
 
     /**
-     * locale / translation_group มาจาก migration ของ Phase 4 — เขียนได้เฉพาะเมื่อมีคอลัมน์แล้ว
-     * (allowlist ของ base Model ใส่คอลัมน์ที่ยังไม่มีไม่ได้ ไม่งั้น INSERT พัง)
+     * ทุกภาษาของหน้าเดียวกัน (รวมตัวเอง) — hreflang / ปุ่มสลับภาษา
+     *
+     * @return array<int, array<string, mixed>>
      */
-    public function __construct()
+    public function translations(string $group): array
     {
-        foreach (['locale', 'translation_group'] as $column) {
-            if (\Core\Database::hasColumn($this->table, $column)) {
-                $this->fillable[] = $column;
-            }
-        }
+        return Database::select(
+            'SELECT id, path, locale, status, published_at, robots, canonical_override FROM pages
+             WHERE translation_group = :g AND deleted_at IS NULL ORDER BY id',
+            ['g' => $group]
+        );
     }
+
+    /**
+     * คู่ path ไทย → path ของคำแปลในภาษานี้ที่เผยแพร่แล้ว — เมนู/footer ของภาษาอื่น (App\Services\SiteService)
+     *
+     * @return array<int, array{th_path:string, tr_path:string}>
+     */
+    public function translatedPaths(string $locale): array
+    {
+        return Database::select(
+            "SELECT th.path AS th_path, tr.path AS tr_path
+               FROM pages th
+               JOIN pages tr ON tr.translation_group = th.translation_group AND tr.locale = :locale
+              WHERE th.locale = 'th' AND th.deleted_at IS NULL AND tr.deleted_at IS NULL
+                AND tr.status = 'published' AND (tr.published_at IS NULL OR tr.published_at <= NOW())",
+            ['locale' => $locale]
+        );
+    }
+
+    /**
+     * หน้าทั้งหมดที่มีกลุ่มคำแปล — sitemap ใช้จับคู่ hreflang ทีเดียว (ไม่ query ทีละหน้า)
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function translationIndex(): array
+    {
+        return Database::select(
+            "SELECT path, locale, translation_group FROM pages
+             WHERE translation_group IS NOT NULL AND status = 'published' AND robots = 'index' AND deleted_at IS NULL
+               AND (canonical_override IS NULL OR canonical_override = '')
+               AND (published_at IS NULL OR published_at <= NOW())"
+        );
+    }
+
     public const STATUSES = ['draft', 'published'];
     public const ROBOTS   = ['index', 'noindex'];
 
@@ -71,7 +105,7 @@ final class Page extends Model
     public function indexable(): array
     {
         return Database::select(
-            "SELECT id, path, template, canonical_override, updated_at FROM pages
+            "SELECT id, path, locale, translation_group, template, canonical_override, updated_at FROM pages
              WHERE status = 'published' AND robots = 'index' AND deleted_at IS NULL
                AND (published_at IS NULL OR published_at <= NOW())
              ORDER BY sort, id"

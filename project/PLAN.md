@@ -1,5 +1,5 @@
 # แผนงาน — OMC MLM Software (rebuild mlmsoftware.omc.co.th)
-> อัปเดตล่าสุด: 2026-11-03 | ⬜ ยังไม่เริ่ม · 🔄 กำลังทำ · 🔨 สร้างเสร็จ รอตรวจ (โหมดเร็ว) · ✅ เสร็จแล้ว
+> อัปเดตล่าสุด: 2026-11-04 | ⬜ ยังไม่เริ่ม · 🔄 กำลังทำ · 🔨 สร้างเสร็จ รอตรวจ (โหมดเร็ว) · ✅ เสร็จแล้ว
 
 อ่านคู่กับ `BRIEF.md` · `SCOPE.md` · `DESIGN.md` · `NOTES.md` · `QUESTIONS.md` · baseline ที่ `docs/seo/baseline-2026-11-03/`
 
@@ -125,10 +125,19 @@
 - [x] ดูหน้าจริงด้วย headless Chrome: desktop + 375px + โหมดมืด (`project/design/built/cms-*.png`)
 - [ ] ตรวจรวมช่วง D (โหมดเร็ว: ข้อ 4/6/8 ของนิยามเสร็จ — ทำแล้วด้วยชุดทดสอบ แต่รอตรวจรวม)
 
-## Phase 4 — หน้า public + copy + lead  ⬜
-- [ ] Home ตามแบบ · MLM Software · Features · Compensation Plans + 6 แผน · Solutions + 7 industry · Pricing · Demo · About · Contact · FAQ · Support · Blog/หมวด/บทความ template · Landing 10 หน้า
-- [ ] copy ภาษาไทยใหม่ทั้งหมด (tone ตาม BRIEF · ห้ามตัวเลข/โลโก้/รีวิวปลอม) · internal linking ตาม topic cluster
-- [ ] lead form: ขอ Demo / ใบเสนอราคา / ปรึกษา / ติดต่อ / ย้ายระบบ · CSRF · honeypot + rate limit · บันทึก lead + แจ้งอีเมล (ถ้าตั้ง SMTP) · หน้า thank-you (noindex) · ปุ่ม LINE/โทร
+## Phase 4 — หน้า public + copy + lead + 3 ภาษา  🔨
+### ครบลูป
+- [x] lead: เพิ่ม (ฟอร์มสาธารณะ) · ดู/แก้/ลบ/สถานะ อยู่ใน Phase 3 (หน้าจัดการ) — service มี update/changeStatus/delete แล้ว
+### ขั้นตอน
+- [x] เนื้อหาทุกหน้าใน URL map เผยแพร่แล้ว (migration `021_publish_site_content.sql` สร้างจาก `tools/content/<locale>/*.php` ด้วย `php tools/content/build-pages.php`) — ไทย 41 · อังกฤษ 39 · จีน 39 หน้า · Home ตามแบบ · MLM Software · Features · แผนรายได้ 7 · Services + 7 solutions · Pricing · Demo · About · Contact · FAQ · Support · Portfolio (สถานะว่างจริง) · OCPB · นโยบาย 2 · Landing 10 · thank-you (noindex)
+- [x] copy ใหม่ทั้งหมด ไทย/อังกฤษ/จีน (ห้ามตัวเลข/โลโก้/รีวิวปลอม — builder + tests ตรวจ) · internal link: hub ↔ ลูก ↔ landing ↔ บทความเดิม · breadcrumb ตาม parent ทุกภาษา
+- [x] SEO: seo_title คีย์เวิร์ดนำ + `| OMC` · description 120–160 (จีน 50–100) · ไม่ซ้ำในภาษาเดียวกัน · H1 เดียว · OG image ค่าเริ่มต้น `og-default.png` · Organization JSON-LD มีโทร/อีเมล/Facebook จริง
+- [x] หลายภาษา: ไทยที่ root (URL เดิมไม่เปลี่ยน) · `/en/` · `/zh/` · `config/locales.php` ที่เดียว · ภาษาจาก URL เท่านั้น · hreflang reciprocal + x-default (ไทย) ทั้ง `<head>` และ sitemap แยกภาษา · `/en/blog/` `/en/feed/` 404 จนกว่าจะมีบทความแปล · ตัวสลับภาษา header/drawer/footer · `lang/zh.php`
+- [x] lead: `POST /lead/` CSRF · honeypot · rate limit ต่อ IP (`lead_attempts`) · validate กับ `BlockService::LEAD_OPTIONS` · locale/landing_page/referrer/UTM (first-touch cookie 30 วัน) · อีเมลแจ้ง sale@omc.co.th ผ่าน `mail()` (ไม่ตั้ง MAIL_* = ข้าม + log) · thank-you ต่อภาษา (noindex) · tel:/LINE
+- [x] template บทความ: breadcrumb · วันที่ไทย (พ.ศ.) · หมวด · ผู้เขียน · รูปเด่น LCP · บทความที่เกี่ยวข้อง · CTA ท้ายบทความ · การ์ดรายการมีรูปเด่น
+- [x] tests: ส่วน "Phase 4" ใน `php tests/run.php` (4548 ผ่าน) · check.php 0 ต้องแก้ · ภาพจริง headless Chrome 1440/375 (th/en/zh) · Lighthouse mobile (ดู NOTES)
+- [ ] ภาพ WebP + srcset ของรูปบทความเดิม (PNG 1.5 MB) — Phase 6 performance
+- [ ] native speaker ตรวจ EN/ZH ก่อนขึ้น production (QUESTIONS)
 
 ## Phase 5 — Content migration  🔨
 - [x] ดึงบทความ 36 เรื่องจาก HTML เว็บจริง (`docs/migration/content.json`) → `posts` ด้วย migration `030_import_old_posts.sql` (สร้างจาก `tools/migration/build-import.php` · idempotent) · ข่าวขายตรง 27 + ประกัน 9 · **URL เดิมตรงทุกตัว** (ทดสอบด้วย URL เดิมแบบ encode ตัวเล็กของ WordPress)

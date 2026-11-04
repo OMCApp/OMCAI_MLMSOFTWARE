@@ -28,21 +28,9 @@ final class Post extends Model
     protected array $fillable = [
         'slug', 'title', 'excerpt', 'content', 'featured_image_id', 'category_id', 'author_name',
         'status', 'published_at', 'seo_title', 'meta_description', 'canonical_override', 'robots',
-        'og_image_id', 'legacy_url',
+        'og_image_id', 'legacy_url', 'locale', 'translation_group',
     ];
 
-    /**
-     * locale / translation_group มาจาก migration ของ Phase 4 — เขียนได้เฉพาะเมื่อมีคอลัมน์แล้ว
-     * (allowlist ของ base Model ใส่คอลัมน์ที่ยังไม่มีไม่ได้ ไม่งั้น INSERT พัง)
-     */
-    public function __construct()
-    {
-        foreach (['locale', 'translation_group'] as $column) {
-            if (\Core\Database::hasColumn($this->table, $column)) {
-                $this->fillable[] = $column;
-            }
-        }
-    }
     public const STATUSES = ['draft', 'published'];
     public const ROBOTS   = ['index', 'noindex'];
 
@@ -63,37 +51,59 @@ final class Post extends Model
     }
 
     /** @return array<int, array<string, mixed>> */
-    public function latestPublished(int $limit, int $offset = 0, ?int $categoryId = null): array
+    public function latestPublished(int $limit, int $offset = 0, ?int $categoryId = null, string $locale = 'th'): array
     {
         $limit  = max(1, min($limit, 100));
         $offset = max(0, $offset);
 
-        if ($categoryId === null) {
-            return Database::select(
-                'SELECT * FROM posts WHERE ' . self::PUBLISHED
-                . ' ORDER BY published_at DESC, id DESC'
-                . ' LIMIT ' . $limit . ' OFFSET ' . $offset
-            );
-        }
+        [$where, $params] = self::scope($categoryId, $locale);
 
         return Database::select(
-            'SELECT * FROM posts WHERE category_id = :category_id AND ' . self::PUBLISHED
+            'SELECT * FROM posts WHERE ' . $where . ' AND ' . self::PUBLISHED
             . ' ORDER BY published_at DESC, id DESC'
             . ' LIMIT ' . $limit . ' OFFSET ' . $offset,
-            ['category_id' => $categoryId]
+            $params
         );
     }
 
-    public function countPublished(?int $categoryId = null): int
+    public function countPublished(?int $categoryId = null, string $locale = 'th'): int
     {
-        $row = $categoryId === null
-            ? Database::selectOne('SELECT COUNT(*) AS total FROM posts WHERE ' . self::PUBLISHED)
-            : Database::selectOne(
-                'SELECT COUNT(*) AS total FROM posts WHERE category_id = :category_id AND ' . self::PUBLISHED,
-                ['category_id' => $categoryId]
-            );
+        [$where, $params] = self::scope($categoryId, $locale);
+
+        $row = Database::selectOne('SELECT COUNT(*) AS total FROM posts WHERE ' . $where . ' AND ' . self::PUBLISHED, $params);
 
         return (int) ($row['total'] ?? 0);
+    }
+
+    /**
+     * บทความเผยแพร่แล้วในหมวดเดียวกัน (ไม่รวมตัวเอง) — "บทความที่เกี่ยวข้อง" ท้ายบทความ
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function relatedPublished(int $postId, int $categoryId, int $limit): array
+    {
+        $limit = max(1, min($limit, 12));
+
+        return Database::select(
+            'SELECT * FROM posts WHERE category_id = :category_id AND id <> :id AND ' . self::PUBLISHED
+            . ' ORDER BY published_at DESC, id DESC'
+            . ' LIMIT ' . $limit,
+            ['category_id' => $categoryId, 'id' => $postId]
+        );
+    }
+
+    /** @return array{0:string, 1:array<string, mixed>} เงื่อนไขภาษา + หมวด (prepared) */
+    private static function scope(?int $categoryId, string $locale): array
+    {
+        $where  = 'locale = :locale';
+        $params = ['locale' => $locale];
+
+        if ($categoryId !== null) {
+            $where .= ' AND category_id = :category_id';
+            $params['category_id'] = $categoryId;
+        }
+
+        return [$where, $params];
     }
 
     /**
@@ -104,7 +114,7 @@ final class Post extends Model
     public function indexable(): array
     {
         return Database::select(
-            "SELECT id, slug, published_at, canonical_override, updated_at FROM posts
+            "SELECT id, slug, locale, translation_group, published_at, canonical_override, updated_at FROM posts
              WHERE robots = 'index' AND " . self::PUBLISHED . '
              ORDER BY published_at DESC, id DESC'
         );
