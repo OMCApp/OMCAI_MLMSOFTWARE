@@ -81,17 +81,94 @@ final class CategoryService
     {
         $errors = [];
 
-        if (preg_match('#^[^/\s?#]+$#u', (string) ($data['slug'] ?? '')) !== 1) {
-            $errors['slug'] = 'category.error_slug';
+        if (preg_match('~^[^/\s?#]+$~u', (string) ($data['slug'] ?? '')) !== 1) {
+            $errors['slug'] = 'cms.category.error_slug';
         }
         if (trim((string) ($data['name'] ?? '')) === '') {
-            $errors['name'] = 'category.error_name';
+            $errors['name'] = 'cms.category.error_name';
         }
         if (!in_array((string) ($data['robots'] ?? 'index'), Category::ROBOTS, true)) {
-            $errors['robots'] = 'category.error_robots';
+            $errors['robots'] = 'cms.category.error_robots';
         }
 
         return $errors;
+    }
+
+    /** @return array{rows:array<int,array<string,mixed>>,total:int} */
+    public function search(array $filters, string $term, string $sort, string $dir, int $page, int $perPage): array
+    {
+        return $this->categories->adminSearch($filters, $term, $sort, $dir, $page, $perPage);
+    }
+
+    /**
+     * @param  array<string, mixed> $data
+     * @return array<string, string>
+     */
+    public function validateForCms(array $data, ?int $id): array
+    {
+        $errors = $this->validate($data);
+
+        if (!isset($errors['slug'])) {
+            // slug ซ้ำได้ข้ามภาษา (URL ต่างกันด้วย prefix) — ห้ามซ้ำในภาษาเดียวกัน
+            $existing = $this->categories->findBySlug((string) $data['slug'], TranslationService::normalize((string) ($data['locale'] ?? '')));
+
+            if ($existing !== null && (int) $existing['id'] !== $id) {
+                $errors['slug'] = 'cms.category.error_slug_taken';
+            }
+        }
+
+        return $errors;
+    }
+
+    /** ลบได้เฉพาะหมวดที่ไม่มีบทความ — ไม่งั้นบทความหลุดหมวดและ URL หมวดเดิม 404 */
+    public function postCount(int $id): int
+    {
+        return $this->categories->postCount($id);
+    }
+
+    /**
+     * คำแปลของหมวด — slug เดิม · ภาษาใหม่ · กลุ่มเดียวกัน
+     *
+     * @return array{id:int, error:?string}
+     */
+    public function translate(int $id, string $locale): array
+    {
+        if (!TranslationService::enabled('categories') || !in_array($locale, TranslationService::locales(), true)) {
+            return ['id' => 0, 'error' => 'cms.translation.error_unavailable'];
+        }
+
+        $source = $this->categories->find($id);
+
+        if ($source === null) {
+            return ['id' => 0, 'error' => 'cms.translation.error_unavailable'];
+        }
+
+        $group    = TranslationService::ensureGroup('categories', $source);
+        $siblings = TranslationService::siblings('categories', $group);
+
+        if (isset($siblings[$locale]) || ($source['locale'] ?? TranslationService::default()) === $locale) {
+            return ['id' => (int) ($siblings[$locale]['id'] ?? $id), 'error' => 'cms.translation.error_exists'];
+        }
+
+        try {
+            return (array) \Core\Database::transaction(function () use ($source, $group, $locale, $id): array {
+                if ((string) ($source['translation_group'] ?? '') === '') {
+                    $this->categories->update($id, ['translation_group' => $group]);
+                }
+
+                $newId = $this->categories->create(array_intersect_key($source, array_flip([
+                    'slug', 'name', 'description', 'seo_title', 'meta_description', 'robots', 'sort',
+                ])) + ['locale' => $locale, 'translation_group' => $group]);
+
+                return ['id' => $newId, 'error' => null];
+            });
+        } catch (\PDOException $e) {
+            if ((string) $e->getCode() === '23000') {
+                return ['id' => 0, 'error' => 'cms.translation.error_conflict'];
+            }
+
+            throw $e;
+        }
     }
 
     /** @param array<string, mixed> $data */

@@ -22,9 +22,10 @@ final class Revision extends Model
     public function forEntity(string $entity, int $entityId, int $limit = 50): array
     {
         return Database::select(
-            'SELECT id, entity, entity_id, user_id, created_at FROM revisions
-             WHERE entity = :entity AND entity_id = :entity_id AND deleted_at IS NULL
-             ORDER BY created_at DESC, id DESC
+            'SELECT r.id, r.entity, r.entity_id, r.user_id, r.created_at, u.display_name AS author FROM revisions r
+             LEFT JOIN users u ON u.id = r.user_id
+             WHERE r.entity = :entity AND r.entity_id = :entity_id AND r.deleted_at IS NULL
+             ORDER BY r.created_at DESC, r.id DESC
              LIMIT ' . max(1, min($limit, 200)),
             ['entity' => $entity, 'entity_id' => $entityId]
         );

@@ -8,10 +8,18 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Core\Database;
+use App\Models\Concerns\AdminSearch;
 use Core\Model;
 
 final class Page extends Model
 {
+    use AdminSearch;
+
+    protected array $searchColumns = ['title', 'path', 'seo_title'];
+    protected array $filterColumns = ['status', 'locale', 'template'];
+
+    public const SORTABLE = ['id', 'title', 'path', 'status', 'updated_at', 'published_at'];
+
     protected string $table = 'pages';
 
     protected array $fillable = [

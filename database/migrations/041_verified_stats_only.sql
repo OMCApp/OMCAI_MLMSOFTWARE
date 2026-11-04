@@ -1,0 +1,62 @@
+SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- Company figures come only from CMS → Site settings → "verified" rows (Phase 3 rule · BRIEF: no unproven numbers).
+-- Numbered 041 (not 016–019): it rewrites content published by 021 and must run after it (numeric order).
+--
+-- 1) Seed settings.stats with the two figures the published pages already showed — both derive from the
+--    registration date the user confirmed (2009-04-03, QUESTIONS.md), so they are verified:
+--      {founded_year} → 2552 on Thai pages / 2009 on en+zh · {years} → years in business (computed)
+--    Labels (th/en/zh): ปีที่ก่อตั้งบริษัท (พ.ศ.) · ดำเนินธุรกิจต่อเนื่อง ( ปี) / Year the company was founded ·
+--    Continuously in business ( years) / 公司成立年份 · 持续经营 ( 年)
+--    Only when the setting has no items yet — never overwrites figures edited in the CMS.
+-- 2) Remove the numbers embedded in stats blocks of pages (home + about in 3 languages), so BlockService::prepare()
+--    fills them from the verified settings. Data change through SQL → no audit_logs rows (same as seeds 010/011/021).
+
+UPDATE settings SET value = CONVERT(X'7B226974656D73223A5B7B2276616C7565223A227B666F756E6465645F796561727D222C22666F726D6174223A22706C61696E222C22707265666978223A22222C2269636F6E223A22222C226C6162656C73223A7B227468223A22E0B89BE0B8B5E0B897E0B8B5E0B988E0B881E0B988E0B8ADE0B895E0B8B1E0B989E0B887E0B89AE0B8A3E0B8B4E0B8A9E0B8B1E0B8972028E0B89E2EE0B8A82E29222C22656E223A22596561722074686520636F6D70616E792077617320666F756E646564222C227A68223A22E585ACE58FB8E68890E7AB8BE5B9B4E4BBBD227D2C227375666669786573223A7B227468223A22222C22656E223A22222C227A68223A22227D2C227665726966696564223A747275657D2C7B2276616C7565223A227B79656172737D222C22666F726D6174223A22222C22707265666978223A22222C2269636F6E223A22222C226C6162656C73223A7B227468223A22E0B894E0B8B3E0B980E0B899E0B8B4E0B899E0B898E0B8B8E0B8A3E0B881E0B8B4E0B888E0B895E0B988E0B8ADE0B980E0B899E0B8B7E0B988E0B8ADE0B887222C22656E223A22436F6E74696E756F75736C7920696E20627573696E657373222C227A68223A22E68C81E7BBADE7BB8FE890A5227D2C227375666669786573223A7B227468223A2220E0B89BE0B8B5222C22656E223A22207965617273222C227A68223A2220E5B9B4227D2C227665726966696564223A747275657D5D7D' USING utf8mb4), updated_at = NOW()
+WHERE setting_key = 'stats' AND deleted_at IS NULL
+  AND (JSON_LENGTH(JSON_EXTRACT(value, '$.items')) = 0 OR JSON_EXTRACT(value, '$.items') IS NULL);
+
+INSERT INTO settings (setting_key, value, created_at, updated_at)
+SELECT 'stats', CONVERT(X'7B226974656D73223A5B7B2276616C7565223A227B666F756E6465645F796561727D222C22666F726D6174223A22706C61696E222C22707265666978223A22222C2269636F6E223A22222C226C6162656C73223A7B227468223A22E0B89BE0B8B5E0B897E0B8B5E0B988E0B881E0B988E0B8ADE0B895E0B8B1E0B989E0B887E0B89AE0B8A3E0B8B4E0B8A9E0B8B1E0B8972028E0B89E2EE0B8A82E29222C22656E223A22596561722074686520636F6D70616E792077617320666F756E646564222C227A68223A22E585ACE58FB8E68890E7AB8BE5B9B4E4BBBD227D2C227375666669786573223A7B227468223A22222C22656E223A22222C227A68223A22227D2C227665726966696564223A747275657D2C7B2276616C7565223A227B79656172737D222C22666F726D6174223A22222C22707265666978223A22222C2269636F6E223A22222C226C6162656C73223A7B227468223A22E0B894E0B8B3E0B980E0B899E0B8B4E0B899E0B898E0B8B8E0B8A3E0B881E0B8B4E0B888E0B895E0B988E0B8ADE0B980E0B899E0B8B7E0B988E0B8ADE0B887222C22656E223A22436F6E74696E756F75736C7920696E20627573696E657373222C227A68223A22E68C81E7BBADE7BB8FE890A5227D2C227375666669786573223A7B227468223A2220E0B89BE0B8B5222C22656E223A22207965617273222C227A68223A2220E5B9B4227D2C227665726966696564223A747275657D5D7D' USING utf8mb4), NOW(), NOW()
+WHERE NOT EXISTS (SELECT 1 FROM settings WHERE setting_key = 'stats' AND deleted_at IS NULL);
+
+UPDATE pages SET blocks = JSON_REMOVE(blocks, '$[0].data.items'), updated_at = NOW()
+WHERE JSON_UNQUOTE(JSON_EXTRACT(blocks, '$[0].type')) = 'stats' AND JSON_EXTRACT(blocks, '$[0].data.items') IS NOT NULL;
+UPDATE pages SET blocks = JSON_REMOVE(blocks, '$[1].data.items'), updated_at = NOW()
+WHERE JSON_UNQUOTE(JSON_EXTRACT(blocks, '$[1].type')) = 'stats' AND JSON_EXTRACT(blocks, '$[1].data.items') IS NOT NULL;
+UPDATE pages SET blocks = JSON_REMOVE(blocks, '$[2].data.items'), updated_at = NOW()
+WHERE JSON_UNQUOTE(JSON_EXTRACT(blocks, '$[2].type')) = 'stats' AND JSON_EXTRACT(blocks, '$[2].data.items') IS NOT NULL;
+UPDATE pages SET blocks = JSON_REMOVE(blocks, '$[3].data.items'), updated_at = NOW()
+WHERE JSON_UNQUOTE(JSON_EXTRACT(blocks, '$[3].type')) = 'stats' AND JSON_EXTRACT(blocks, '$[3].data.items') IS NOT NULL;
+UPDATE pages SET blocks = JSON_REMOVE(blocks, '$[4].data.items'), updated_at = NOW()
+WHERE JSON_UNQUOTE(JSON_EXTRACT(blocks, '$[4].type')) = 'stats' AND JSON_EXTRACT(blocks, '$[4].data.items') IS NOT NULL;
+UPDATE pages SET blocks = JSON_REMOVE(blocks, '$[5].data.items'), updated_at = NOW()
+WHERE JSON_UNQUOTE(JSON_EXTRACT(blocks, '$[5].type')) = 'stats' AND JSON_EXTRACT(blocks, '$[5].data.items') IS NOT NULL;
+UPDATE pages SET blocks = JSON_REMOVE(blocks, '$[6].data.items'), updated_at = NOW()
+WHERE JSON_UNQUOTE(JSON_EXTRACT(blocks, '$[6].type')) = 'stats' AND JSON_EXTRACT(blocks, '$[6].data.items') IS NOT NULL;
+UPDATE pages SET blocks = JSON_REMOVE(blocks, '$[7].data.items'), updated_at = NOW()
+WHERE JSON_UNQUOTE(JSON_EXTRACT(blocks, '$[7].type')) = 'stats' AND JSON_EXTRACT(blocks, '$[7].data.items') IS NOT NULL;
+UPDATE pages SET blocks = JSON_REMOVE(blocks, '$[8].data.items'), updated_at = NOW()
+WHERE JSON_UNQUOTE(JSON_EXTRACT(blocks, '$[8].type')) = 'stats' AND JSON_EXTRACT(blocks, '$[8].data.items') IS NOT NULL;
+UPDATE pages SET blocks = JSON_REMOVE(blocks, '$[9].data.items'), updated_at = NOW()
+WHERE JSON_UNQUOTE(JSON_EXTRACT(blocks, '$[9].type')) = 'stats' AND JSON_EXTRACT(blocks, '$[9].data.items') IS NOT NULL;
+UPDATE pages SET blocks = JSON_REMOVE(blocks, '$[10].data.items'), updated_at = NOW()
+WHERE JSON_UNQUOTE(JSON_EXTRACT(blocks, '$[10].type')) = 'stats' AND JSON_EXTRACT(blocks, '$[10].data.items') IS NOT NULL;
+UPDATE pages SET blocks = JSON_REMOVE(blocks, '$[11].data.items'), updated_at = NOW()
+WHERE JSON_UNQUOTE(JSON_EXTRACT(blocks, '$[11].type')) = 'stats' AND JSON_EXTRACT(blocks, '$[11].data.items') IS NOT NULL;
+UPDATE pages SET blocks = JSON_REMOVE(blocks, '$[12].data.items'), updated_at = NOW()
+WHERE JSON_UNQUOTE(JSON_EXTRACT(blocks, '$[12].type')) = 'stats' AND JSON_EXTRACT(blocks, '$[12].data.items') IS NOT NULL;
+UPDATE pages SET blocks = JSON_REMOVE(blocks, '$[13].data.items'), updated_at = NOW()
+WHERE JSON_UNQUOTE(JSON_EXTRACT(blocks, '$[13].type')) = 'stats' AND JSON_EXTRACT(blocks, '$[13].data.items') IS NOT NULL;
+UPDATE pages SET blocks = JSON_REMOVE(blocks, '$[14].data.items'), updated_at = NOW()
+WHERE JSON_UNQUOTE(JSON_EXTRACT(blocks, '$[14].type')) = 'stats' AND JSON_EXTRACT(blocks, '$[14].data.items') IS NOT NULL;
+UPDATE pages SET blocks = JSON_REMOVE(blocks, '$[15].data.items'), updated_at = NOW()
+WHERE JSON_UNQUOTE(JSON_EXTRACT(blocks, '$[15].type')) = 'stats' AND JSON_EXTRACT(blocks, '$[15].data.items') IS NOT NULL;
+UPDATE pages SET blocks = JSON_REMOVE(blocks, '$[16].data.items'), updated_at = NOW()
+WHERE JSON_UNQUOTE(JSON_EXTRACT(blocks, '$[16].type')) = 'stats' AND JSON_EXTRACT(blocks, '$[16].data.items') IS NOT NULL;
+UPDATE pages SET blocks = JSON_REMOVE(blocks, '$[17].data.items'), updated_at = NOW()
+WHERE JSON_UNQUOTE(JSON_EXTRACT(blocks, '$[17].type')) = 'stats' AND JSON_EXTRACT(blocks, '$[17].data.items') IS NOT NULL;
+UPDATE pages SET blocks = JSON_REMOVE(blocks, '$[18].data.items'), updated_at = NOW()
+WHERE JSON_UNQUOTE(JSON_EXTRACT(blocks, '$[18].type')) = 'stats' AND JSON_EXTRACT(blocks, '$[18].data.items') IS NOT NULL;
+UPDATE pages SET blocks = JSON_REMOVE(blocks, '$[19].data.items'), updated_at = NOW()
+WHERE JSON_UNQUOTE(JSON_EXTRACT(blocks, '$[19].type')) = 'stats' AND JSON_EXTRACT(blocks, '$[19].data.items') IS NOT NULL;
