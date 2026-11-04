@@ -152,3 +152,13 @@
 - ปุ่ม Demo ทั้งเว็บชี้ระบบจริง https://demomlm.omc.co.th/ (ผู้ใช้ยืนยัน — กดเล่นได้เลย ไม่ต้องขอ) · หน้า /demo/ เก็บฟอร์มนัดทีมงานพาดูไว้
 - analytics events ใน `app.js`: demo_click · contact_click · lead_submit → dataLayer / gtag (เมื่อเปิด GA4/GTM ในตั้งค่าเว็บ)
 - ต่างจาก Mockup โดยจงใจ (กฎห้ามของปลอม): ตัวเลข 200+ ลูกค้า / 98% ความพึงพอใจ / "15 ปี" ไม่แสดง — แสดงเฉพาะตัวเลขที่ยืนยันแล้ว (ปีก่อตั้ง 2552 · 17 ปี) · รีวิวลูกค้าซ่อนจนมีรีวิวที่ได้รับอนุญาตใน CMS
+
+## หน้าแรก Mockup ชุดที่ 3 — ภาพผู้บริหารตะวันตก (2026-11-04)
+- ภาพแบบ: `project/design/refs/home-mockup-3.png`
+- ภาพบุคคลใน hero = `public/assets/images/stock/hero-executive{,-768,-480}.webp` — Unsplash `F_CnS-8NlZQ` (Humberto Chávez · Unsplash License ใช้เชิงพาณิชย์ได้ ไม่ต้องให้เครดิต) · **ตัดพื้นหลังแล้ว (WebP โปร่งใส)** ด้วย rembg/BiRefNet บนเครื่อง (ไม่ใช่ dependency ของโปรเจค) · ป้าย "ภาพประกอบ" + alt ทั่วไป ไม่อ้างว่าเป็นผู้บริหาร OMC
+  · ภาพต้นฉบับไม่มีเนกไท (Mockup มี) — ภาพฟรีที่ตรงทุกข้อ (ผมเทา สูทกรมท่า กอดอก เนกไท พื้นสว่าง) ไม่มีใน Unsplash ตอนค้น
+- migration `046` สร้างจาก `php tools/content/build-hero-photo.php` — เปลี่ยน `hero.person` ของ / /en/ /zh/ **เฉพาะเมื่อยังเป็นภาพ 044** (ภาพที่เปลี่ยนใน CMS แล้วไม่ถูกทับ) · `build-home.php` ยังเขียน 044 — ห้ามรันซ้ำ (044 apply แล้ว)
+- **ภาพ hero.person จาก CMS ต้องเป็นภาพตัดพื้นหลัง (PNG/WebP โปร่งใส)** — CSS ไม่ใช้ `mix-blend-mode`/mask วงรีแล้ว ภาพมีพื้นจะเห็นเป็นกรอบสี่เหลี่ยม (ขอบล่างจางอย่างเดียว)
+- animation hero: ข้อความรอง/ปุ่ม/อุปกรณ์ fade-up · แล็ปท็อปลอยช้า · **h1 กับภาพบุคคลไม่ fade** (เป็นตัวเลือก LCP) · ปิดทั้งหมดเมื่อ prefers-reduced-motion
+- พาดหัว: balance เฉพาะมือถือ (จอใหญ่ตัดแบบ Mockup) · จีนไม่ balance (ตัดกลางคำ 计|划)
+- **`Lang::useForRequest()` รับภาษาของเว็บสาธารณะที่มีไฟล์ใน `lang/` แม้ไม่อยู่ใน `APP_LOCALES`** — เดิม APP_LOCALES=th,en ทำให้ /zh/ ได้ข้อความ UI ไทย/อังกฤษปนตาม Accept-Language (มี test แล้ว)

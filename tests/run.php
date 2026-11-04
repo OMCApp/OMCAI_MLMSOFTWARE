@@ -711,6 +711,13 @@ foreach (['en', 'zh', 'en-US,en;q=0.9', 'zh-CN,zh;q=0.9'] as $acceptLanguage) {
     $check($res['status'] === 200 && $header($res, 'location') === '' && str_contains($res['body'], '<html lang="th"'),
         "Accept-Language: {$acceptLanguage} on / → Thai page 200, no redirect");
 }
+// UI strings (__()) follow the URL even when APP_LOCALES (admin languages) leaves the locale out
+foreach (['/zh/' => '人物为示意图片', '/en/' => 'Person photo is illustrative'] as $path => $caption) {
+    foreach (['th', 'en-US,en;q=0.9', 'zh-CN'] as $acceptLanguage) {
+        $res = $http('GET', $path, ['headers' => ['Accept-Language: ' . $acceptLanguage]]);
+        $check(str_contains($res['body'], $caption), "{$path} UI strings in its own language (Accept-Language: {$acceptLanguage})");
+    }
+}
 foreach (['/en/blog/', '/zh/blog/', '/en/feed/', '/zh/feed/', '/en/category/ข่าวขายตรง/', '/en/2025/05/20/mlm-software-คำตอบการจัดการสต็อก/'] as $path) {
     $res = $http('GET', $enc($path));
     $check($res['status'] === 404 && str_contains($res['body'], 'noindex'), "{$path} → 404 noindex (no translated posts yet)", (string) $res['status']);

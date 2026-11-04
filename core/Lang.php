@@ -116,6 +116,12 @@ final class Lang
      */
     public static function useForRequest(string $locale): bool
     {
+        /* ‼️ ภาษาของเว็บสาธารณะ (config/locales.php — LocaleService ตรวจ allowlist แล้ว) ไม่ขึ้นกับ APP_LOCALES ของหลังบ้าน
+              เดิม APP_LOCALES=th,en ทำให้ /zh/ ได้ข้อความ UI ภาษาไทย/อังกฤษปนกัน (ตาม Accept-Language) โดยไม่มี error */
+        if (!self::allowed($locale) && preg_match('/^[a-z]{2}$/', $locale) === 1 && is_file(self::$dir . '/' . $locale . '.php')) {
+            self::$enabled[] = $locale;
+        }
+
         if (!self::allowed($locale)) {
             return false;
         }
