@@ -711,6 +711,13 @@ foreach (['en', 'zh', 'en-US,en;q=0.9', 'zh-CN,zh;q=0.9'] as $acceptLanguage) {
     $check($res['status'] === 200 && $header($res, 'location') === '' && str_contains($res['body'], '<html lang="th"'),
         "Accept-Language: {$acceptLanguage} on / → Thai page 200, no redirect");
 }
+// UI strings (__()) follow the URL even when APP_LOCALES (admin languages) leaves the locale out
+foreach (['/zh/' => '人物为示意图片', '/en/' => 'Person photo is illustrative'] as $path => $caption) {
+    foreach (['th', 'en-US,en;q=0.9', 'zh-CN'] as $acceptLanguage) {
+        $res = $http('GET', $path, ['headers' => ['Accept-Language: ' . $acceptLanguage]]);
+        $check(str_contains($res['body'], $caption), "{$path} UI strings in its own language (Accept-Language: {$acceptLanguage})");
+    }
+}
 foreach (['/en/blog/', '/zh/blog/', '/en/feed/', '/zh/feed/', '/en/category/ข่าวขายตรง/', '/en/2025/05/20/mlm-software-คำตอบการจัดการสต็อก/'] as $path) {
     $res = $http('GET', $enc($path));
     $check($res['status'] === 404 && str_contains($res['body'], 'noindex'), "{$path} → 404 noindex (no translated posts yet)", (string) $res['status']);
@@ -720,6 +727,14 @@ $check(str_contains($thaiPost['body'], 'href="/en/" hreflang="en"') || str_conta
 $check(!str_contains($thaiPost['body'], 'hreflang="x-default"'), 'Thai-only post has no hreflang');
 $check(str_contains($thaiPost['body'], 'class="post-related"') && str_contains($thaiPost['body'], 'class="cta-band"'), 'post page has related posts and a CTA band');
 $check(preg_match('#<img[^>]+fetchpriority="high"#', $thaiPost['body']) === 1, 'post featured image is the LCP image (fetchpriority=high, not lazy)');
+// Phase 6 — imported WordPress images served as WebP + srcset (originals stay reachable)
+$check(preg_match('#<figure class="post-cover">\s*<img[^>]+src="[^"]+\.webp\?v=\d+"\s+srcset="[^"]+ 480w#', $thaiPost['body']) === 1, 'post cover is WebP with srcset');
+$check(preg_match('#class="prose post-body".*?<img[^>]+src="/wp-content/uploads/[^"]+\.webp"[^>]+srcset="[^"]+ 480w[^"]*"[^>]+sizes="#s', $thaiPost['body']) === 1, 'images inside the article are WebP with srcset + sizes');
+$check(!preg_match('#<img[^>]+src="[^"]+\.(png|jpe?g)(\?[^"]*)?"#i', $thaiPost['body'] . $http('GET', '/blog/')['body']), 'no PNG/JPEG <img> on a post or /blog/');
+$check(str_contains($thaiPost['body'], '%E0%B8%9B%E0%B8%81') && !str_contains($thaiPost['body'], 'src="/wp-content/uploads/2025/05/ปก'), 'Thai image file names are percent-encoded in src/srcset');
+// the test server (php -S from the project root) does not serve static files — check the original is still on disk
+$check(is_file($root . '/public/wp-content/uploads/2025/05/ปกบทความ.png') && is_file($root . '/public/wp-content/uploads/2025/05/ปกบทความ.webp'),
+    'original PNG kept next to its WebP (old backlinks / Google Images)');
 $home = $p4Bodies['/'] ?? '';
 $check(substr_count($home, 'class="lang-switch') >= 3, 'header (desktop + drawer) and footer have the language switcher');
 $check(str_contains($home, 'aria-label="' . e(__('site.lang_switch')) . '"') || str_contains($home, 'class="lang-switch is-header" aria-label='), 'language switcher has an accessible label');

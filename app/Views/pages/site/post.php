@@ -8,8 +8,6 @@
 
 declare(strict_types=1);
 
-use Core\Path;
-
 $sitePost    = (array) ($sitePost ?? []);
 $sitePreview = (bool) ($sitePreview ?? false);
 $siteImage   = $sitePost['image'] ?? null;
@@ -38,12 +36,7 @@ $siteImage   = $sitePost['image'] ?? null;
     <?php if ($siteImage !== null): ?>
         <?php /* รูปเด่นคือ LCP ของหน้าบทความ — ห้าม lazy */ ?>
         <figure class="post-cover">
-            <img src="<?= e(url(Path::encode((string) $siteImage['path']))) ?>"
-                 alt="<?= e((string) $siteImage['alt']) ?>"
-                 <?php if ($siteImage['width'] !== null && $siteImage['height'] !== null): ?>
-                 width="<?= e((string) $siteImage['width']) ?>" height="<?= e((string) $siteImage['height']) ?>"
-                 <?php endif; ?>
-                 fetchpriority="high" decoding="async">
+            <?php $siteImageEager = true; $siteImageSizes = \App\Services\ContentImages::SIZES; include __DIR__ . '/../../partials/site-image.php'; ?>
         </figure>
     <?php endif; ?>
 

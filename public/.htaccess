@@ -8,6 +8,20 @@
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
+    # โดเมนหลักของ production = https://mlmsoftware.omc.co.th (ไม่มี www) — 301 ครั้งเดียว ไม่เป็น chain
+    # ‼️ ทำงานเฉพาะชื่อโดเมน production — staging (IP) ไม่โดน
+    # ‼️ path มาจาก THE_REQUEST (ตัวที่เบราว์เซอร์ส่งมา encode แล้ว + query) — REQUEST_URI ถูก decode แล้ว
+    #    และหลัง rewrite ภายในมี /public ติดมา · NE = ไม่ encode ซ้ำ
+    # ‼️ X-Forwarded-Proto: กรณีมี proxy/CDN ที่ถอด TLS ก่อนถึง Apache — ไม่งั้นวนไม่รู้จบ
+    RewriteCond %{HTTP_HOST} ^www\.mlmsoftware\.omc\.co\.th$ [NC]
+    RewriteCond %{THE_REQUEST} ^\S+\s+(/\S*)
+    RewriteRule ^ https://mlmsoftware.omc.co.th%1 [R=301,L,NE]
+    RewriteCond %{HTTP_HOST} ^mlmsoftware\.omc\.co\.th$ [NC]
+    RewriteCond %{HTTPS} !=on
+    RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+    RewriteCond %{THE_REQUEST} ^\S+\s+(/\S*)
+    RewriteRule ^ https://mlmsoftware.omc.co.th%1 [R=301,L,NE]
+
     # ทุก request ที่ไม่ใช่ไฟล์หรือโฟลเดอร์จริง ให้เข้า front controller
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d

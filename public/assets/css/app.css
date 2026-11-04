@@ -1933,7 +1933,7 @@
 
   @media (min-width: 960px) {
     .hero-site-inner {
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+      grid-template-columns: minmax(0, 1.04fr) minmax(0, 1fr);
       min-height: var(--hero-min-height);
       padding-block: var(--space-12) var(--space-16);
     }
@@ -2835,8 +2835,15 @@
   }
 
   /* ---- hero: บรรทัดที่ 2+ ของพาดหัวเป็นสีส้ม · ภาพบุคคล + mockup ซ้อน */
-  .hero-site-accent { color: var(--color-brand-primary); }
-  .hero-site-title { text-wrap: balance; }
+  /* block ของตัวเอง → text-wrap: balance ทำงานกับบรรทัดสีส้มได้ (<br> ทำให้ balance ไม่ทำงาน — มือถือเหลือ "คุณ" คำเดียวในบรรทัด)
+     · balance เฉพาะมือถือ — จอใหญ่ตัดบรรทัดแบบ Mockup ("…ตามแผนธุรกิจ / ของคุณ")
+     · จีนไม่ balance — ตัดกลางคำ (计|划) */
+  .hero-site-accent { display: block; color: var(--color-brand-primary); }
+  .hero-site-title { text-wrap: wrap; }
+  @media (max-width: 639.98px) {
+    .hero-site-title, .hero-site-accent { text-wrap: balance; }
+  }
+  :lang(zh) .hero-site-title, :lang(zh) .hero-site-accent { text-wrap: wrap; }
 
   .hero-site-visual[data-compose="person"] {
     display: grid;
@@ -2844,18 +2851,24 @@
     align-items: end;
   }
   .hero-person, .hero-person-devices { grid-area: 1 / 1; }
-  .hero-person { justify-self: end; width: min(74%, 30rem); }
+  .hero-person { position: relative; justify-self: end; width: min(100%, 36rem); }
+  /* วงแสงอุ่นด้านหลังบุคคล (แบบ Mockup) */
+  .hero-person::before {
+    content: "";
+    position: absolute;
+    inset: 8% -6% 10%;
+    border-radius: var(--radius-full);
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--color-brand-accent) 16%, transparent), transparent);
+    pointer-events: none;
+  }
   .hero-person-image {
+    position: relative;
     display: block;
     width: 100%;
     height: auto;
-    /* ภาพพื้นขาว → กลืนกับพื้น hero สีอุ่น · ขอบล่างจางหายแทนการตัดขอบ */
-    mix-blend-mode: multiply;
-    mask-image: radial-gradient(ellipse 52% 56% at 50% 42%, currentColor 62%, transparent 100%);
-  }
-  :root[data-theme="dark"] .hero-person-image { mix-blend-mode: normal; border-radius: var(--radius-xl); }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) .hero-person-image { mix-blend-mode: normal; border-radius: var(--radius-xl); }
+    /* ภาพตัดพื้นหลังแล้ว (WebP โปร่งใส) — ขอบล่างจางหายหลังแล็ปท็อปแทนการตัดขอบ
+       ‼️ ภาพจาก CMS ที่ไม่โปร่งใสจะเห็นเป็นกรอบสี่เหลี่ยม — ใช้ภาพตัดพื้นหลังเท่านั้น (คู่มือ CMS) */
+    mask-image: linear-gradient(180deg, currentColor 72%, transparent 98%);
   }
   .hero-person-devices {
     position: relative;
@@ -2863,9 +2876,24 @@
     justify-self: start;
     align-self: end;
     width: 76%;
-    margin-block-end: var(--space-4);
+    /* แล็ปท็อปบังลำตัวช่วงล่างของบุคคล (แบบ Mockup) — ส่วนที่จางของภาพอยู่หลังจอ */
+    margin-block-end: calc(-1 * var(--space-6));
   }
-  .hero-site-visual[data-compose="person"] .mock-caption { grid-area: 2 / 1; }
+
+  /* เปิดหน้าแบบนุ่ม — h1 · ย่อหน้านำ · ภาพบุคคล ไม่ fade: เป็นตัวเลือก LCP
+     (มือถือ LCP = ย่อหน้านำ — fade แล้ว LCP ช้าไป ~0.7 วินาที วัดจริง 2026-11-04) */
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-site .check-list, .hero-site-actions, .hero-person-devices, .hero-site .eyebrow-pill {
+      animation: hero-rise var(--duration-reveal) var(--ease-enter) backwards;
+    }
+    .hero-site .eyebrow-pill { animation-delay: 0ms; }
+    .hero-site .check-list { animation-delay: calc(var(--duration-fast) * .8); }
+    .hero-site-actions { animation-delay: calc(var(--duration-fast) * 1.8); }
+    .hero-person-devices { animation-delay: calc(var(--duration-fast) * 1.4); }
+    .hero-person-devices .device-laptop { animation: mock-float calc(var(--duration-reveal) * 14) ease-in-out calc(var(--duration-reveal) * 2) infinite; }
+  }
+  @keyframes hero-rise { from { opacity: 0; transform: translateY(var(--space-4)); } to { opacity: 1; transform: none; } }
+  .hero-site-visual[data-compose="person"] .mock-caption { grid-area: 2 / 1; padding-block-start: var(--space-8); }
   /* แท็บเล็ต: คนขวา mockup ซ้าย เห็นทั้งคู่ · มือถือ: mockup กว้างขึ้น คนอยู่ด้านหลังเหนือจอ */
   @media (min-width: 640px) and (max-width: 959.98px) {
     .hero-person { width: 46%; }

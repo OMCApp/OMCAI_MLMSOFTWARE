@@ -165,4 +165,36 @@ final class Media extends Model
 
         return $out;
     }
+
+    /**
+     * รูปหลายรูปตาม path ต้นฉบับ (รูปในเนื้อหาบทความ) — query เดียวทั้งชุด
+     *
+     * @param  array<int, string> $paths
+     * @return array<string, array<string, mixed>> path → แถว
+     */
+    public function findManyByPath(array $paths): array
+    {
+        $paths = array_values(array_unique(array_filter($paths, static fn (string $p) => $p !== '')));
+
+        if ($paths === []) {
+            return [];
+        }
+
+        $marks    = [];
+        $bindings = [];
+
+        foreach ($paths as $index => $path) {
+            $marks[]                = ':p' . $index;
+            $bindings['p' . $index] = $path;
+        }
+
+        $rows = Database::select('SELECT * FROM media WHERE deleted_at IS NULL AND path IN (' . implode(', ', $marks) . ')', $bindings);
+        $out  = [];
+
+        foreach ($rows as $row) {
+            $out[(string) $row['path']] = $row;
+        }
+
+        return $out;
+    }
 }

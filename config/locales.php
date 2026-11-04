@@ -28,6 +28,7 @@ return [
         'label'         => 'TH',
         'name'          => 'ภาษาไทย',
         'font_token'    => null,
+        /* preload ชุดละตินเพิ่ม (พาดหัว "MLM Software") ลองแล้ว 2026-11-04 — LCP มือถือไม่ดีขึ้น (แย่งแบนด์วิดท์กับ CSS) จึงไม่ใส่ */
         'preload_fonts' => [
             '/assets/vendor/fonts/prompt-thai-600-normal.woff2',
             '/assets/vendor/fonts/ibm-plex-sans-thai-thai-400-normal.woff2',

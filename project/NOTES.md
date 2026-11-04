@@ -152,3 +152,22 @@
 - ปุ่ม Demo ทั้งเว็บชี้ระบบจริง https://demomlm.omc.co.th/ (ผู้ใช้ยืนยัน — กดเล่นได้เลย ไม่ต้องขอ) · หน้า /demo/ เก็บฟอร์มนัดทีมงานพาดูไว้
 - analytics events ใน `app.js`: demo_click · contact_click · lead_submit → dataLayer / gtag (เมื่อเปิด GA4/GTM ในตั้งค่าเว็บ)
 - ต่างจาก Mockup โดยจงใจ (กฎห้ามของปลอม): ตัวเลข 200+ ลูกค้า / 98% ความพึงพอใจ / "15 ปี" ไม่แสดง — แสดงเฉพาะตัวเลขที่ยืนยันแล้ว (ปีก่อตั้ง 2552 · 17 ปี) · รีวิวลูกค้าซ่อนจนมีรีวิวที่ได้รับอนุญาตใน CMS
+
+## หน้าแรก Mockup ชุดที่ 3 — ภาพผู้บริหารตะวันตก (2026-11-04)
+- ภาพแบบ: `project/design/refs/home-mockup-3.png`
+- ภาพบุคคลใน hero = `public/assets/images/stock/hero-executive{,-768,-480}.webp` — Unsplash `F_CnS-8NlZQ` (Humberto Chávez · Unsplash License ใช้เชิงพาณิชย์ได้ ไม่ต้องให้เครดิต) · **ตัดพื้นหลังแล้ว (WebP โปร่งใส)** ด้วย rembg/BiRefNet บนเครื่อง (ไม่ใช่ dependency ของโปรเจค) · ป้าย "ภาพประกอบ" + alt ทั่วไป ไม่อ้างว่าเป็นผู้บริหาร OMC
+  · ภาพต้นฉบับไม่มีเนกไท (Mockup มี) — ภาพฟรีที่ตรงทุกข้อ (ผมเทา สูทกรมท่า กอดอก เนกไท พื้นสว่าง) ไม่มีใน Unsplash ตอนค้น
+- migration `046` สร้างจาก `php tools/content/build-hero-photo.php` — เปลี่ยน `hero.person` ของ / /en/ /zh/ **เฉพาะเมื่อยังเป็นภาพ 044** (ภาพที่เปลี่ยนใน CMS แล้วไม่ถูกทับ) · `build-home.php` ยังเขียน 044 — ห้ามรันซ้ำ (044 apply แล้ว)
+- **ภาพ hero.person จาก CMS ต้องเป็นภาพตัดพื้นหลัง (PNG/WebP โปร่งใส)** — CSS ไม่ใช้ `mix-blend-mode`/mask วงรีแล้ว ภาพมีพื้นจะเห็นเป็นกรอบสี่เหลี่ยม (ขอบล่างจางอย่างเดียว)
+- animation hero: ข้อความรอง/ปุ่ม/อุปกรณ์ fade-up · แล็ปท็อปลอยช้า · **h1 กับภาพบุคคลไม่ fade** (เป็นตัวเลือก LCP) · ปิดทั้งหมดเมื่อ prefers-reduced-motion
+- พาดหัว: balance เฉพาะมือถือ (จอใหญ่ตัดแบบ Mockup) · จีนไม่ balance (ตัดกลางคำ 计|划)
+- **`Lang::useForRequest()` รับภาษาของเว็บสาธารณะที่มีไฟล์ใน `lang/` แม้ไม่อยู่ใน `APP_LOCALES`** — เดิม APP_LOCALES=th,en ทำให้ /zh/ ได้ข้อความ UI ไทย/อังกฤษปนตาม Accept-Language (มี test แล้ว)
+
+## Phase 6 — SEO regression + performance (2026-11-04)
+- **SEO regression:** `php tools/seo-audit/regression.php` → `docs/seo/regression.md` (95 URL เดิม + ทุก URL ใน sitemap 3 ภาษา + hreflang กลับไปกลับมา) · exit 1 ถ้ามีปัญหาที่กั้น production · indexability ตัดสินจาก meta robots/canonical — ไม่นับ X-Robots-Tag ของ non-production (`Core\Staging`)
+  · "keyword kept" = H1 เดิม (หรือชื่อใน `<title>` เดิม) ยังอยู่ใน title/H1/เนื้อหา · รายการ keyword ท้าย title ของ WordPress เป็นของทั้งเว็บ → นับเฉพาะหน้าแรก · URL ที่ 301 = รวมหน้า (แสดง title เดิมไว้ให้ตรวจ)
+- **www → non-www / http → https** อยู่ใน `public/.htaccess` (เฉพาะชื่อโดเมน production · 301 ครั้งเดียว · path จาก `THE_REQUEST` เพื่อคง %-encoding ของ URL ไทย)
+- **รูปเดิมของ WordPress → WebP + srcset:** `php tools/media/build-legacy-webp.php` (ใช้ตัวแปลงเดียวกับ CMS — `MediaService::webpVariants`) → ไฟล์ข้างต้นฉบับ + migration `048` เติม `media.sizes` · ต้นฉบับ PNG/JPEG ยังอยู่ (URL เดิมเปิดได้) · 81 MB → 7.9 MB (ขนาดเต็ม)
+  · รูปในเนื้อหาบทความเปลี่ยนตอนแสดง (`App\Services\ContentImages` — query เดียวต่อบทความ) ไม่แก้ HTML ในฐานข้อมูล · บทความไม่มีรูปเด่น = รูปแรกในเนื้อหา eager + fetchpriority
+  · การ์ดบทความ / รูปเด่น ใช้ `partials/site-image.php` (srcset + sizes) · `asset()` encode path ภาษาไทยให้เอง
+- **Lighthouse ในเครื่องต้องมี gzip** — XAMPP ไม่มี mod_deflate (staging มี: app.css 139→26 KB) · วัดผ่าน gzip proxy ชั่วคราวนอกโปรเจค ไม่งั้นมือถือต่ำกว่าจริง ~10–20 คะแนน
