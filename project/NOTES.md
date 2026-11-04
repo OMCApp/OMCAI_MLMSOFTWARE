@@ -81,3 +81,9 @@
 
 ## `server.php` ตั้ง SCRIPT_NAME เอง
 - built-in server ให้ SCRIPT_NAME เป็น path ที่ขอ → `Path::base()` ผิดกับ URL หลายชั้น (`/_preview/home` ได้ base `/_preview`) · server.php ตั้ง `/index.php` ก่อน require (เครื่อง dev เท่านั้น)
+
+## Staging ไม่มีรหัสเข้าแล้ว (2026-11-04)
+- **ผู้ใช้สั่ง:** "ไม่ต้องมี login ขึ้นหน้าเว็บไปเลย" — ขัดกับ brief ฉบับ 2 ข้อ 3 (staging ต้องมี Authentication) · คำสั่งล่าสุดชนะ
+- CI ไม่เขียน `STAGING_PASS` ลง `.env` แล้ว → `Core\Staging` ข้าม Basic Auth (โค้ดยังอยู่ เปิดกลับได้โดยใส่บรรทัดนั้นคืน)
+- **ยังกันไม่ให้ถูก index เหมือนเดิม:** `X-Robots-Tag: noindex` ทุก response + robots.txt `Disallow: /` + canonical ชี้ production · CI ยังตรวจ noindex ทุกครั้ง
+- ความเสี่ยงที่เหลือ: ใครก็เปิดดูเนื้อหาร่างได้ถ้ารู้ URL · ซอร์สโค้ดยังปิดอยู่ (root `.htaccess`)
