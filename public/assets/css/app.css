@@ -2839,7 +2839,9 @@
      · balance เฉพาะมือถือ — จอใหญ่ตัดบรรทัดแบบ Mockup ("…ตามแผนธุรกิจ / ของคุณ")
      · จีนไม่ balance — ตัดกลางคำ (计|划) */
   .hero-site-accent { display: block; color: var(--color-brand-primary); }
-  .hero-site-title { text-wrap: wrap; }
+  /* ขนาดสูงสุด 3.5rem (กึ่งกลาง 4xl–display): คอลัมน์ข้อความหยุดโตที่ความกว้าง container แต่ 3.7vw ยังโตต่อ —
+     ที่ 1536px "ที่ออกแบบตามแผนธุรกิจ" ต้องการ 590px มีอยู่ 587px จึงตัดบรรทัดผิดจาก Mockup (วัดจริง 2026-11-04) */
+  .hero-site-title { text-wrap: wrap; font-size: clamp(var(--text-2xl), 3.7vw, calc((var(--text-4xl) + var(--text-display)) / 2)); }
   @media (max-width: 639.98px) {
     .hero-site-title, .hero-site-accent { text-wrap: balance; }
   }
