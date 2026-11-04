@@ -94,3 +94,6 @@
 **ตรวจด้วยเครื่องได้ไหม:** ได้ — test ส่ง token ปลอมแล้วดู Location
 - `Core\Lang::lookup()` คืน null สำหรับค่าที่ไม่ใช่ string → `date.year_offset` (543) ไม่เคยถูกใช้ใน `formatDate()` · วันที่ภาษาไทยจึงไม่เป็น พ.ศ. ทั้งที่ lang ตั้งไว้ (พบตอนทำ `{founded_year}`)
 - ช่วงเลข migration ที่แบ่งให้แต่ละ phase ต้องคำนึงถึงลำดับการพึ่งพา — Migrator รันตามเลข งานที่ต้องต่อจาก migration ของ phase อื่นใช้เลขที่ต่ำกว่าไม่ได้
+
+- [2026-11-04] (AI ทำผิดซ้ำ) แก้ไฟล์ PHP ผ่าน `php -r` ใน Git Bash แล้ว `\$` / `\n` ถูกแปลงเป็น `/` (MSYS path conversion ค้างจาก `MSYS_NO_PATHCONV`) → `core/Lang.php` เสีย ต้อง `git checkout` · เหตุการณ์เดียวกับ Auth.php ก่อนหน้า — **แก้โค้ดด้วย Edit tool เท่านั้น** ไม่ใช้ shell แทรกโค้ด
+- [2026-11-04] Chrome headless (`--headless=new`) มีความกว้างหน้าต่างขั้นต่ำ ~500px — ภาพหน้าจอ 390px ถูกตัดขอบดูเหมือนล้นแนวนอน ทั้งที่ไม่ล้น · ใช้ `chrome-headless-shell` (ms-playwright) สำหรับจอมือถือ

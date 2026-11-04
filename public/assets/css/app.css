@@ -2866,7 +2866,12 @@
     margin-block-end: var(--space-4);
   }
   .hero-site-visual[data-compose="person"] .mock-caption { grid-area: 2 / 1; }
-  @media (max-width: 959.98px) {
+  /* แท็บเล็ต: คนขวา mockup ซ้าย เห็นทั้งคู่ · มือถือ: mockup กว้างขึ้น คนอยู่ด้านหลังเหนือจอ */
+  @media (min-width: 640px) and (max-width: 959.98px) {
+    .hero-person { width: 46%; }
+    .hero-person-devices { width: 62%; }
+  }
+  @media (max-width: 639.98px) {
     .hero-person { width: min(70%, 22rem); }
     .hero-person-devices { width: 84%; }
   }

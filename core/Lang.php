@@ -200,6 +200,11 @@ final class Lang
             $value = $value[$segment];
         }
 
+        // ‼️ ค่าตัวเลขในไฟล์ภาษา (date.year_offset = 543) ต้องอ่านได้ด้วย — เดิมคืน null เงียบๆ ปีไทยจึงเป็น ค.ศ.
+        if (is_int($value) || is_float($value)) {
+            return (string) $value;
+        }
+
         if (!is_string($value) || trim($value) === '') {
             return null;
         }
