@@ -1,6 +1,14 @@
 <?php
 /**
- * lead จากฟอร์มบนเว็บ — Phase 4 ต่อฟอร์ม (CSRF + honeypot + rate limit) · Phase 3 ทำหน้าจัดการ
+ * lead จากฟอร์มบนเว็บ — รับฟอร์ม (Phase 4) · หน้าจัดการ (Phase 3)
+ *
+ * ลำดับตอนรับฟอร์ม (submit)
+ *   1. rate limit ต่อ IP (ตาราง lead_attempts — นับทุกครั้งที่ส่ง ไม่ใช่แค่ที่สำเร็จ) + lead ที่บันทึกแล้วต่อชั่วโมง
+ *   2. honeypot (ช่อง website ต้องว่าง) — bot ได้หน้า "ขอบคุณ" เหมือนสำเร็จ แต่ไม่บันทึก ไม่ส่งอีเมล
+ *   3. validate — ค่าของ select/radio ต้องอยู่ใน BlockService::LEAD_OPTIONS ชุดเดียว · ต้องมีเบอร์/อีเมล/LINE อย่างน้อยหนึ่ง
+ *   4. บันทึก (ผ่าน base Model → audit log) แล้วค่อยส่งอีเมลแจ้งเตือน — อีเมลล้มเหลว lead ไม่หาย
+ *
+ * ‼️ CSRF ตรวจที่ public/index.php ก่อนถึงที่นี่
  */
 
 declare(strict_types=1);
@@ -8,24 +16,106 @@ declare(strict_types=1);
 namespace App\Services;
 
 use App\Models\Lead;
+use App\Models\LeadAttempt;
+use Core\Logger;
 
 final class LeadService
 {
-    /** ฟอร์มต่อ IP ต่อชั่วโมง — เกินนี้เป็นสแปม ไม่ใช่ลูกค้า */
+    /** lead ที่บันทึกได้ต่อ IP ต่อชั่วโมง — เกินนี้เป็นสแปม ไม่ใช่ลูกค้า */
     public const MAX_PER_HOUR = 5;
 
-    public function __construct(private readonly Lead $leads = new Lead())
-    {
+    /** การส่งฟอร์มทุกแบบ (รวมกรอกผิด) ต่อ IP ต่อ 15 นาที */
+    public const MAX_ATTEMPTS = 10;
+    public const WINDOW_MINUTES = 15;
+
+    /** ความยาวสูงสุดของแต่ละช่อง (ตรงกับคอลัมน์ใน leads) */
+    private const MAX_LEN = [
+        'name' => 150, 'company' => 150, 'phone' => 50, 'email' => 190, 'line_id' => 100, 'message' => 3000,
+    ];
+
+    public function __construct(
+        private readonly Lead $leads = new Lead(),
+        private readonly LeadAttempt $attempts = new LeadAttempt(),
+    ) {
     }
 
-    public function throttled(string $ip): bool
+    public function throttled(string $ipKey): bool
     {
-        return $this->leads->recentCountFromIp($ip) >= self::MAX_PER_HOUR;
+        return $this->attempts->countSince($ipKey, self::WINDOW_MINUTES) >= self::MAX_ATTEMPTS
+            || $this->leads->recentCountFromIp($ipKey) >= self::MAX_PER_HOUR;
     }
 
     /**
-     * @param  array<string, mixed> $data
-     * @return array<string, string>
+     * @param  array<string, mixed> $input $_POST
+     * @return array{status: 'sent'|'spam'|'invalid'|'throttled', errors: array<string,string>, input: array<string,string>,
+     *               locale: string, source_path: string, id: ?int}
+     *         errors = ชื่อช่อง => key ของข้อความใน lang (Controller แปลด้วย __())
+     */
+    public function submit(array $input, string $ipKey, ?string $cookieReferrer = null): array
+    {
+        $clean      = $this->clean($input);
+        $sourcePath = self::internalPath((string) ($input['source_path'] ?? '/'));
+        $locale     = LocaleService::localeOf($sourcePath);
+        $result     = ['errors' => [], 'input' => $clean, 'locale' => $locale, 'source_path' => $sourcePath, 'id' => null];
+
+        if ($this->throttled($ipKey)) {
+            $this->attempts->record($ipKey, 'throttled');
+            Logger::warning('lead_throttled', ['ip' => $ipKey]);
+
+            return ['status' => 'throttled'] + $result;
+        }
+
+        // honeypot — ตอบเหมือนสำเร็จ bot จะได้ไม่ลองใหม่
+        if (trim((string) ($input['website'] ?? '')) !== '') {
+            $this->attempts->record($ipKey, 'spam');
+
+            return ['status' => 'spam'] + $result;
+        }
+
+        $errors = $this->validate($clean);
+
+        if ($errors !== []) {
+            $this->attempts->record($ipKey, 'invalid');
+
+            return ['status' => 'invalid', 'errors' => $errors] + $result;
+        }
+
+        $utm = LeadTrackingService::utm($input);
+        $id  = $this->create([
+            'form_key'        => $clean['form_key'],
+            'locale'          => $locale,
+            'name'            => $clean['name'],
+            'company'         => self::nullable($clean['company']),
+            'business_type'   => self::nullable($clean['business_type']),
+            'phone'           => self::nullable($clean['phone']),
+            'email'           => self::nullable($clean['email']),
+            'line_id'         => self::nullable($clean['line_id']),
+            'has_system'      => self::nullable($clean['has_system']),
+            'need'            => self::nullable($clean['need']),
+            'member_estimate' => self::nullable($clean['member_estimate']),
+            'message'         => self::nullable($clean['message']),
+            'source_url'      => SeoService::absolute($sourcePath),
+            'landing_page'    => $sourcePath,
+            'referrer'        => LeadTrackingService::referrer((string) ($input['ref'] ?? $cookieReferrer ?? '')),
+            'utm'             => ($utm['first'] === [] && $utm['current'] === []) ? null
+                : (string) json_encode(['first' => (object) $utm['first'], 'current' => (object) $utm['current']], JSON_UNESCAPED_UNICODE),
+            'ip'              => mb_substr($ipKey, 0, 45),
+        ]);
+
+        $this->attempts->record($ipKey, 'sent');
+
+        if (random_int(1, 50) === 1) {
+            $this->attempts->prune();
+        }
+
+        $this->notify($id, $clean, $locale, $sourcePath, $utm);
+
+        return ['status' => 'sent', 'id' => $id] + $result;
+    }
+
+    /**
+     * @param  array<string, string> $data ค่าที่ผ่าน clean() แล้ว
+     * @return array<string, string> ชื่อช่อง => key ของข้อความ
      */
     public function validate(array $data): array
     {
@@ -43,6 +133,24 @@ final class LeadService
         }
         if (($data['email'] ?? '') !== '' && filter_var((string) $data['email'], FILTER_VALIDATE_EMAIL) === false) {
             $errors['email'] = 'lead.error_email';
+        }
+        if (($data['phone'] ?? '') !== '' && preg_match('/^\+?[0-9][0-9 ()\-.]{5,29}$/', (string) $data['phone']) !== 1) {
+            $errors['phone'] = 'lead.error_phone';
+        }
+
+        // ‼️ ตัวเลือกต้องอยู่ในชุดเดียวกับที่ฟอร์มแสดง (BlockService::LEAD_OPTIONS) — ไม่รับค่าอื่นแม้แก้ HTML เอง
+        foreach (BlockService::LEAD_OPTIONS as $field => $allowed) {
+            $value = (string) ($data[$field] ?? '');
+
+            if ($value !== '' && !in_array($value, $allowed, true)) {
+                $errors[$field] = 'lead.error_option';
+            }
+        }
+
+        foreach (self::MAX_LEN as $field => $max) {
+            if (!isset($errors[$field]) && mb_strlen((string) ($data[$field] ?? '')) > $max) {
+                $errors[$field] = 'lead.error_length';
+            }
         }
 
         return $errors;
@@ -72,5 +180,102 @@ final class LeadService
     public function delete(int $id): bool
     {
         return $this->leads->delete($id);
+    }
+
+    /** หน้าขอบคุณของภาษานั้น (noindex) */
+    public static function thankYouPath(string $locale): string
+    {
+        return SiteService::localizePath('/thank-you/', $locale);
+    }
+
+    /** path ภายในที่ปลอดภัยสำหรับ redirect กลับ — ห้ามเป็น //host หรือ URL เต็ม (open redirect) */
+    public static function internalPath(string $path): string
+    {
+        $path = '/' . ltrim(explode('?', explode('#', $path, 2)[0], 2)[0], '/');
+
+        if (str_starts_with($path, '//') || str_contains($path, '\\') || !mb_check_encoding($path, 'UTF-8')
+            || preg_match('/[\x00-\x1F]/', $path) === 1 || mb_strlen($path) > 300) {
+            return '/';
+        }
+
+        return $path;
+    }
+
+    // ------------------------------------------------------------------
+
+    /**
+     * @param  array<string, mixed> $input
+     * @return array<string, string>
+     */
+    private function clean(array $input): array
+    {
+        $fields = ['form_key', 'name', 'company', 'phone', 'email', 'line_id', 'business_type', 'has_system', 'need', 'member_estimate', 'message'];
+        $out    = [];
+
+        foreach ($fields as $field) {
+            $value = $input[$field] ?? '';
+            $value = is_string($value) ? $value : '';
+            $value = $field === 'message'
+                ? trim(str_replace("\0", '', $value))
+                : trim((string) preg_replace('/\s+/u', ' ', str_replace("\0", '', $value)));
+
+            $out[$field] = $value;
+        }
+
+        $out['email'] = mb_strtolower($out['email']);
+
+        return $out;
+    }
+
+    private static function nullable(string $value): ?string
+    {
+        return $value === '' ? null : $value;
+    }
+
+    /**
+     * อีเมลแจ้งทีมขาย — ภาษาไทยเสมอ (ทีมขายเป็นคนไทย) ไม่ว่าผู้ส่งฟอร์มจะใช้ภาษาไหน
+     *
+     * @param array<string, string>                                          $data
+     * @param array{first: array<string,string>, current: array<string,string>} $utm
+     */
+    private function notify(int $id, array $data, string $locale, string $sourcePath, array $utm): void
+    {
+        $to = (string) (SettingService::get('lead.notify_email') ?: SiteService::leadEmail());
+
+        $previous = LocaleService::current();
+        LocaleService::use(LocaleService::DEFAULT);
+
+        $options = BlockService::leadOptions();
+        $label   = static fn (string $field, string $value): string => $value === '' ? '-' : (string) ($options[$field][$value] ?? $value);
+        $lines   = [
+            __('lead.mail_intro'),
+            '',
+            '#' . $id . ' · ' . __('lead.forms.' . $data['form_key']),
+            __('lead.name') . ': ' . $data['name'],
+            __('lead.company') . ': ' . ($data['company'] ?: '-'),
+            __('lead.phone') . ': ' . ($data['phone'] ?: '-'),
+            __('lead.email') . ': ' . ($data['email'] ?: '-'),
+            __('lead.line_id') . ': ' . ($data['line_id'] ?: '-'),
+            __('lead.business_type') . ': ' . $label('business_type', $data['business_type']),
+            __('lead.has_system') . ': ' . $label('has_system', $data['has_system']),
+            __('lead.need') . ': ' . $label('need', $data['need']),
+            __('lead.member_estimate') . ': ' . $label('member_estimate', $data['member_estimate']),
+            __('lead.message') . ': ' . ($data['message'] ?: '-'),
+            '',
+            __('lead.locale') . ': ' . $locale,
+            __('lead.source_page') . ': ' . SeoService::absolute($sourcePath),
+            __('lead.utm') . ': ' . (string) json_encode($utm, JSON_UNESCAPED_UNICODE),
+        ];
+        $subject = __('lead.mail_subject', ['form' => __('lead.forms.' . $data['form_key']), 'name' => $data['name']]);
+
+        LocaleService::use($previous);
+
+        // __() escape ค่าที่แทนใน placeholder เป็น HTML entity — อีเมลเป็นข้อความล้วนจึงถอดกลับ
+        (new MailService())->send(
+            $to,
+            html_entity_decode($subject, ENT_QUOTES, 'UTF-8'),
+            html_entity_decode(implode("\n", $lines), ENT_QUOTES, 'UTF-8'),
+            $data['email'] !== '' ? $data['email'] : null
+        );
     }
 }

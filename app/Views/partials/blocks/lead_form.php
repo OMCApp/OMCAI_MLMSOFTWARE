@@ -25,7 +25,8 @@ $leadKey     = in_array($leadBlock['form_key'] ?? '', ['demo', 'quote', 'consult
     ? (string) $leadBlock['form_key'] : 'contact';
 $leadChoose  = ['' => __('lead.choose')];
 ?>
-<section class="section" data-tone="tint" aria-labelledby="<?= e($leadUid) ?>-title" id="<?= e($leadUid) ?>">
+<?php /* id="lead-form" คงที่ — ปุ่ม "ขอใบเสนอราคา" ในหน้าเดียวกันลิงก์มาที่ #lead-form (หนึ่งฟอร์มต่อหน้า) */ ?>
+<section class="section" data-tone="tint" aria-labelledby="<?= e($leadUid) ?>-title" id="lead-form">
     <div class="container lead-form-wrap">
         <?php
         $sectionHeadEyebrow = (string) ($leadBlock['eyebrow'] ?? '');
@@ -39,6 +40,10 @@ $leadChoose  = ['' => __('lead.choose')];
             <?= csrf_field() ?>
             <input type="hidden" name="form_key" value="<?= e($leadKey) ?>">
             <input type="hidden" name="source_path" value="<?= e(current_path()) ?>">
+            <?php /* แหล่งที่มาของการเข้าชมหน้านี้ (UTM ใน URL · referrer ภายนอก) — BlockService::prepare() ใส่ให้ */ ?>
+            <?php foreach ((array) ($leadBlock['tracking'] ?? []) as $leadTrackName => $leadTrackValue): ?>
+                <input type="hidden" name="<?= e((string) $leadTrackName) ?>" value="<?= e((string) $leadTrackValue) ?>">
+            <?php endforeach; ?>
 
             <?php /* ‼️ honeypot — คนไม่เห็นและ Tab ไม่ผ่าน · bot ที่กรอกทุกช่องจะกรอกช่องนี้ด้วย */ ?>
             <div class="hp-field" aria-hidden="true">

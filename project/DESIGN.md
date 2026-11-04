@@ -40,6 +40,7 @@ typography:
     heading: "Prompt"
     body:    "IBM Plex Sans Thai"
     mono:    "ui-monospace"
+    zh:      '"PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Noto Sans SC", sans-serif'
   scale:      { xs: 0.75, sm: 0.875, base: 1, lg: 1.125, xl: 1.375, 2xl: 1.75, 3xl: 2.25, 4xl: 3, display: 4 }
   weight:     { normal: 400, medium: 500, bold: 600 }
   lineHeight: { tight: 1.3, snug: 1.45, normal: 1.65, loose: 1.85 }
@@ -135,7 +136,7 @@ component:
 
 บริษัทซอฟต์แวร์ไทยที่จริงจังและเข้าถึงได้ — **พื้นขาวสะอาด ส้มแบรนด์จากโลโก้เป็นตัวนำสายตา ตัวอักษรหมึกเข้มอมน้ำเงิน** ตามแบบอ้างอิงหน้าแรก (`refs/home-reference.png`) และ brief ฉบับที่ 3 ("modern · clean · premium · corporate · trustworthy · technology-driven") · ความ "เทคโนโลยี" มาจาก mockup แดชบอร์ดที่สร้างด้วย HTML/CSS ไม่ใช่จากสีมืดหรือ neon ซึ่ง brief ห้ามไว้
 
-ฟอนต์: หัวข้อ **Prompt** (600) — ทรงเรขาคณิตไม่มีหัว หนักแน่นแบบพาดหัวในแบบอ้างอิง · เนื้อความ **IBM Plex Sans Thai** (400/500/600) — อ่านง่าย ทางการ ตัวเลขชัด · ทั้งสองตัว self-host ที่ `public/assets/vendor/fonts/` (SIL OFL 1.1 — ใช้เชิงพาณิชย์ได้)
+ฟอนต์: หัวข้อ **Prompt** (600) — ทรงเรขาคณิตไม่มีหัว หนักแน่นแบบพาดหัวในแบบอ้างอิง · เนื้อความ **IBM Plex Sans Thai** (400/500/600) — อ่านง่าย ทางการ ตัวเลขชัด · ทั้งสองตัว self-host ที่ `public/assets/vendor/fonts/` (SIL OFL 1.1 — ใช้เชิงพาณิชย์ได้) · **ภาษาจีน** (`/zh/`) ใช้ฟอนต์ระบบ `font.zh` (PingFang SC / Microsoft YaHei / Noto Sans CJK SC) ผ่าน `:lang(zh)` — ฟอนต์จีนแบบ webfont หนักหลาย MB จึงไม่โหลด
 
 ## ลายเซ็นของระบบนี้
 

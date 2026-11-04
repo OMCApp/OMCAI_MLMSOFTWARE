@@ -8,6 +8,8 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Services\FeedService;
+use App\Services\LocaleService;
+use App\Services\PostService;
 use App\Services\RobotsService;
 use App\Services\SitemapService;
 use Core\Path;
@@ -21,7 +23,8 @@ final class SeoController extends PublicController
 
     public function sitemap(string $section): void
     {
-        if (!in_array($section, SitemapService::SECTIONS, true)) {
+        // sitemap-pages.xml (ภาษาหลัก) · sitemap-pages-en.xml — ส่วนที่ไม่มีแถวในภาษานั้นได้ 404
+        if (!in_array($section, (new SitemapService())->available(), true)) {
             (new SiteController())->resolve();
 
             return;
@@ -38,13 +41,24 @@ final class SeoController extends PublicController
         );
     }
 
-    public function feed(): void
+    /** /feed/ (ไทย) · /en/feed/ · /zh/feed/ — แต่ละภาษามี feed ของตัวเอง */
+    public function feed(string $locale = LocaleService::DEFAULT): void
     {
-        // URL ของ feed เดิมคือ /feed/ — /feed ไม่มี / ท้ายตามกฎเดียวกับทุกหน้า
-        if (!str_ends_with(Path::requested(), '/')) {
-            $this->redirectTo('/feed/' . (($_SERVER['QUERY_STRING'] ?? '') !== '' ? '?' . $_SERVER['QUERY_STRING'] : ''), 301);
+        $locale = LocaleService::exists($locale) ? $locale : LocaleService::DEFAULT;
+        $path   = LocaleService::localize('/feed/', $locale);
+
+        // ‼️ ภาษาที่ยังไม่มีบทความเผยแพร่ = ไม่มี feed (404 noindex) — ห้ามมี URL ว่างให้ index
+        if ($locale !== LocaleService::DEFAULT && !(new PostService())->hasPublished($locale)) {
+            (new SiteController())->resolve();
+
+            return;
         }
 
-        $this->plain((new FeedService())->rss(), 'application/rss+xml; charset=utf-8');
+        // URL ของ feed เดิมคือ /feed/ — /feed ไม่มี / ท้ายตามกฎเดียวกับทุกหน้า
+        if (!str_ends_with(Path::requested(), '/')) {
+            $this->redirectTo($path . (($_SERVER['QUERY_STRING'] ?? '') !== '' ? '?' . $_SERVER['QUERY_STRING'] : ''), 301);
+        }
+
+        $this->plain((new FeedService())->rss($locale), 'application/rss+xml; charset=utf-8');
     }
 }

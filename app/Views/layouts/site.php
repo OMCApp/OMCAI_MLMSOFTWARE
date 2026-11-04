@@ -26,9 +26,11 @@ $site            = (array) ($site ?? \App\Services\SiteService::layout(current_p
 $metaDescription = (string) ($metaDescription ?? '');
 $siteName        = (string) ($site['brand']['name'] ?? config('name'));
 $pageBreadcrumb  = (array) ($breadcrumbs ?? []);
+// ‼️ ภาษาของหน้ามาจาก URL (App\Services\LocaleService) — lang ผิด = screen reader อ่านผิดภาษา และ Google เดาภาษาผิด
+$siteHtmlLang    = (string) ($site['html_lang'] ?? 'th');
 ?>
 <!doctype html>
-<html lang="th" data-theme="light">
+<html lang="<?= e($siteHtmlLang) ?>" data-theme="light">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -41,9 +43,10 @@ $pageBreadcrumb  = (array) ($breadcrumbs ?? []);
             <meta name="description" content="<?= e($metaDescription) ?>">
         <?php endif; ?>
     <?php endif; ?>
-    <?php /* ‼️ preload เฉพาะฟอนต์ไทยสองตัวที่จอแรกใช้จริง (พาดหัว + เนื้อความ) — ลด LCP / FOUT */ ?>
-    <link rel="preload" href="<?= e(url('/assets/vendor/fonts/prompt-thai-600-normal.woff2')) ?>" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="<?= e(url('/assets/vendor/fonts/ibm-plex-sans-thai-thai-400-normal.woff2')) ?>" as="font" type="font/woff2" crossorigin>
+    <?php /* ‼️ preload เฉพาะฟอนต์ที่จอแรกของภาษานี้ใช้จริง (config/locales.php) — จีนใช้ฟอนต์ระบบ ไม่ preload */ ?>
+    <?php foreach ((array) ($site['preload_fonts'] ?? []) as $siteFont): ?>
+        <link rel="preload" href="<?= e(url($siteFont)) ?>" as="font" type="font/woff2" crossorigin>
+    <?php endforeach; ?>
     <?php include __DIR__ . '/../partials/favicon.php'; ?>
     <link rel="stylesheet" href="<?= e(asset('/assets/css/app.css')) ?>">
 </head>

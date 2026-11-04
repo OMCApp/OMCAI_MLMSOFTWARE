@@ -15,10 +15,10 @@ final class FeedService
     ) {
     }
 
-    public function rss(): string
+    public function rss(string $locale = LocaleService::DEFAULT): string
     {
         $limit = max(1, min((int) SettingService::get('blog.feed_items', 20), 50));
-        $items = $this->posts->latest($limit);
+        $items = $this->posts->latest($limit, $locale);
         $brand = SettingService::brand();
         $x     = static fn (string $v): string => SitemapService::xml($v);
 
@@ -28,11 +28,11 @@ final class FeedService
              . '<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">' . "\n"
              . "<channel>\n"
              . '  <title>' . $x($brand) . "</title>\n"
-             . '  <link>' . $x(SeoService::absolute('/')) . "</link>\n"
+             . '  <link>' . $x(SeoService::absolute(LocaleService::home($locale))) . "</link>\n"
              . '  <description>' . $x((string) (SettingService::get('site.tagline') ?: $brand)) . "</description>\n"
-             . "  <language>th</language>\n"
+             . '  <language>' . $x(LocaleService::htmlLang($locale)) . "</language>\n"
              . '  <lastBuildDate>' . $x(date(DATE_RSS, $built)) . "</lastBuildDate>\n"
-             . '  <atom:link href="' . $x(SeoService::absolute('/feed/')) . '" rel="self" type="application/rss+xml" />' . "\n";
+             . '  <atom:link href="' . $x(SeoService::absolute(LocaleService::localize('/feed/', $locale))) . '" rel="self" type="application/rss+xml" />' . "\n";
 
         $categoryNames = $this->categories->names();
 
