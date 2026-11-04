@@ -67,6 +67,8 @@ final class SiteService
                 (array) ($site['contact'] ?? [])
             ),
             'cta'       => $cta,
+            // แถบติดต่อติดล่างจอมือถือ (partials/site-mobile-bar.php)
+            'contact_url' => self::localizePath('/contact/', $locale),
             'nav'       => array_values($nav),
             'footer'    => $footer,
             'languages' => self::languages($locale, $translations),

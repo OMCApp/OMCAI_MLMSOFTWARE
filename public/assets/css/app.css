@@ -2317,6 +2317,8 @@
   }
   .plan-card-name { font-size: var(--text-xl); }
   .plan-card-text { flex: 1; color: var(--color-text-normal); }
+  /* Mockup: การ์ดแผนจัดกึ่งกลาง (ไอคอน · ชื่อ · คำอธิบาย) */
+  .plan-card { align-items: center; text-align: center; box-shadow: var(--shadow-sm); }
 
   /* ---------------------------------------------------------------- industry grid */
 
@@ -2810,6 +2812,144 @@
 
   /* ฟอร์ม: ช่องที่ผิดเห็นได้โดยไม่พึ่งสีอย่างเดียว (มีข้อความใต้ช่องเสมอ) */
   .lead-form [aria-invalid="true"] { border-color: var(--color-state-danger); outline: 1px solid var(--color-state-danger); }
+
+  /* ================================================================ Mockup หน้าแรก 2026-11-04 (Premium Technology + Human Trust) */
+
+  /* ---- เลื่อนไปยัง anchor แบบนุ่ม (#lead-form) — เว้นที่ให้ header ที่ติดบน */
+  html { scroll-padding-top: calc(var(--site-header-height) + var(--space-4)); }
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+
+  /* ---- หัวข้อส่วนกลางหน้า: ขีดส้มสองข้าง */
+  .section-head[data-align="center"] .section-title { display: inline-flex; align-items: center; gap: var(--space-4); }
+  .section-head[data-align="center"] .section-title::before,
+  .section-head[data-align="center"] .section-title::after {
+    content: "";
+    flex: none;
+    width: var(--space-10);
+    border-block-start: 2px solid var(--color-brand-accent);
+  }
+  @media (max-width: 639.98px) {
+    .section-head[data-align="center"] .section-title { display: block; }
+    .section-head[data-align="center"] .section-title::before,
+    .section-head[data-align="center"] .section-title::after { content: none; }
+  }
+
+  /* ---- hero: บรรทัดที่ 2+ ของพาดหัวเป็นสีส้ม · ภาพบุคคล + mockup ซ้อน */
+  .hero-site-accent { color: var(--color-brand-primary); }
+  .hero-site-title { text-wrap: balance; }
+
+  .hero-site-visual[data-compose="person"] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: end;
+  }
+  .hero-person, .hero-person-devices { grid-area: 1 / 1; }
+  .hero-person { justify-self: end; width: min(74%, 30rem); }
+  .hero-person-image {
+    display: block;
+    width: 100%;
+    height: auto;
+    /* ภาพพื้นขาว → กลืนกับพื้น hero สีอุ่น · ขอบล่างจางหายแทนการตัดขอบ */
+    mix-blend-mode: multiply;
+    mask-image: radial-gradient(ellipse 52% 56% at 50% 42%, currentColor 62%, transparent 100%);
+  }
+  :root[data-theme="dark"] .hero-person-image { mix-blend-mode: normal; border-radius: var(--radius-xl); }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .hero-person-image { mix-blend-mode: normal; border-radius: var(--radius-xl); }
+  }
+  .hero-person-devices {
+    position: relative;
+    z-index: 1;
+    justify-self: start;
+    align-self: end;
+    width: 76%;
+    margin-block-end: var(--space-4);
+  }
+  .hero-site-visual[data-compose="person"] .mock-caption { grid-area: 2 / 1; }
+  @media (max-width: 959.98px) {
+    .hero-person { width: min(70%, 22rem); }
+    .hero-person-devices { width: 84%; }
+  }
+
+  /* ตัวเลขที่ยืนยันแล้ว: การ์ดลอยทับขอบล่างของ hero (แบบ Mockup) */
+  .hero-site + .stats-band { position: relative; z-index: 2; margin-block-start: calc(-1 * var(--space-10)); padding-block-start: 0; }
+  .stats-band .stat { justify-content: center; }
+  @media (min-width: 640px) {
+    .stats-band .stat:not(:first-child) { border-inline-start: 1px solid var(--color-border-normal); }
+  }
+
+  /* ---- การ์ด "ทำไมต้อง OMC" และการ์ดอื่น: ยกขึ้นเล็กน้อยเมื่อชี้ */
+  @media (prefers-reduced-motion: no-preference) {
+    div.feature-card:hover { transform: translateY(calc(-1 * var(--space-1))); box-shadow: var(--shadow-md); }
+  }
+
+  /* ---- ฟีเจอร์เด่น: ภาพซ้าย ข้อความขวา */
+  @media (min-width: 960px) {
+    .showcase-inner[data-reverse="true"] { grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); }
+    .showcase-inner[data-reverse="true"] .showcase-text { order: 2; }
+  }
+
+  /* ---- split (ทีมงาน): บรรทัดรองสีส้ม · คำอธิบายใต้ภาพ */
+  .split-subtitle {
+    color: var(--color-brand-primary);
+    font-family: var(--font-heading), system-ui, sans-serif;
+    font-size: var(--text-lg);
+    font-weight: var(--weight-bold);
+    line-height: var(--leading-snug);
+  }
+  .split-figure { margin: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+  .split-figure .split-image { aspect-ratio: 3 / 2; object-fit: cover; box-shadow: var(--shadow-lg); }
+  .split-caption { color: var(--color-text-muted); font-size: var(--text-xs); text-align: end; }
+
+  /* ---- ขั้นตอน: เลข + ไอคอน · ลูกศรเชื่อม */
+  .step-head { display: flex; align-items: center; gap: var(--space-4); }
+  .step-icon { color: var(--color-brand-primary); }
+  .step-icon .icon { width: var(--icon-xl); height: var(--icon-xl); }
+  @media (min-width: 1100px) {
+    .step:has(.step-icon):not(:last-child)::after { inset-inline-start: calc(var(--space-12) + var(--icon-xl) + var(--space-8)); }
+  }
+
+  /* ---- ติดต่อ: ข้อความ | ฟอร์มย่อ | ภาพผู้ให้คำปรึกษา */
+  .lead-contact { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-8); align-items: center; }
+  .lead-contact-text { display: flex; flex-direction: column; gap: var(--space-4); }
+  .lead-contact .lead-form { gap: var(--space-4); }
+  /* ฟอร์มย่อ: ไม่มีกรอบกลุ่ม (หัวกลุ่มยังอยู่ให้ screen reader) · ช่องเรียงสองคอลัมน์ */
+  .lead-contact fieldset.group { padding: 0; border: 0; }
+  .lead-contact fieldset.group > legend { padding: 0; margin-block-end: var(--space-2); color: var(--color-text-muted); font-size: var(--text-sm); }
+  .lead-contact .field-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr)); gap: var(--space-3) var(--space-4); }
+  .lead-contact .lead-form-foot { flex-direction: column; align-items: stretch; }
+  .lead-contact .lead-form-foot .btn { justify-content: center; }
+  .lead-contact-figure { margin: 0; display: flex; flex-direction: column; gap: var(--space-2); }
+  .lead-contact-image { width: 100%; height: auto; aspect-ratio: 4 / 3; object-fit: cover; object-position: 70% 30%; border-radius: var(--radius-xl); box-shadow: var(--shadow-lg); }
+  @media (min-width: 1100px) {
+    .lead-contact { grid-template-columns: minmax(0, .85fr) minmax(0, 1.25fr) minmax(0, .8fr); gap: var(--space-8); align-items: stretch; }
+    .lead-contact-text { justify-content: center; }
+    .lead-contact-figure { justify-content: center; }
+    .lead-contact-image { aspect-ratio: auto; height: 100%; min-height: 100%; flex: 1; }
+  }
+  @media (max-width: 639.98px) {
+    .lead-contact-figure { display: none; }
+  }
+
+  /* ---- แถบติดต่อติดล่างจอ (มือถือ) */
+  .site-mobile-bar { display: none; }
+  @media (max-width: 767.98px) {
+    .site-mobile-bar {
+      position: fixed;
+      inset-inline: 0;
+      bottom: 0;
+      z-index: 40;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--space-2);
+      padding: var(--space-2) var(--site-gutter-mobile) calc(var(--space-2) + env(safe-area-inset-bottom));
+      border-block-start: 1px solid var(--color-border-normal);
+      background: var(--color-surface-card);
+      box-shadow: var(--shadow-lg);
+    }
+    .site-mobile-bar .btn { justify-content: center; }
+    .site-body { padding-block-end: calc(var(--space-16) + env(safe-area-inset-bottom)); }
+  }
 }
 
 @layer utilities {

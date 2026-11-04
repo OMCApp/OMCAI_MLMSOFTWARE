@@ -6,6 +6,8 @@
  *   'eyebrow', 'title' (h2), 'lead'
  *   'bullets' => list<string>   — ไม่บังคับ
  *   'action'  => ['label','url'] — ไม่บังคับ
+ *   'layout'  => 'tabs' | 'device'   device = แล็ปท็อป + มือถือภาพเดียว ไม่มีแท็บ
+ *   'reverse' => bool   ภาพไปซ้าย ข้อความขวา
  * ]
  *
  * ‼️ ไม่ต้องมีภาพหน้าจอ — mockup มาจาก partials/dashboard-mock.php (HTML/CSS) พร้อม caption "ข้อมูลสมมติ"
@@ -17,6 +19,8 @@ declare(strict_types=1);
 
 $showcaseBlock = (array) ($block ?? []);
 $showcaseUid   = (string) ($showcaseBlock['_uid'] ?? 'showcase');
+// device = แล็ปท็อป + มือถือภาพเดียว (แบบ Mockup หน้าแรก) · tabs = สลับ 3 มุมมอง
+$showcaseDevice = ($showcaseBlock['layout'] ?? 'tabs') === 'device';
 $showcaseViews = [
     'overview'   => __('showcase.tab_overview'),
     'team'       => __('showcase.tab_team'),
@@ -24,7 +28,7 @@ $showcaseViews = [
 ];
 ?>
 <section class="section showcase" data-tone="tint" aria-labelledby="<?= e($showcaseUid) ?>-title">
-    <div class="container showcase-inner">
+    <div class="container showcase-inner"<?php if (!empty($showcaseBlock['reverse'])): ?> data-reverse="true"<?php endif; ?>>
         <div class="showcase-text reveal">
             <?php if ((string) ($showcaseBlock['eyebrow'] ?? '') !== ''): ?>
                 <p class="eyebrow-pill"><?= e((string) $showcaseBlock['eyebrow']) ?></p>
@@ -41,6 +45,12 @@ $showcaseViews = [
             <?php endif; ?>
         </div>
 
+        <?php if ($showcaseDevice): ?>
+        <figure class="showcase-stage showcase-device reveal">
+            <?php $dashboardMockFrame = 'laptop'; $dashboardMockView = 'overview'; include __DIR__ . '/../dashboard-mock.php'; ?>
+            <figcaption class="mock-caption"><?= e(__('showcase.caption')) ?></figcaption>
+        </figure>
+        <?php else: ?>
         <figure class="showcase-stage reveal" data-tabs>
             <div class="tabs-list" role="tablist" aria-label="<?= e((string) ($showcaseBlock['title'] ?? '')) ?>" hidden>
                 <?php foreach ($showcaseViews as $showcaseKey => $showcaseLabel): ?>
@@ -60,5 +70,6 @@ $showcaseViews = [
 
             <figcaption class="mock-caption"><?= e(__('showcase.caption')) ?></figcaption>
         </figure>
+        <?php endif; ?>
     </div>
 </section>

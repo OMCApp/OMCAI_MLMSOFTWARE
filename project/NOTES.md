@@ -140,3 +140,15 @@
 - **SiteService** = layout ต่อภาษาของ Phase 4 (ตัวสลับภาษา · `localizePath`) + ของ Phase 3 ทับด้านบน: ข้อมูลบริษัทจาก settings (ที่อยู่/แนะนำต่อภาษา · 3 อีเมล · เบอร์) และเมนูจากตาราง menus ของภาษานั้น (ว่าง = เมนูใน config ของภาษานั้น) · `leadEmail()` / `founded()` / `about()` อ่าน settings ก่อน
 - **CSP ของหน้าที่มีรหัสติดตาม** (security review): `script-src 'nonce-…' 'strict-dynamic' 'self' https://www.googletagmanager.com/gtag/js https://www.googletagmanager.com/gtm.js` · nonce สุ่มต่อ request (`Security::nonce()` / helper `csp_nonce()`) ใส่ใน `<script>` ของ `layouts/site.php` และ `partials/tracking.php` · เปิดเฉพาะ production + ตั้งรหัสไว้ · หน้าอื่น CSP เดิม (`script-src 'self'`) ไม่มี nonce
 - `Core\Lang::yearOffset()` — `date.year_offset` เป็นตัวเลข แต่ `Lang::lookup()` คืนเฉพาะ string → `formatDate()` อ่านได้ 0 เสมอ (วันที่ไม่เป็น พ.ศ.) · บันทึกใน FEEDBACK — ไม่แก้ `formatDate` ในรอบนี้เพราะกระทบผลทดสอบ/การแสดงผลของ Phase 2/4
+
+## หน้าแรกตาม Mockup ชุดที่ 2 (2026-11-04)
+- ผู้ใช้ส่ง Mockup ใหม่ (Premium Technology + Human Trust) เป็น single source of truth ของหน้าแรก — ภาพอยู่ในแชท **ยังไม่ได้อยู่ใน `project/design/refs/`** (เครื่องมือบันทึกภาพจากแชทเป็นไฟล์ไม่ได้ — ให้ผู้ใช้วางไฟล์ไว้ที่ `project/design/refs/home-mockup-2.png`)
+- เนื้อหาหน้าแรก 3 ภาษา: `tools/content/home/<locale>.php` → `php tools/content/build-home.php` → migration 044 (title / SEO / URL ไม่เปลี่ยน)
+- ภาพบุคคล 3 ภาพเป็น **ภาพประกอบ** จาก Unsplash (Unsplash License — ใช้เชิงพาณิชย์ได้ ไม่ต้องให้เครดิต) ทุกภาพมีป้าย "ภาพประกอบ" บนหน้า และ alt ไม่อ้างว่าเป็นทีม OMC
+  · hero-consultant = unsplash.com/photos/HDQzRDsAfkI · team = Of_m3hMsoAA · support = wnpf3Q5pkXA
+  · ไฟล์ WebP อยู่ `public/assets/images/stock/` และลงทะเบียนในคลังสื่อ (เปลี่ยนเป็นภาพทีมจริงได้จาก CMS)
+- บล็อกที่เพิ่มความสามารถ (มีช่องใน CMS ครบ): hero.person · split.subtitle/caption · dashboard_showcase.layout=device/reverse · steps.items.icon · lead_form.layout=compact (+subtitle/bullets/image)
+- รูปจากคลังสื่อส่ง `srcset` แล้ว (`MediaService::imageData` + `partials/site-image.php`)
+- ปุ่ม Demo ทั้งเว็บชี้ระบบจริง https://demomlm.omc.co.th/ (ผู้ใช้ยืนยัน — กดเล่นได้เลย ไม่ต้องขอ) · หน้า /demo/ เก็บฟอร์มนัดทีมงานพาดูไว้
+- analytics events ใน `app.js`: demo_click · contact_click · lead_submit → dataLayer / gtag (เมื่อเปิด GA4/GTM ในตั้งค่าเว็บ)
+- ต่างจาก Mockup โดยจงใจ (กฎห้ามของปลอม): ตัวเลข 200+ ลูกค้า / 98% ความพึงพอใจ / "15 ปี" ไม่แสดง — แสดงเฉพาะตัวเลขที่ยืนยันแล้ว (ปีก่อตั้ง 2552 · 17 ปี) · รีวิวลูกค้าซ่อนจนมีรีวิวที่ได้รับอนุญาตใน CMS

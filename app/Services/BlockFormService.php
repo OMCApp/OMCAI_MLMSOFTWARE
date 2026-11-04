@@ -47,8 +47,10 @@ final class BlockFormService
                 ['key' => 'actions', 'type' => 'list', 'fields' => [
                     ['key' => 'label', 'type' => 'text'], ['key' => 'url', 'type' => 'text'],
                     ['key' => 'style', 'type' => 'select', 'options' => self::HERO_STYLES],
+                    ['key' => 'icon', 'type' => 'text'],
                 ]],
                 ['key' => 'image', 'type' => 'image'],
+                ['key' => 'person', 'type' => 'image'],
             ],
             'trust_bar' => [
                 ['key' => 'title', 'type' => 'text'],
@@ -69,7 +71,9 @@ final class BlockFormService
                 ['key' => 'visual', 'type' => 'select', 'options' => ['image', 'bars']],
                 ['key' => 'image', 'type' => 'image'],
                 ['key' => 'reverse', 'type' => 'checkbox'],
+                ['key' => 'caption', 'type' => 'text'],
             ], $head, [
+                ['key' => 'subtitle', 'type' => 'text'],
                 ['key' => 'bullets', 'type' => 'lines'],
                 ['key' => 'action', 'type' => 'link', 'styles' => self::HERO_STYLES],
             ]),
@@ -88,7 +92,10 @@ final class BlockFormService
                     ['key' => 'image', 'type' => 'image'],
                 ]],
             ]),
-            'dashboard_showcase' => array_merge($head, [
+            'dashboard_showcase' => array_merge([
+                ['key' => 'layout', 'type' => 'select', 'options' => ['tabs', 'device']],
+                ['key' => 'reverse', 'type' => 'checkbox'],
+            ], $head, [
                 ['key' => 'bullets', 'type' => 'lines'],
                 $action,
             ]),
@@ -129,6 +136,7 @@ final class BlockFormService
             'steps' => array_merge($head, [
                 ['key' => 'items', 'type' => 'list', 'fields' => [
                     ['key' => 'title', 'type' => 'text'], ['key' => 'text', 'type' => 'textarea'],
+                    ['key' => 'icon', 'type' => 'text'],
                 ]],
             ]),
             'comparison_table' => array_merge($head, [
@@ -144,7 +152,11 @@ final class BlockFormService
             ]),
             'lead_form' => array_merge([
                 ['key' => 'form_key', 'type' => 'select', 'options' => self::FORM_KEYS],
+                ['key' => 'layout', 'type' => 'select', 'options' => ['full', 'compact']],
             ], $head, [
+                ['key' => 'subtitle', 'type' => 'text'],
+                ['key' => 'bullets', 'type' => 'lines'],
+                ['key' => 'image', 'type' => 'image'],
                 ['key' => 'submit', 'type' => 'text'],
             ]),
         ];

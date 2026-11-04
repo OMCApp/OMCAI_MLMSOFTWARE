@@ -9,7 +9,8 @@
  *   'visual'  => 'image' | 'bars'   bars = กราฟแท่ง CSS (ไม่ต้องมีภาพ) — ค่าเริ่มต้น image ถ้ามี image
  *   'image'   => ['src','alt','width','height'] — ไม่บังคับ · lazy เสมอ (ไม่ใช่ส่วนเปิด)
  *   'reverse' => bool   สลับภาพไปซ้าย (เฉพาะ plain)
- *   'eyebrow', 'title' (h2), 'lead', 'bullets' => list<string>
+ *   'caption' => string   คำอธิบายใต้ภาพ เช่น "ภาพประกอบ" (ภาพที่ไม่ใช่ทีมจริงต้องบอก)
+ *   'eyebrow', 'title' (h2), 'subtitle' (บรรทัดรองสีส้ม), 'lead', 'bullets' => list<string>
  *   'action'  => ['label','url','style'] — ไม่บังคับ
  * ]
  */
@@ -18,9 +19,9 @@ declare(strict_types=1);
 
 $splitBlock  = (array) ($block ?? []);
 $splitLayout = ($splitBlock['layout'] ?? 'plain') === 'band' ? 'band' : 'plain';
-$splitImage  = is_array($splitBlock['image'] ?? null) && (string) ($splitBlock['image']['src'] ?? '') !== ''
+$splitPicture  = is_array($splitBlock['image'] ?? null) && (string) ($splitBlock['image']['src'] ?? '') !== ''
     ? $splitBlock['image'] : null;
-$splitVisual = $splitImage !== null && ($splitBlock['visual'] ?? 'image') === 'image' ? 'image' : 'bars';
+$splitVisual = $splitPicture !== null && ($splitBlock['visual'] ?? 'image') === 'image' ? 'image' : 'bars';
 $splitTitleId = ($splitBlock['_uid'] ?? 'split') . '-title';
 ?>
 <section class="section split-section" data-layout="<?= e($splitLayout) ?>" aria-labelledby="<?= e($splitTitleId) ?>">
@@ -28,11 +29,13 @@ $splitTitleId = ($splitBlock['_uid'] ?? 'split') . '-title';
         <div class="split-block reveal" data-layout="<?= e($splitLayout) ?>"<?php if (!empty($splitBlock['reverse'])): ?> data-reverse="true"<?php endif; ?>>
             <div class="split-visual">
                 <?php if ($splitVisual === 'image'): ?>
-                    <img class="split-image" src="<?= e(asset((string) $splitImage['src'])) ?>"
-                         alt="<?= e((string) ($splitImage['alt'] ?? '')) ?>"
-                         width="<?= e((string) (int) ($splitImage['width'] ?? 800)) ?>"
-                         height="<?= e((string) (int) ($splitImage['height'] ?? 600)) ?>"
-                         loading="lazy" decoding="async">
+                    <figure class="split-figure">
+                        <?php $siteImage = $splitPicture; $siteImageClass = 'split-image'; $siteImageSizes = '(min-width: 960px) 45vw, 100vw';
+                              include __DIR__ . '/../site-image.php'; ?>
+                        <?php if ((string) ($splitBlock['caption'] ?? '') !== ''): ?>
+                            <figcaption class="split-caption"><?= e((string) $splitBlock['caption']) ?></figcaption>
+                        <?php endif; ?>
+                    </figure>
                 <?php else: ?>
                     <div class="bars-art" aria-hidden="true">
                         <span class="bars-art-bar" data-h="1"></span>
@@ -52,6 +55,9 @@ $splitTitleId = ($splitBlock['_uid'] ?? 'split') . '-title';
                     <p class="eyebrow-pill"><?= e((string) $splitBlock['eyebrow']) ?></p>
                 <?php endif; ?>
                 <h2 class="section-title" id="<?= e($splitTitleId) ?>"><?= e((string) ($splitBlock['title'] ?? '')) ?></h2>
+                <?php if ((string) ($splitBlock['subtitle'] ?? '') !== ''): ?>
+                    <p class="split-subtitle"><?= e((string) $splitBlock['subtitle']) ?></p>
+                <?php endif; ?>
                 <?php if ((string) ($splitBlock['lead'] ?? '') !== ''): ?>
                     <p class="section-lead"><?= e((string) $splitBlock['lead']) ?></p>
                 <?php endif; ?>

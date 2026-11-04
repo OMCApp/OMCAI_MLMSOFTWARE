@@ -79,6 +79,8 @@ return [
     // ---- Dashboard mockup (dashboard_showcase / hero blocks) — sample data, always disclosed
     'showcase' => [
         'caption'        => '系统界面示例 — 数据仅供演示',
+        'caption_person' => '人物为示意图片 · 系统界面示例，数据仅供演示',
+        'illustrative'   => '示意图片',
         'app_title'      => '业务概览',
         'sales_today'    => '今日销售额',
         'members_total'  => '会员总数',
@@ -414,8 +416,8 @@ return [
             'text' => '文字', 'layout' => '布局', 'visual' => '配图', 'reverse' => '图片放在左侧', 'action' => '结尾链接/按钮', 'plans' => '奖金制度',
             'key' => '制度类型', 'name' => '名称', 'subtitle' => '第二行', 'points' => '要点', 'group' => '问题分组（来自常见问题菜单）',
             'q' => '问题', 'a' => '答案', 'paragraphs' => '段落', 'list' => '项目列表', 'html' => 'HTML（从旧网站迁移的内容）',
-            'highlight' => '突出显示的列（从 0 开始）', 'caption' => '表格说明', 'rows' => '行', 'values' => '各列的值', 'form_key' => '表单类型',
-            'submit' => '提交按钮文字',
+            'highlight' => '突出显示的列（从 0 开始）', 'caption' => '图片 / 表格说明', 'rows' => '行', 'values' => '各列的值', 'form_key' => '表单类型',
+            'submit' => '提交按钮文字', 'person' => '模型后方的人物照片（示意图 — 不得声称是真实团队）',
         ],
         'block_hint' => [
             'image' => '从媒体库选择 — 新图片请在媒体库菜单上传', 'lines' => '每行一项', 'paragraphs' => '段落之间空一行',
@@ -430,6 +432,7 @@ return [
             'plain' => '两栏', 'band' => '色带', 'image' => '图片', 'bars' => '柱状图', 'binary' => 'Binary', 'unilevel' => 'Unilevel', 'matrix' => 'Matrix',
             'board' => 'Board', 'stair_step' => 'Stair Step', 'hybrid' => 'Hybrid', 'demo' => '申请演示', 'quote' => '索取报价', 'consult' => '咨询',
             'contact' => '联系', 'migration' => '系统迁移',
+            'tabs' => '三个标签视图', 'device' => '笔记本 + 手机', 'full' => '完整表单', 'compact' => '简短表单 + 文字 + 图片',
         ],
         'revisions' => [
             'title' => '修订历史', 'empty' => '还没有历史 — 第一次保存后开始记录', 'view' => '较早版本', 'compare_hint' => '此版本与当前版本对比 — 仅显示不同的字段',

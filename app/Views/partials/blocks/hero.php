@@ -11,6 +11,9 @@
  *   'image'   => ['src','alt','width','height'] | null
  *                ‣ มีภาพ = ใช้ภาพแทน mockup (ภาพทีม/ระบบจริงจาก CMS) · ‼️ ภาพนี้คือ LCP — ห้าม lazy
  *                ‣ ไม่มี = mockup แล็ปท็อป + มือถือ (partials/dashboard-mock.php) พร้อม caption ข้อมูลสมมติ
+ *   'person'  => ['src','alt',…] | null   ภาพบุคคลด้านหลัง mockup (แบบ Human Trust) — ใช้เมื่อไม่มี image
+ *                ‣ ‼️ ภาพประกอบต้องไม่อ้างว่าเป็นทีม OMC — alt เขียนแบบทั่วไป
+ *   บรรทัดที่ 2 เป็นต้นไปของพาดหัวเป็นสีส้ม (แบบ Mockup)
  * ]
  *
  * ‼️ มี h1 ได้ตัวเดียวต่อหน้า — เรียก hero_rendered(true) ให้ page-head.php ไม่วาดซ้ำ
@@ -26,6 +29,8 @@ $heroBlock   = (array) ($block ?? []);
 $heroLines   = preg_split('/\R/', (string) ($heroBlock['title'] ?? '')) ?: [];
 $heroImage   = is_array($heroBlock['image'] ?? null) && (string) ($heroBlock['image']['src'] ?? '') !== ''
     ? $heroBlock['image'] : null;
+$heroPerson  = is_array($heroBlock['person'] ?? null) && (string) ($heroBlock['person']['src'] ?? '') !== ''
+    ? $heroBlock['person'] : null;
 
 /* variant 'page' = ส่วนเปิดของหน้าใน (ไม่มี mockup) — breadcrumb อยู่ในนี้ เพราะ page-head ไม่วาดเมื่อมี hero
    ‼️ $breadcrumbs มาจาก Controller (view data) — หน้าแรกไม่มี breadcrumb */
@@ -71,7 +76,7 @@ endif;
 
             <h1 class="hero-site-title" id="<?= e($heroBlock['_uid'] ?? 'hero') ?>-title">
                 <?php foreach ($heroLines as $heroLineIndex => $heroLine): ?>
-                    <?php if ($heroLineIndex > 0): ?><br><?php endif; ?><?= e($heroLine) ?>
+                    <?php if ($heroLineIndex > 0): ?><br><span class="hero-site-accent"><?= e($heroLine) ?></span><?php else: ?><?= e($heroLine) ?><?php endif; ?>
                 <?php endforeach; ?>
             </h1>
 
@@ -90,8 +95,18 @@ endif;
             <?php endif; ?>
         </div>
 
-        <figure class="hero-site-visual">
-            <?php if ($heroImage !== null): ?>
+        <figure class="hero-site-visual"<?php if ($heroImage === null && $heroPerson !== null): ?> data-compose="person"<?php endif; ?>>
+            <?php if ($heroImage === null && $heroPerson !== null): ?>
+                <?php /* ภาพบุคคล = LCP ของหน้าแรก → eager · mockup ซ้อนด้านหน้า (ข้อมูลสมมติ — caption บอกไว้) */ ?>
+                <div class="hero-person">
+                    <?php $siteImage = $heroPerson; $siteImageClass = 'hero-person-image'; $siteImageEager = true;
+                          $siteImageSizes = '(min-width: 960px) 30vw, 70vw'; include __DIR__ . '/../site-image.php'; ?>
+                </div>
+                <div class="hero-person-devices">
+                    <?php $dashboardMockFrame = 'laptop'; $dashboardMockView = 'overview'; include __DIR__ . '/../dashboard-mock.php'; ?>
+                </div>
+                <figcaption class="mock-caption"><?= e(__('showcase.caption_person')) ?></figcaption>
+            <?php elseif ($heroImage !== null): ?>
                 <img class="hero-site-image"
                      src="<?= e(asset((string) $heroImage['src'])) ?>"
                      alt="<?= e((string) ($heroImage['alt'] ?? '')) ?>"

@@ -6,6 +6,10 @@
  *   'form_key' => 'demo' | 'quote' | 'consult' | 'contact' | 'migration'   ส่งไปกับฟอร์ม (leads.form_key)
  *   'eyebrow', 'title' (h2), 'lead'
  *   'submit'   => string   ข้อความปุ่ม — ไม่บังคับ (ค่าเริ่มต้น lead.submit)
+ *   'layout'   => 'full' | 'compact'
+ *                compact = ข้อความ (title · subtitle · lead · bullets) | ฟอร์มย่อ 5 ช่อง | ภาพ (แบบ Mockup หน้าแรก)
+ *                ช่องที่ตัดออก (บริษัท · LINE · ความต้องการ · จำนวนสมาชิก · มีระบบเดิม) ไม่บังคับอยู่แล้ว
+ *   'subtitle', 'bullets', 'image'  ใช้เฉพาะ compact
  *   'options'  => array    ตัวเลือกของ select/radio — BlockService::prepare() ใส่ให้ ห้ามส่งเอง
  *   'privacy_url' => string ลิงก์นโยบายความเป็นส่วนตัว — BlockService::prepare() ใส่ให้จาก config/site.php
  * ]
@@ -24,10 +28,27 @@ $leadUid     = (string) ($leadBlock['_uid'] ?? 'lead');
 $leadKey     = in_array($leadBlock['form_key'] ?? '', ['demo', 'quote', 'consult', 'contact', 'migration'], true)
     ? (string) $leadBlock['form_key'] : 'contact';
 $leadChoose  = ['' => __('lead.choose')];
+$leadCompact = ($leadBlock['layout'] ?? 'full') === 'compact';
+$leadImage   = is_array($leadBlock['image'] ?? null) && (string) ($leadBlock['image']['src'] ?? '') !== '' ? $leadBlock['image'] : null;
 ?>
 <?php /* id="lead-form" คงที่ — ปุ่ม "ขอใบเสนอราคา" ในหน้าเดียวกันลิงก์มาที่ #lead-form (หนึ่งฟอร์มต่อหน้า) */ ?>
-<section class="section" data-tone="tint" aria-labelledby="<?= e($leadUid) ?>-title" id="lead-form">
-    <div class="container lead-form-wrap">
+<section class="section" data-tone="tint" aria-labelledby="<?= e($leadUid) ?>-title" id="lead-form"<?php if ($leadCompact): ?> data-layout="compact"<?php endif; ?>>
+    <div class="container <?= e($leadCompact ? 'lead-contact' : 'lead-form-wrap') ?>">
+        <?php if ($leadCompact): ?>
+            <div class="lead-contact-text reveal">
+                <?php if ((string) ($leadBlock['eyebrow'] ?? '') !== ''): ?>
+                    <p class="eyebrow-pill"><?= e((string) $leadBlock['eyebrow']) ?></p>
+                <?php endif; ?>
+                <h2 class="section-title" id="<?= e($leadUid) ?>-title"><?= e((string) ($leadBlock['title'] ?? '')) ?></h2>
+                <?php if ((string) ($leadBlock['subtitle'] ?? '') !== ''): ?>
+                    <p class="split-subtitle"><?= e((string) $leadBlock['subtitle']) ?></p>
+                <?php endif; ?>
+                <?php if ((string) ($leadBlock['lead'] ?? '') !== ''): ?>
+                    <p class="section-lead"><?= e((string) $leadBlock['lead']) ?></p>
+                <?php endif; ?>
+                <?php $checkListItems = (array) ($leadBlock['bullets'] ?? []); include __DIR__ . '/../check-list.php'; ?>
+            </div>
+        <?php else: ?>
         <?php
         $sectionHeadEyebrow = (string) ($leadBlock['eyebrow'] ?? '');
         $sectionHeadTitle   = (string) ($leadBlock['title'] ?? '');
@@ -35,6 +56,7 @@ $leadChoose  = ['' => __('lead.choose')];
         $sectionHeadId      = $leadUid . '-title';
         include __DIR__ . '/../section-head.php';
         ?>
+        <?php endif; ?>
 
         <form class="lead-form reveal" method="POST" action="<?= e(url('/lead/')) ?>" novalidate>
             <?= csrf_field() ?>
@@ -60,8 +82,10 @@ $leadChoose  = ['' => __('lead.choose')];
                     include __DIR__ . '/../field.php';
 
                     $fieldRequired = false;
-                    $fieldName = 'company'; $fieldLabel = __('lead.company');
-                    include __DIR__ . '/../field.php';
+                    if (!$leadCompact) {
+                        $fieldName = 'company'; $fieldLabel = __('lead.company');
+                        include __DIR__ . '/../field.php';
+                    }
 
                     $fieldType = 'tel';
                     $fieldName = 'phone'; $fieldLabel = __('lead.phone'); $fieldHint = __('lead.contact_hint');
@@ -71,9 +95,11 @@ $leadChoose  = ['' => __('lead.choose')];
                     $fieldName = 'email'; $fieldLabel = __('lead.email');
                     include __DIR__ . '/../field.php';
 
-                    $fieldType = 'text';
-                    $fieldName = 'line_id'; $fieldLabel = __('lead.line_id');
-                    include __DIR__ . '/../field.php';
+                    if (!$leadCompact) {
+                        $fieldType = 'text';
+                        $fieldName = 'line_id'; $fieldLabel = __('lead.line_id');
+                        include __DIR__ . '/../field.php';
+                    }
                     ?>
                 </div>
             </fieldset>
@@ -87,6 +113,7 @@ $leadChoose  = ['' => __('lead.choose')];
                     $fieldOptions = $leadChoose + (array) ($leadOptions['business_type'] ?? []);
                     include __DIR__ . '/../field.php';
 
+                    if (!$leadCompact) {
                     $fieldType = 'select';
                     $fieldName = 'need'; $fieldLabel = __('lead.need');
                     $fieldOptions = $leadChoose + (array) ($leadOptions['need'] ?? []);
@@ -96,15 +123,18 @@ $leadChoose  = ['' => __('lead.choose')];
                     $fieldName = 'member_estimate'; $fieldLabel = __('lead.member_estimate');
                     $fieldOptions = $leadChoose + (array) ($leadOptions['member_estimate'] ?? []);
                     include __DIR__ . '/../field.php';
+                    }
                     ?>
                 </div>
                 <?php
-                $fieldType = 'radio';
-                $fieldName = 'has_system'; $fieldLabel = __('lead.has_system');
-                $fieldOptions = (array) ($leadOptions['has_system'] ?? []);
-                include __DIR__ . '/../field.php';
+                if (!$leadCompact) {
+                    $fieldType = 'radio';
+                    $fieldName = 'has_system'; $fieldLabel = __('lead.has_system');
+                    $fieldOptions = (array) ($leadOptions['has_system'] ?? []);
+                    include __DIR__ . '/../field.php';
+                }
 
-                $fieldType = 'textarea'; $fieldRows = 4;
+                $fieldType = 'textarea'; $fieldRows = $leadCompact ? 3 : 4;
                 $fieldName = 'message'; $fieldLabel = __('lead.message'); $fieldHint = __('lead.message_hint');
                 include __DIR__ . '/../field.php';
                 ?>
@@ -123,5 +153,13 @@ $leadChoose  = ['' => __('lead.choose')];
                 </button>
             </div>
         </form>
+
+        <?php if ($leadCompact && $leadImage !== null): ?>
+            <figure class="lead-contact-figure reveal">
+                <?php $siteImage = $leadImage; $siteImageClass = 'lead-contact-image'; $siteImageSizes = '(min-width: 1100px) 25vw, 100vw';
+                      include __DIR__ . '/../site-image.php'; ?>
+                <figcaption class="split-caption"><?= e(__('showcase.illustrative')) ?></figcaption>
+            </figure>
+        <?php endif; ?>
     </div>
 </section>

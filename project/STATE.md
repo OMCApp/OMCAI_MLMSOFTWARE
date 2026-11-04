@@ -8,7 +8,7 @@
 - **ประตูที่ผ่านแล้ว:** A ✅ (2026-11-03 — brief 3 ฉบับแทนการสัมภาษณ์) · B ✅ (2026-11-03 — ผู้ใช้อนุมัติเต็มรูปแบบล่วงหน้า + ส่งแบบอ้างอิงหน้าแรก)
 
 ## ค้างอยู่ที่
-merge Phase 4 · native speaker ตรวจ EN/ZH · ตั้ง MAIL_ENABLED/MAIL_FROM ของ staging
+หน้าแรกตาม Mockup ชุดที่ 2 ขึ้น staging แล้ว — รอภาพทีมจริง / ตัวเลขที่พิสูจน์ได้ / รีวิวที่ได้รับอนุญาต (QUESTIONS.md) · Phase 6 QA ต่อ · merge Phase 4 · native speaker ตรวจ EN/ZH · ตั้ง MAIL_ENABLED/MAIL_FROM ของ staging
 
 ## ตัดสินใจอะไรไปแล้วที่ไม่ได้อยู่ในไฟล์อื่น
 - [2026-11-03] Phase 2: หลังบ้านย้ายไป `/admin` · หน้าสาธารณะทั้งหมดเป็น draft จน Phase 4 · หลัง merge Phase 1 ให้เปลี่ยน `PublicController::LAYOUT` เป็น `site` · รายละเอียดใน NOTES.md หัวข้อ Phase 2
@@ -18,4 +18,5 @@ merge Phase 4 · native speaker ตรวจ EN/ZH · ตั้ง MAIL_ENABLED/
 - [2026-11-03] Phase 1: ช่อง SEO head ของ `layouts/site.php` = include `partials/seo-head.php` (Phase 2 สร้าง) ส่ง `$seo` + `$jsonLd` · ไม่ใช่ string HTML (ชุดตรวจ output-escape)
 - [2026-11-03] Phase 1: preview หน้าแรกที่ `/_preview/home` เฉพาะ env ที่ไม่ใช่ production
 - [2026-11-04] Phase 3 (CMS admin) 🔨 สร้างเสร็จบน branch ของ Phase 3 — migration 012–015 · secret ใหม่ `APP_KEY` (ผู้ใช้ต้องเพิ่ม) · คำแปลจีนของ UI หลังบ้านรวมเข้า `lang/zh.php` แล้ว · รายละเอียด NOTES.md หัวข้อ Phase 3
+- [2026-11-04] Phase 3 ขึ้น staging แล้ว (APP_KEY พร้อม) · ปุ่ม Demo ชี้ demomlm.omc.co.th · หน้าแรกปรับตาม Mockup ชุดที่ 2 (NOTES.md หัวข้อเดียวกัน)
 - [2026-11-04] ผู้ใช้สั่งเว็บสาธารณะ 3 ภาษา (ไทย root · /en/ · /zh/) + เกณฑ์รับงานชุดใหม่ — รายละเอียดใน NOTES.md หัวข้อ Phase 4

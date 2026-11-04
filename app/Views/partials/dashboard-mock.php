@@ -18,6 +18,8 @@ declare(strict_types=1);
 
 $dashboardMockView  = (string) ($dashboardMockView ?? 'overview');
 $dashboardMockFrame = (string) ($dashboardMockFrame ?? 'panel');
+// id ของ gradient ต้องไม่ซ้ำ — หน้าแรกมี mockup แล็ปท็อปสองชุด (hero + ฟีเจอร์เด่น)
+$dashboardMockGradient = 'mock-area-' . bin2hex(random_bytes(4));
 $dashboardMockMark  = asset('/assets/images/brand/omc-mark.svg');
 ?>
 <div class="mock-frame" data-frame="<?= e($dashboardMockFrame) ?>" aria-hidden="true">
@@ -94,13 +96,13 @@ $dashboardMockMark  = asset('/assets/images/brand/omc-mark.svg');
                             <span class="mock-card-label"><?= e(__('showcase.sales_trend')) ?></span>
                             <svg class="mock-chart-svg" viewBox="0 0 240 96" preserveAspectRatio="none">
                                 <defs>
-                                    <linearGradient id="mock-area-<?= e($dashboardMockFrame) ?>" x1="0" y1="0" x2="0" y2="1">
+                                    <linearGradient id="<?= e($dashboardMockGradient) ?>" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="0" class="mock-stop-top"/>
                                         <stop offset="1" class="mock-stop-bottom"/>
                                     </linearGradient>
                                 </defs>
                                 <path class="mock-chart-grid" d="M0 24h240M0 48h240M0 72h240"/>
-                                <path class="mock-chart-area" fill="url(#mock-area-<?= e($dashboardMockFrame) ?>)"
+                                <path class="mock-chart-area" fill="url(#<?= e($dashboardMockGradient) ?>)"
                                       d="M0 80 L30 70 L60 74 L90 56 L120 60 L150 42 L180 46 L210 26 L240 14 V96 H0 Z"/>
                                 <path class="mock-chart-line" pathLength="1"
                                       d="M0 80 L30 70 L60 74 L90 56 L120 60 L150 42 L180 46 L210 26 L240 14"/>

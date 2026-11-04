@@ -72,8 +72,21 @@ final class MediaService
         $sizes = json_decode((string) ($row['sizes'] ?? ''), true);
         $src   = is_array($sizes) && is_string($sizes['webp'] ?? null) ? $sizes['webp'] : (string) $row['path'];
 
+        // srcset: รูปย่อทุกขนาด (คีย์ตัวเลข = ความกว้าง) + ตัวเต็ม — partial ใส่ asset() ให้แต่ละ URL เอง
+        $srcset = [];
+        foreach (is_array($sizes) ? $sizes : [] as $width => $url) {
+            if (is_int($width) && is_string($url)) {
+                $srcset[$width] = $url;
+            }
+        }
+        if ($srcset !== [] && $row['width'] !== null) {
+            $srcset[(int) $row['width']] = $src;
+        }
+        ksort($srcset);
+
         return [
             'src'    => $src,
+            'srcset' => $srcset,
             'alt'    => (string) $row['alt'],
             'width'  => $row['width'] !== null ? (int) $row['width'] : null,
             'height' => $row['height'] !== null ? (int) $row['height'] : null,

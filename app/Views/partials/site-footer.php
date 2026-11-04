@@ -56,13 +56,14 @@ $siteFooterLogo    = (array) ($siteFooterBrand['logo_dark_size'] ?? ['width' => 
                         </a>
                     </li>
                 <?php endif; ?>
-                <?php if (($siteFooterContact['email'] ?? '') !== ''): ?>
+                <?php /* ทุกอีเมลจากตั้งค่าเว็บ (ผู้ใช้ยืนยัน 3 อีเมล) — ไม่มี list ใช้อีเมลเดี่ยว */ ?>
+                <?php foreach ((array) ($siteFooterContact['emails'] ?? array_filter([(string) ($siteFooterContact['email'] ?? '')])) as $siteFooterEmail): ?>
                     <li><?= icon('mail') ?>
-                        <a href="<?= e(url('mailto:' . $siteFooterContact['email'])) ?>">
-                            <span class="visually-hidden"><?= e(__('site.email')) ?> </span><?= e($siteFooterContact['email']) ?>
+                        <a href="<?= e(url('mailto:' . $siteFooterEmail)) ?>">
+                            <span class="visually-hidden"><?= e(__('site.email')) ?> </span><?= e((string) $siteFooterEmail) ?>
                         </a>
                     </li>
-                <?php endif; ?>
+                <?php endforeach; ?>
                 <?php if (($siteFooterContact['line_url'] ?? '') !== ''): ?>
                     <li><?= icon('chat') ?>
                         <a href="<?= e(url($siteFooterContact['line_url'])) ?>" rel="noopener">

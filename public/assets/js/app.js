@@ -1180,4 +1180,48 @@
 
         update();
     }
+
+    /* ------------------------------------------------------------ analytics events */
+
+    // demo_click · contact_click · lead_submit → dataLayer (GTM) และ gtag (GA4) ถ้าเปิดใช้ในตั้งค่าเว็บ
+    // ‼️ ไม่ส่งข้อมูลที่ผู้ใช้กรอก — แค่ชื่อเหตุการณ์ + ปลายทางของลิงก์ / ชนิดฟอร์ม
+    const track = (event, params) => {
+        if (Array.isArray(window.dataLayer)) {
+            window.dataLayer.push(Object.assign({ event }, params));
+        }
+        if (typeof window.gtag === 'function') {
+            window.gtag('event', event, params);
+        }
+    };
+
+    const linkEvent = (href) => {
+        if (/demomlm\.|\/demo\/$/.test(href)) {
+            return 'demo_click';
+        }
+        if (/^(tel:|mailto:)|line\.me|#lead-form$|\/contact\/$/.test(href)) {
+            return 'contact_click';
+        }
+        return '';
+    };
+
+    document.addEventListener('click', (event) => {
+        const link = event.target.closest('a[href]');
+        if (!link || !link.closest('.site-body')) {
+            return;
+        }
+
+        const href = link.getAttribute('href') || '';
+        const name = link.dataset.track || linkEvent(href);
+
+        if (name !== '') {
+            track(name, { link_url: link.href, page_path: window.location.pathname });
+        }
+    });
+
+    document.querySelectorAll('.lead-form').forEach((form) => {
+        form.addEventListener('submit', () => {
+            const key = form.querySelector('input[name="form_key"]');
+            track('lead_submit', { form_key: key ? key.value : '', page_path: window.location.pathname });
+        });
+    });
 })();

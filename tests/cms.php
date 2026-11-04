@@ -568,7 +568,7 @@ $send('PATCH', '/admin/pages/' . $pageId, 'p3editor', array_merge($base, ['path'
     'blocks' => [['type' => 'split', 'data' => ['title' => 'x', 'image' => ['media_id' => (string) $mediaId]]]]]));
 $pageRow->execute(['id' => $pageId]);
 $withImage = json_decode((string) $pageRow->fetch()['blocks'], true);
-$check(($withImage[0]['data']['image'] ?? []) === ['src' => $sizes['webp'], 'alt' => 'รูปทดสอบ', 'width' => 1600, 'height' => 900], 'image field stores src/alt/width/height', json_encode($withImage[0]['data']['image'] ?? null));
+$check(($withImage[0]['data']['image'] ?? []) === ['src' => $sizes['webp'], 'srcset' => [480 => $sizes['480'], 768 => $sizes['768'], 1200 => $sizes['1200'], 1600 => $sizes['webp']], 'alt' => 'รูปทดสอบ', 'width' => 1600, 'height' => 900], 'image field stores src/srcset/alt/width/height', json_encode($withImage[0]['data']['image'] ?? null));
 $blocked = $send('DELETE', '/admin/media/' . $mediaId, 'p3editor');
 $mediaRow->execute(['id' => $mediaId]);
 $check($mediaRow->fetch()['deleted_at'] === null, 'media in use cannot be deleted');

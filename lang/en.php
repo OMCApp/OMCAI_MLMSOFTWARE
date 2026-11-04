@@ -79,6 +79,8 @@ return [
     // ---- Dashboard mockup (dashboard_showcase / hero blocks) — sample data, always disclosed
     'showcase' => [
         'caption'        => 'Sample system screen — figures are illustrative',
+        'caption_person' => 'Person photo is illustrative · sample system screen, figures are illustrative',
+        'illustrative'   => 'Illustrative photo',
         'app_title'      => 'Business overview',
         'sales_today'    => 'Sales today',
         'members_total'  => 'Total members',
@@ -431,8 +433,8 @@ return [
             'plans' => 'Plans', 'key' => 'Plan type', 'name' => 'Name', 'subtitle' => 'Second line', 'points' => 'Points',
             'group' => 'Question group (from the FAQ menu)', 'q' => 'Question', 'a' => 'Answer', 'paragraphs' => 'Paragraphs',
             'list' => 'Bullet list', 'html' => 'HTML (content migrated from the old site)', 'highlight' => 'Highlighted column (starts at 0)',
-            'caption' => 'Table caption', 'rows' => 'Rows', 'values' => 'Values per column', 'form_key' => 'Form type',
-            'submit' => 'Submit button text',
+            'caption' => 'Image / table caption', 'rows' => 'Rows', 'values' => 'Values per column', 'form_key' => 'Form type',
+            'submit' => 'Submit button text', 'person' => 'Person photo behind the mockup (illustrative — never claim it is the real team)',
         ],
         'block_hint' => [
             'image' => 'Pick from the media library — upload new images in the Media library menu',
@@ -450,6 +452,7 @@ return [
             'plain' => 'Two columns', 'band' => 'Coloured band', 'image' => 'Image', 'bars' => 'Bar chart',
             'binary' => 'Binary', 'unilevel' => 'Unilevel', 'matrix' => 'Matrix', 'board' => 'Board', 'stair_step' => 'Stair Step', 'hybrid' => 'Hybrid',
             'demo' => 'Request a demo', 'quote' => 'Request a quote', 'consult' => 'Consultation', 'contact' => 'Contact', 'migration' => 'System migration',
+            'tabs' => 'Three tabbed views', 'device' => 'Laptop + phone', 'full' => 'Full form', 'compact' => 'Short form + text + image',
         ],
         'revisions' => [
             'title' => 'Revision history', 'empty' => 'No history yet — it starts after the first save', 'view' => 'Earlier version',

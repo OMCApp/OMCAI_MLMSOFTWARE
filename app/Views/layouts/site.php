@@ -70,6 +70,7 @@ $siteHtmlLang    = (string) ($site['html_lang'] ?? 'th');
 </main>
 
 <?php include __DIR__ . '/../partials/site-footer.php'; ?>
+<?php include __DIR__ . '/../partials/site-mobile-bar.php'; ?>
 
 <?php include __DIR__ . '/../partials/flash.php'; ?>
 <?php include __DIR__ . '/../partials/js-lang.php'; ?>
