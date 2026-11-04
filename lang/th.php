@@ -46,7 +46,7 @@ return [
         'menu_open'       => 'เปิดเมนู',
         'menu_close'      => 'ปิดเมนู',
         'home_link'       => 'OMC MLM Software หน้าแรก',
-        'cta_demo'        => 'ขอ Demo ฟรี',
+        'cta_demo'        => 'ทดลองใช้ Demo',
         'call_us'         => 'โทรหาเรา',
         'footer_contact'  => 'ติดต่อเรา',
         'phone'           => 'โทรศัพท์',

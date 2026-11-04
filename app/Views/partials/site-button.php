@@ -25,9 +25,11 @@ $siteButtonStyle = in_array($siteButtonStyle, ['primary', 'secondary', 'outline'
 $siteButtonArrow = (bool) ($siteButton['arrow'] ?? in_array($siteButtonStyle, ['primary', 'light'], true));
 $siteButtonIcon  = (string) ($siteButton['icon'] ?? '');
 $siteButtonClass = 'btn btn-pill btn-' . $siteButtonStyle . (($siteButton['size'] ?? 'md') === 'lg' ? ' btn-lg' : '');
+// ลิงก์ออกนอกเว็บ (เช่นระบบ Demo) เปิดแท็บใหม่ — ผู้ชมยังอยู่บนเว็บเรา
+$siteButtonExternal = preg_match('#^https?://#i', (string) ($siteButton['url'] ?? '')) === 1;
 
 if ((string) ($siteButton['label'] ?? '') !== ''): ?>
-<a class="<?= e($siteButtonClass) ?>" href="<?= e(url((string) ($siteButton['url'] ?? '/'))) ?>">
+<a class="<?= e($siteButtonClass) ?>" href="<?= e(url((string) ($siteButton['url'] ?? '/'))) ?>"<?php if ($siteButtonExternal): ?> target="_blank" rel="noopener"<?php endif; ?>>
     <?php if ($siteButtonIcon !== ''): ?><?= icon($siteButtonIcon) ?><?php endif; ?>
     <span><?= e((string) $siteButton['label']) ?></span>
     <?php if ($siteButtonArrow): ?><?= icon('arrow-right', 'btn-arrow') ?><?php endif; ?>
