@@ -37,6 +37,11 @@ abstract class PublicController extends Controller
         http_response_code($screen['status']);
         header('Content-Type: text/html; charset=utf-8');
 
+        // รหัสติดตาม (production + ตั้งไว้ใน CMS) ต้องให้ CSP ยอมสคริปต์ของ Google — ไม่มีรหัส = CSP เดิมเข้มเท่าเดิม
+        if (!$screen['private'] && \App\Services\TrackingService::active() !== null) {
+            \Core\Security::allowTracking();
+        }
+
         if ($screen['private']) {
             // ดูตัวอย่าง draft — ห้ามเก็บ cache และห้าม index ไม่ว่า environment ไหน (ต้องล็อกอินถึงเห็น)
             header('Cache-Control: private, no-store');

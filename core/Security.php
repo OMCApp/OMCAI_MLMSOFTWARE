@@ -115,6 +115,31 @@ final class Security
     }
 
     /**
+     * ขยาย CSP ของหน้าสาธารณะที่มีรหัสติดตาม (GA4/GTM) — เพิ่มเฉพาะโดเมนของ Google ไม่เพิ่ม unsafe-inline
+     * ‼️ เรียกจาก PublicController เท่านั้น และเฉพาะเมื่อ TrackingService::active() — หลังบ้านไม่ได้รับผลนี้
+     */
+    public static function allowTracking(): void
+    {
+        if (headers_sent()) {
+            return;
+        }
+
+        $google = 'https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com';
+
+        header(
+            "Content-Security-Policy: default-src 'self'; "
+            . "img-src 'self' data: blob: {$google}; "
+            . "font-src 'self'; "
+            . "style-src 'self'; "
+            . "script-src 'self' https://www.googletagmanager.com; "
+            . "connect-src 'self' {$google}; "
+            . "form-action 'self'; "
+            . "frame-ancestors 'self'; "
+            . "base-uri 'self'"
+        );
+    }
+
+    /**
      * ทำให้ชื่อไฟล์ปลอดภัยสำหรับใช้เป็นชื่อบนดิสก์
      *
      * ‼️ ใช้กับ "ชื่อที่จะเก็บ" เท่านั้น — ชื่อเดิมของผู้ใช้ต้องเก็บไว้ในฐานข้อมูลเพื่อแสดงผล

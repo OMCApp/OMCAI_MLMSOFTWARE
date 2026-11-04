@@ -129,7 +129,7 @@ final class PostService
         $slug   = (string) ($data['slug'] ?? '');
 
         // slug ห้ามมี / หรือช่องว่าง — เป็นส่วนเดียวของ URL
-        if ($slug === '' || preg_match('#[/\s?#]#u', $slug) === 1) {
+        if ($slug === '' || preg_match('~[/\s?#]~u', $slug) === 1) {
             $errors['slug'] = 'cms.post.error_slug';
         }
         if (trim((string) ($data['title'] ?? '')) === '') {

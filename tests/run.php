@@ -104,6 +104,10 @@ $http = static function (string $method, string $url, array $opts = []) use ($ba
     if (isset($opts['post'])) {
         $curlOpts[CURLOPT_POSTFIELDS] = http_build_query($opts['post']);
     }
+    // อัปโหลดไฟล์ (multipart) — ค่าเป็น CURLFile ได้ (Phase 3 คลังสื่อ)
+    if (isset($opts['multipart'])) {
+        $curlOpts[CURLOPT_POSTFIELDS] = $opts['multipart'];
+    }
     if (isset($opts['jar'])) {
         $jar = $cookieJars[$opts['jar']] ??= tempnam(sys_get_temp_dir(), 'omcjar');
         $curlOpts[CURLOPT_COOKIEJAR]  = $jar;
@@ -638,6 +642,10 @@ $audit = $pdo->prepare("SELECT action FROM audit_logs WHERE table_name = 'redire
 $audit->execute(['id' => $newId]);
 $check($audit->fetchAll(PDO::FETCH_COLUMN) === ['create', 'update', 'delete'], 'service writes are audited (create/update/delete)');
 $pdo->prepare('DELETE FROM redirects WHERE id = :id')->execute(['id' => $newId]);
+
+// ------------------------------------------------------------------ Phase 3 — CMS admin
+
+require __DIR__ . '/cms.php';
 
 // ------------------------------------------------------------------ สรุป
 

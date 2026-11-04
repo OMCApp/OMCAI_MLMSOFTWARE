@@ -81,7 +81,7 @@ final class CategoryService
     {
         $errors = [];
 
-        if (preg_match('#^[^/\s?#]+$#u', (string) ($data['slug'] ?? '')) !== 1) {
+        if (preg_match('~^[^/\s?#]+$~u', (string) ($data['slug'] ?? '')) !== 1) {
             $errors['slug'] = 'cms.category.error_slug';
         }
         if (trim((string) ($data['name'] ?? '')) === '') {

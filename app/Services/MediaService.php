@@ -374,8 +374,9 @@ final class MediaService
             foreach ($files as $url) {
                 $file = $public . str_replace(['..', "\0"], '', $url);
 
-                if (str_starts_with($url, '/uploads/') && is_file($file)) {
-                    @unlink($file);
+                if (str_starts_with($url, '/uploads/') && is_file($file) && !@unlink($file)) {
+                    // แถวถูกลบแล้ว ไฟล์ค้างไม่อันตราย (ไม่มีที่ไหนอ้าง) แต่ต้องรู้ไว้
+                    Logger::warning('media_file_not_removed', ['file' => $url, 'error' => error_get_last()['message'] ?? '']);
                 }
             }
         }

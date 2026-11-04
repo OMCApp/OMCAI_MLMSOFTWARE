@@ -144,7 +144,7 @@ final class SocialProofService
     {
         $errors = [];
 
-        if (preg_match('#^[^/\s?#]+$#u', (string) ($data['slug'] ?? '')) !== 1) {
+        if (preg_match('~^[^/\s?#]+$~u', (string) ($data['slug'] ?? '')) !== 1) {
             $errors['slug'] = 'cms.case_study.error_slug';
         }
         if (trim((string) ($data['title'] ?? '')) === '') {

@@ -46,6 +46,8 @@ $pageBreadcrumb  = (array) ($breadcrumbs ?? []);
     <link rel="preload" href="<?= e(url('/assets/vendor/fonts/ibm-plex-sans-thai-thai-400-normal.woff2')) ?>" as="font" type="font/woff2" crossorigin>
     <?php include __DIR__ . '/../partials/favicon.php'; ?>
     <link rel="stylesheet" href="<?= e(asset('/assets/css/app.css')) ?>">
+    <?php /* GA4/GTM จาก CMS → ตั้งค่าเว็บ — วาดเฉพาะ production (Phase 3) */ ?>
+    <?php if (empty($sitePreview)) { include __DIR__ . '/../partials/tracking.php'; } ?>
 </head>
 <body class="site-body">
 
