@@ -68,11 +68,11 @@ jobs:
           S6: ${{ secrets.STAGING_PASS }}
         run: |
           missing=0
-          for n in S1:FTP_SERVER_DIR S2:APP_URL S3:MIGRATE_TOKEN S4:DB_NAME S5:DB_USER S6:STAGING_PASS; do
+          # STAGING_PASS is no longer used: the user asked for staging without a login (2026-11-04) — noindex stays
+          for n in S1:FTP_SERVER_DIR S2:APP_URL S3:MIGRATE_TOKEN S4:DB_NAME S5:DB_USER; do
             v="${n%%:*}"; if [ -z "${!v}" ]; then echo "::error::secret ${n#*:} is not set"; missing=1; fi
           done
           # Basic Auth has no lockout — a long random password is what makes guessing impractical
-          if [ -n "$S6" ] && [ "${#S6}" -lt 20 ]; then echo "::error::STAGING_PASS must be at least 20 characters"; missing=1; fi
           exit $missing
 
       - name: Build .env from secrets
@@ -98,7 +98,7 @@ jobs:
             echo 'APP_HTTPS=false'
             echo 'APP_TIMEZONE=Asia/Bangkok'
             echo 'STAGING_USER=omc'
-            echo "STAGING_PASS=\"${STAGING_PASS}\""
+            # No STAGING_PASS line: Core\Staging skips Basic Auth when it is empty (noindex still applies)
             echo "DB_HOST=${DB_HOST:-localhost}"
             echo 'DB_PORT=3306'
             echo "DB_NAME=\"${DB_NAME}\""
@@ -194,11 +194,11 @@ jobs:
           code=$(curl -s -o /dev/null -w "%{http_code}" "$base/_health")
           [ "$code" = "200" ] && echo "health: ok" || { echo "::error::/_health returned $code"; fail=1; }
           code=$(curl -s -o /dev/null -w "%{http_code}" "$base/")
-          [ "$code" = "401" ] && echo "staging login required: yes" || { echo "::error::home returned $code, expected 401 (staging must require login)"; fail=1; }
+          [ "$code" != "401" ] && echo "staging open without login: yes ($code)" || { echo "::error::home returned 401 — staging login should be off"; fail=1; }
           # With the password a rendered page must come back — catches a site stuck in maintenance (503)
           # /admin/login, not /: public pages are draft shells until Phase 4 publishes them, so / is 404 by design
-          code=$(curl -s -o /dev/null -w "%{http_code}" -u "omc:${STAGING_PASS}" "$base/admin/login")
-          [ "$code" = "200" ] && echo "admin login with staging auth: 200" || { echo "::error::/admin/login with staging auth returned $code"; fail=1; }
+          code=$(curl -s -o /dev/null -w "%{http_code}" "$base/admin/login")
+          [ "$code" = "200" ] && echo "admin login page: 200" || { echo "::error::/admin/login returned $code"; fail=1; }
           for p in _health assets/css/app.css; do
             robots=$(curl -s -D - -o /dev/null "$base/$p" | grep -ci '^x-robots-tag: noindex')
             [ "$robots" -ge 1 ] && echo "noindex on /$p: yes" || { echo "::error::X-Robots-Tag noindex missing on /$p"; fail=1; }

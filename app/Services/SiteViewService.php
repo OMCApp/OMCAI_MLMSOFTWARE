@@ -104,7 +104,7 @@ final class SiteViewService
                 'category'      => $category !== null ? (string) $category['name'] : '',
                 'category_url'  => $category !== null ? Path::encode(CategoryService::path($category)) : '',
                 'image'         => $image,
-                'content'       => $this->sanitizer->clean((string) ($post['content'] ?? '')),
+                'content'       => $this->withBase($this->sanitizer->clean((string) ($post['content'] ?? ''))),
             ],
             'sitePreview' => $preview,
         ], $seo, $breadcrumbs, $preview, ['post' => $post, 'category' => $category, 'image' => $ogImage]);
@@ -218,7 +218,7 @@ final class SiteViewService
             }
 
             if ($block['type'] === 'rich_text' && isset($block['data']['html'])) {
-                $block['data']['html'] = $this->sanitizer->clean((string) $block['data']['html']);
+                $block['data']['html'] = $this->withBase($this->sanitizer->clean((string) $block['data']['html']));
             }
 
             $blocks[$index] = $block + ['partial' => $file];
@@ -253,5 +253,24 @@ final class SiteViewService
             'breadcrumbs' => $breadcrumbs,
             'private'     => $private,
         ];
+    }
+
+    /**
+     * เติม base path ให้ลิงก์และรูปแบบ root-relative ในเนื้อหา HTML (src="/wp-content/..." · href="/...")
+     *
+     * ‼️ เนื้อหาที่ย้ายจากเว็บเดิมเขียน path แบบ root-relative — บน production (document root = public/)
+     *    base เป็นค่าว่างจึงไม่เปลี่ยนอะไร แต่บน staging ที่ติดตั้งใต้ /~omcai/mlmsoftware รูปทุกรูปจะ 404
+     *    ทำตอนแสดงผลเท่านั้น ห้ามเขียน base ลงฐานข้อมูล — ย้ายที่ติดตั้งเมื่อไหร่เนื้อหาพังทั้งหมด
+     */
+    private function withBase(string $html): string
+    {
+        $base = Path::base();
+
+        if ($base === '' || $html === '') {
+            return $html;
+        }
+
+        // เฉพาะ "/x" ไม่ใช่ "//x" (protocol-relative = โดเมนอื่น)
+        return (string) preg_replace('#\b(src|href|srcset)="/(?!/)#', '$1="' . $base . '/', $html);
     }
 }

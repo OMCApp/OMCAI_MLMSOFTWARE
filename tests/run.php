@@ -363,9 +363,17 @@ $check(!str_contains($res['body'], 'aggregateRating') && !str_contains($res['bod
 preg_match('#<script type="application/ld\+json">(.*?)</script>#s', $res['body'], $ld);
 $check(is_array(json_decode($ld[1] ?? '', true)), 'JSON-LD is valid JSON');
 
-$blog = $http('GET', '/blog/');
-$check(str_contains($blog['body'], $enc($postPath)), '/blog/ lists the published post');
-$check(!str_contains($blog['body'], 'zz-test-draft-'), '/blog/ hides drafts');
+// เดินทุกหน้าของ /blog/ — หลังนำเข้าบทความเดิม (Phase 5) บทความทดสอบไม่ได้อยู่หน้าแรกแล้ว
+$blogBodies = '';
+for ($blogPage = 1; $blogPage <= 20; $blogPage++) {
+    $blog = $http('GET', $blogPage === 1 ? '/blog/' : "/blog/page/{$blogPage}/");
+    if ($blog['status'] !== 200) {
+        break;
+    }
+    $blogBodies .= $blog['body'];
+}
+$check(str_contains($blogBodies, $enc($postPath)), '/blog/ (any page) lists the published post');
+$check(!str_contains($blogBodies, 'zz-test-draft-'), '/blog/ hides drafts');
 
 // ------------------------------------------------------------------ 404
 
@@ -418,11 +426,166 @@ $feed = $http('GET', '/feed/');
 $rss  = @simplexml_load_string($feed['body']);
 $check($rss !== false && (string) $rss['version'] === '2.0', '/feed/ is RSS 2.0');
 $check(str_contains($header($feed, 'content-type'), 'rss+xml'), 'feed content-type');
-$check(str_contains($feed['body'], '<link>' . $canonical . '</link>'), 'feed has post permalink');
+// feed มีแค่ล่าสุด 20 เรื่อง — เทียบกับบทความที่เผยแพร่ล่าสุดจริงในฐานข้อมูล (อาจเป็นบทความทดสอบหรือบทความที่นำเข้า)
+$newest = $pdo->query("SELECT slug, published_at FROM posts WHERE status = 'published' AND published_at <= NOW() AND robots = 'index' AND deleted_at IS NULL ORDER BY published_at DESC, id DESC LIMIT 1")->fetch();
+$newestUrl = $newest !== false ? 'https://mlmsoftware.omc.co.th' . $enc(App\Services\PostService::permalink($newest)) : '';
+$check($newestUrl !== '' && str_contains($feed['body'], '<link>' . $newestUrl . '</link>'), 'feed has the newest post permalink', $newestUrl);
 $check($rss !== false && count($rss->channel->item) <= 20, 'feed has at most 20 items');
 $check(!str_contains($feed['body'], 'zz-test-draft-'), 'feed hides drafts');
 $feedNoSlash = $http('GET', '/feed');
 $check($feedNoSlash['status'] === 301 && $header($feedNoSlash, 'location') === '/feed/', '/feed → 301 /feed/');
+
+// ------------------------------------------------------------------ Phase 5: บทความที่นำเข้าจากเว็บเดิม
+
+$section('Phase 5 — imported old posts (docs/migration/content.json → migration 030)');
+
+$oldPosts = array_values(array_filter(
+    (array) json_decode((string) file_get_contents($root . '/docs/migration/content.json'), true),
+    static fn (array $it): bool => ($it['type'] ?? '') === 'post'
+));
+$check(count($oldPosts) === 36, 'content.json has the 36 old posts', (string) count($oldPosts));
+
+$findImported = $pdo->prepare(
+    "SELECT * FROM posts WHERE slug = :slug AND published_date = :date AND deleted_at IS NULL"
+);
+$importedUrls = [];   // category slug => [canonical...]
+$allImported  = [];
+
+foreach ($oldPosts as $old) {
+    $path = (string) $old['path_decoded'];
+
+    if (preg_match('#^/(\d{4})/(\d{2})/(\d{2})/([^/]+)/$#u', $path, $pm) !== 1) {
+        $check(false, "old post path shape {$path}");
+        continue;
+    }
+
+    $findImported->execute(['slug' => $pm[4], 'date' => "{$pm[1]}-{$pm[2]}-{$pm[3]}"]);
+    $row = $findImported->fetch();
+
+    if ($row === false) {
+        $check(false, "imported row exists for {$path}", 'run php scripts/migrate.php');
+        continue;
+    }
+
+    $check($row['status'] === 'published' && $row['robots'] === 'index', "{$path} is published + index");
+    $check((string) $row['legacy_url'] === (string) $old['url'], "{$path} legacy_url = old URL");
+
+    $canon = 'https://mlmsoftware.omc.co.th' . $enc($path);
+    $allImported[] = $canon;
+    $importedUrls[rawurldecode((string) ($old['categories'][0]['slug'] ?? ''))][] = $canon;
+
+    // ขอด้วย URL เดิมตรงตัว (percent-encode ตัวเล็กแบบ WordPress) และแบบที่ระบบ encode เอง
+    $legacyPath = (string) parse_url((string) $old['url'], PHP_URL_PATH);
+    $res        = $http('GET', $legacyPath);
+    $check($res['status'] === 200, "old URL as-is → 200: {$path}", (string) $res['status']);
+    $check($http('GET', $enc($path))['status'] === 200, "encoded path → 200: {$path}");
+
+    $body = $res['body'];
+    $check(substr_count($body, '<h1') === 1, "exactly one <h1>: {$path}", (string) substr_count($body, '<h1'));
+    preg_match('#<h1[^>]*>(.*?)</h1>#s', $body, $h1);
+    $h1Text = trim(html_entity_decode(strip_tags($h1[1] ?? ''), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    $check($h1Text === (string) $row['title'], "H1 = post title: {$path}", $h1Text . ' ≠ ' . $row['title']);
+
+    $check(str_contains($body, '<link rel="canonical" href="' . $canon . '">'), "canonical = production host + encoded old path: {$path}");
+    $check(str_contains($body, '<title>' . e((string) $row['seo_title']) . '</title>'), "<title> = seo_title: {$path}");
+    $check((string) $row['meta_description'] !== ''
+        && str_contains($body, '<meta name="description" content="' . e(App\Services\SeoService::description((string) $row['meta_description'])) . '">'),
+        "meta description present: {$path}");
+    $check(mb_strlen((string) $row['meta_description']) <= 160, "meta description not cut by the 160 limit: {$path}", (string) mb_strlen((string) $row['meta_description']));
+    $descLen = mb_strlen((string) $row['meta_description']);
+    $check($descLen >= 50 && $descLen <= 170, "meta description 50–170 chars: {$path}", (string) $descLen);
+
+    // BlogPosting + datePublished ตรงวันที่ใน URL (เวลาไทย)
+    $blogPosting = null;
+    if (preg_match('#<script type="application/ld\+json">(.*?)</script>#s', $body, $ldm) === 1) {
+        foreach ((array) (json_decode($ldm[1], true)['@graph'] ?? []) as $node) {
+            if (($node['@type'] ?? '') === 'BlogPosting') {
+                $blogPosting = $node;
+            }
+        }
+    }
+    $expectedDate = date('c', (int) strtotime((string) $row['published_at']));
+    $check($blogPosting !== null && ($blogPosting['datePublished'] ?? '') === $expectedDate
+        && str_starts_with($expectedDate, "{$pm[1]}-{$pm[2]}-{$pm[3]}T") && str_ends_with($expectedDate, '+07:00'),
+        "BlogPosting datePublished = {$expectedDate}: {$path}", json_encode($blogPosting['datePublished'] ?? null));
+
+    // รูปทุกตัวในบทความ: alt ไม่ว่าง · width/height · ไฟล์มีจริงใน public/
+    preg_match('#<article\b.*?</article>#s', $body, $article);
+    preg_match_all('#<img\b[^>]*>#s', $article[0] ?? '', $imgs);
+    $check(($imgs[0] ?? []) !== [], "post renders at least one image (featured): {$path}");
+    foreach ($imgs[0] as $tag) {
+        preg_match('#\bsrc="([^"]*)"#', $tag, $src);
+        preg_match('#\balt="([^"]*)"#', $tag, $alt);
+        $srcPath = rawurldecode((string) parse_url(html_entity_decode($src[1] ?? '', ENT_QUOTES), PHP_URL_PATH));
+        $check(trim(html_entity_decode($alt[1] ?? '', ENT_QUOTES)) !== '', "img has alt: {$path} {$srcPath}");
+        $check(preg_match('#\bwidth="\d+"#', $tag) === 1 && preg_match('#\bheight="\d+"#', $tag) === 1, "img has width/height: {$path} {$srcPath}");
+        $check(str_starts_with($srcPath, '/wp-content/uploads/') && is_file($root . '/public' . $srcPath), "img file exists under public/: {$srcPath}");
+    }
+}
+
+// วันที่ผิด → 301 ไป URL เดิมที่ถูก (เหมือน WordPress)
+$sample = $oldPosts[0] ?? null;
+if ($sample !== null) {
+    $wrongDate = preg_replace('#^/\d{4}/\d{2}/\d{2}/#', '/2001/01/01/', (string) $sample['path_decoded']);
+    $res = $http('GET', $enc((string) $wrongDate));
+    $check($res['status'] === 301 && $header($res, 'location') === $enc((string) $sample['path_decoded']), 'imported post: wrong date → 301 to the old URL', $res['status'] . ' ' . $header($res, 'location'));
+}
+
+// หน้ารวม: เดินทุกหน้าแล้วต้องเจอครบ
+$crawlListing = static function (string $base) use ($http, $enc): array {
+    $bodies = '';
+    $pages  = 0;
+    for ($n = 1; $n <= 30; $n++) {
+        $res = $http('GET', $enc($n === 1 ? $base : $base . "page/{$n}/"));
+        if ($res['status'] !== 200) {
+            return ['bodies' => $bodies, 'pages' => $pages, 'end' => $res['status']];
+        }
+        $bodies .= $res['body'];
+        $pages++;
+    }
+    return ['bodies' => $bodies, 'pages' => $pages, 'end' => 0];
+};
+
+$relative = static fn (string $canonicalUrl): string => substr($canonicalUrl, strlen('https://mlmsoftware.omc.co.th'));
+
+foreach ($importedUrls as $catSlug => $urls) {
+    $crawl   = $crawlListing("/category/{$catSlug}/");
+    $missing = array_filter($urls, static fn (string $u): bool => !str_contains($crawl['bodies'], 'href="' . $relative($u) . '"'));
+    $check($missing === [], "/category/{$catSlug}/ lists all " . count($urls) . ' imported posts', implode(' ', array_slice($missing, 0, 3)));
+    $check($crawl['end'] === 404, "/category/{$catSlug}/ pagination ends with 404 after page {$crawl['pages']}", (string) $crawl['end']);
+}
+
+$blogCrawl = $crawlListing('/blog/');
+$missing   = array_filter($allImported, static fn (string $u): bool => !str_contains($blogCrawl['bodies'], 'href="' . $relative($u) . '"'));
+$check($blogCrawl['pages'] >= 4, '/blog/ is paginated (36 posts, 10 per page)', (string) $blogCrawl['pages']);
+$check($missing === [], '/blog/ pages list all 36 imported posts', implode(' ', array_slice($missing, 0, 3)));
+$check($blogCrawl['end'] === 404, '/blog/ pagination ends with 404 after the last page', (string) $blogCrawl['end']);
+$check(str_contains($blogCrawl['bodies'], 'href="/blog/page/2/"'), '/blog/ links to page 2');
+
+$postsSitemap = $http('GET', '/sitemap-posts.xml')['body'];
+$missing      = array_filter($allImported, static fn (string $u): bool => !str_contains($postsSitemap, '<loc>' . $u . '</loc>'));
+$check($missing === [], 'sitemap-posts.xml includes all 36 imported posts', implode(' ', array_slice($missing, 0, 3)));
+
+$feedXml = @simplexml_load_string($http('GET', '/feed/')['body']);
+$latest  = $pdo->query("SELECT slug, published_at FROM posts WHERE status = 'published' AND published_at <= NOW() AND deleted_at IS NULL ORDER BY published_at DESC, id DESC LIMIT 1")->fetch();
+$check($feedXml !== false && $latest !== false
+    && (string) $feedXml->channel->item[0]->link === 'https://mlmsoftware.omc.co.th' . $enc(App\Services\PostService::permalink($latest)),
+    '/feed/ first item is the latest post', $feedXml !== false ? (string) $feedXml->channel->item[0]->link : 'no feed');
+$check($feedXml !== false && count($feedXml->channel->item) === 20, '/feed/ lists 20 items', $feedXml !== false ? (string) count($feedXml->channel->item) : '');
+
+// รายการ media ของบทความที่นำเข้า — alt บังคับ · ขนาดครบ · ไฟล์มีจริง
+$mediaRows = $pdo->query("SELECT path, alt, width, height FROM media WHERE path LIKE '/wp-content/uploads/%' AND deleted_at IS NULL")->fetchAll();
+$check(count($mediaRows) >= 36, 'media rows imported for old images', (string) count($mediaRows));
+$badMedia = array_filter($mediaRows, static fn (array $m): bool => trim((string) $m['alt']) === '' || $m['width'] === null || $m['height'] === null
+    || !is_file($root . '/public' . $m['path']));
+$check($badMedia === [], 'every imported media row has alt + size + a real file', implode(' ', array_column(array_slice($badMedia, 0, 3), 'path')));
+
+// หมวดมีคำอธิบาย SEO จริง (เว็บเดิมมีแค่ชื่อหมวด)
+foreach (['/category/ข่าวขายตรง/', '/category/ประกัน/'] as $catPath) {
+    $res = $http('GET', $enc($catPath));
+    preg_match('#<meta name="description" content="([^"]*)"#', $res['body'], $dm);
+    $check(mb_strlen(html_entity_decode($dm[1] ?? '', ENT_QUOTES)) >= 50, "{$catPath} has a real meta description", $dm[1] ?? '');
+}
 
 // ------------------------------------------------------------------ environment / noindex
 

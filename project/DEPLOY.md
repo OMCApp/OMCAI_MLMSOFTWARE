@@ -9,7 +9,7 @@
 | Deployed by | GitHub Actions on push to `main` | **Not touched by CI.** Switching to the new site goes through the SEO Migration Gate |
 | Document root | Cannot point at `public/` (userdir URL) → root `.htaccess` routes everything into `public/` | Must point at `public/` |
 | Indexing | `X-Robots-Tag: noindex` on every response (`APP_ENV=staging`) | indexable |
-| Access | HTTP Basic Auth, user `omc`, password = secret `STAGING_PASS` | public |
+| Access | Open, no login (user decision 2026-11-04). Still noindex: `X-Robots-Tag` + robots.txt `Disallow: /` | public |
 
 ## How a deploy runs (`.github/workflows/deploy.yml`)
 
@@ -19,7 +19,7 @@
 4. Upload `storage/maintenance.flag` and `.env` with lftp. The site shows 503 from here on.
 5. Sync the files (FTP-Deploy-Action, plain FTP; see NOTES.md).
 6. Call `/_migrate` with header `X-Migrate-Token`. It runs the migrations and **removes the maintenance flag** on success.
-7. Verify: `/_health` returns 200, `/` returns 401 (login required), the noindex header is present, and `.env`, `app/`, `core/`, `config/` and `database/` are not reachable.
+7. Verify: `/_health` returns 200, `/` is not 401 (staging is open), the noindex header is present, and `.env`, `app/`, `core/`, `config/` and `database/` are not reachable.
 
 ## GitHub Secrets
 
