@@ -87,25 +87,75 @@ final class SettingService
      *
      * @return list<array{value:float|int, prefix:string, suffix:string, label:string, icon:string}>
      */
-    public static function verifiedStats(): array
+    public static function verifiedStats(?string $locale = null): array
     {
-        $out = [];
+        $locale = $locale ?? LocaleService::current();
+        $out    = [];
 
         foreach ((array) (self::group('stats')['items'] ?? []) as $item) {
-            if (!is_array($item) || empty($item['verified']) || !is_numeric($item['value'] ?? null) || (string) ($item['label'] ?? '') === '') {
+            if (!is_array($item) || empty($item['verified'])) {
                 continue;
             }
 
-            $out[] = [
-                'value'  => $item['value'] + 0,
+            $value = self::statValue($item['value'] ?? null, $locale);
+            $label = self::localized($item, 'labels', 'label', $locale);
+
+            if ($value === null || $label === '') {
+                continue;
+            }
+
+            $cell = [
+                'value'  => $value,
                 'prefix' => (string) ($item['prefix'] ?? ''),
-                'suffix' => (string) ($item['suffix'] ?? ''),
-                'label'  => (string) $item['label'],
+                'suffix' => self::localized($item, 'suffixes', 'suffix', $locale),
+                'label'  => $label,
                 'icon'   => (string) ($item['icon'] ?? ''),
             ];
+
+            if (($item['format'] ?? '') === 'plain') {
+                $cell['format'] = 'plain';
+            }
+
+            $out[] = $cell;
         }
 
         return $out;
+    }
+
+    /** token ที่ตัวเลขใช้ได้ — คำนวณจากวันจดทะเบียน (ยืนยันแล้ว) ไม่ใช่ตัวเลขตายตัว */
+    public const STAT_TOKENS = ['{years}', '{founded_year}'];
+
+    /**
+     * ตัวเลขจริงของรายการ: ตัวเลข · {years} = ปีที่ดำเนินธุรกิจ · {founded_year} = ปีที่ก่อตั้งตามปฏิทินของภาษาที่แสดง (พ.ศ. สำหรับไทย)
+     */
+    private static function statValue(mixed $value, string $locale): int|float|null
+    {
+        if (is_numeric($value)) {
+            return $value + 0;
+        }
+        if ($value === '{years}') {
+            return BlockService::yearsInBusiness();
+        }
+        if ($value === '{founded_year}') {
+            return (int) substr(SiteService::founded(), 0, 4) + \Core\Lang::yearOffset($locale);
+        }
+
+        return null;
+    }
+
+    /** ข้อความของภาษานั้น — ไม่มีให้ใช้ภาษาหลัก แล้วค่าเดี่ยวแบบเดิม */
+    private static function localized(array $item, string $mapKey, string $single, string $locale): string
+    {
+        $map = (array) ($item[$mapKey] ?? []);
+
+        foreach ([$locale, LocaleService::DEFAULT] as $code) {
+            if (is_string($map[$code] ?? null) && trim($map[$code]) !== '') {
+                // ไม่ trim ค่าที่คืน — หน่วยต่อท้ายมักขึ้นต้นด้วยช่องว่าง (" ปี")
+                return $map[$code];
+            }
+        }
+
+        return (string) ($item[$single] ?? '');
     }
 
     /**
@@ -236,19 +286,36 @@ final class SettingService
         $stats = [];
 
         foreach ((array) ($input['stats'] ?? []) as $row) {
-            if (!is_array($row) || $text($row['label'] ?? '') === '') {
+            if (!is_array($row)) {
                 continue;
             }
-            if (!is_numeric($text($row['value'] ?? ''))) {
+
+            $labels   = $localized($row['labels'] ?? []);
+            // หน่วยต่อท้ายเก็บช่องว่างนำหน้าไว้ (" ปี") — ตัดแค่บรรทัดใหม่
+            $suffixes = [];
+
+            foreach (TranslationService::locales() as $code) {
+                $raw              = $row['suffixes'][$code] ?? '';
+                $suffixes[$code] = mb_substr(str_replace(["\r", "\n"], '', is_string($raw) ? $raw : ''), 0, 20);
+            }
+
+            if (implode('', $labels) === '') {
+                continue; // แถวว่างที่เผื่อไว้
+            }
+
+            $value = $text($row['value'] ?? '');
+
+            if (!is_numeric($value) && !in_array($value, self::STAT_TOKENS, true)) {
                 $errors['stats'] = 'cms.settings.error_stat_value';
                 continue;
             }
 
             $stats[] = [
-                'value'    => $text($row['value']) + 0,
+                'value'    => is_numeric($value) ? $value + 0 : $value,
+                'format'   => !empty($row['plain']) ? 'plain' : '',
                 'prefix'   => $text($row['prefix'] ?? ''),
-                'suffix'   => $text($row['suffix'] ?? ''),
-                'label'    => $text($row['label']),
+                'labels'   => $labels,
+                'suffixes' => $suffixes,
                 'icon'     => $text($row['icon'] ?? ''),
                 'verified' => !empty($row['verified']),
             ];

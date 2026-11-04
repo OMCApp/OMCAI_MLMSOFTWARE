@@ -139,6 +139,9 @@ final class BlockFormService
                 ['key' => 'highlight', 'type' => 'number'],
                 ['key' => 'caption', 'type' => 'text'],
             ]),
+            'case_studies' => array_merge($head, [
+                ['key' => 'items', 'type' => 'from_settings'],
+            ]),
             'lead_form' => array_merge([
                 ['key' => 'form_key', 'type' => 'select', 'options' => self::FORM_KEYS],
             ], $head, [

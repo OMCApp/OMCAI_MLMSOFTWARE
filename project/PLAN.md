@@ -121,8 +121,9 @@
 - [x] backup: สร้าง/ดาวน์โหลด/ลบที่ `/admin/backups` (audit) · **restore = CLI เท่านั้น** (DEPLOY.md + คู่มือ)
 - [x] device cookie ลงลายเซ็น (HMAC `APP_KEY` + ความลับต่อผู้ใช้: password_hash · role · is_active · device_token_version) แทนข้อยกเว้นผูก IP · อายุ ≤ 90 วันตรวจที่ server · HttpOnly · SameSite=Strict · Secure ตาม `config('https')` · ข้อยกเว้นมีเพดาน 200 ครั้ง/15 นาที · **secret ใหม่ `APP_KEY`**
 - [x] คู่มือ th + en 10 บทความ (`cms-*`) พร้อมรูป · ข้อความ UI ผ่าน `__()` th/en (zh อยู่ที่ `tools/i18n/zh-cms.php` รอรวมกับ `lang/zh.php` ของ Phase 4)
-- [x] tests: `tests/cms.php` (ต่อจาก `tests/run.php`) — ทุก route ใต้ /admin จากตาราง route (ต้องล็อกอิน · เขียนต้องมี CSRF) · สิทธิ์ 3 บทบาททุกโมดูล · บังคับเปลี่ยนรหัส · ล็อก pair/IP/user cap · device cookie · session fixation/revoke · CRUD + audit ทุกโมดูล — **1806 ผ่าน**
+- [x] tests: `tests/cms.php` (ต่อจาก `tests/run.php`) — ทุก route ใต้ /admin จากตาราง route (ต้องล็อกอิน · เขียนต้องมี CSRF) · สิทธิ์ 3 บทบาททุกโมดูล · บังคับเปลี่ยนรหัส · ล็อก pair/IP/user cap · device cookie · session fixation/revoke · CRUD + audit ทุกโมดูล — **ชุดรวมกับ Phase 4: 4972+ ผ่าน**
 - [x] ดูหน้าจริงด้วย headless Chrome: desktop + 375px + โหมดมืด (`project/design/built/cms-*.png`)
+- [x] merge กับ Phase 4: ภาษาอ่านจาก config/locales.php (LocaleService) · unique key รวม locale (040) · ตัวเลขจาก settings ที่ยืนยันแล้วเท่านั้น (041) · บล็อก case_studies ใน /portfolio/ 3 ภาษา (042) · CSP nonce + strict-dynamic สำหรับรหัสติดตาม
 - [ ] ตรวจรวมช่วง D (โหมดเร็ว: ข้อ 4/6/8 ของนิยามเสร็จ — ทำแล้วด้วยชุดทดสอบ แต่รอตรวจรวม)
 
 ## Phase 4 — หน้า public + copy + lead + 3 ภาษา  🔨

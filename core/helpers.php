@@ -251,3 +251,17 @@ if (!function_exists('page_public')) {
         return $public;
     }
 }
+
+if (!function_exists('csp_nonce')) {
+    /**
+     * nonce ของ <script> — มีค่าเฉพาะหน้าที่ CSP ใช้ nonce (หน้าสาธารณะที่มีรหัสติดตาม · Security::allowTracking)
+     * หน้าอื่นคืน '' (CSP ปกติใช้ 'self' ไม่ต้องมี nonce)
+     *
+     * ‼️ ใส่ใน <script src> ทุกตัวของ layout ที่อาจมีรหัสติดตาม — ไม่งั้นสคริปต์ของเราเองถูก 'strict-dynamic' บล็อก
+     *    ใช้: <?php if (csp_nonce() !== ''): ?> nonce="<?= e(csp_nonce()) ?>"<?php endif; ?>
+     */
+    function csp_nonce(): string
+    {
+        return Security::nonce();
+    }
+}

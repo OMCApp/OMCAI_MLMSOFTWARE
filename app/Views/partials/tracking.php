@@ -13,5 +13,5 @@ if ($trackingIds === null) {
     return;
 }
 ?>
-<script src="<?= e(asset('/assets/js/tracking.js')) ?>" defer
+<script src="<?= e(asset('/assets/js/tracking.js')) ?>" defer<?php if (csp_nonce() !== ''): ?> nonce="<?= e(csp_nonce()) ?>"<?php endif; ?>
         data-ga4="<?= e($trackingIds['ga4']) ?>" data-gtm="<?= e($trackingIds['gtm']) ?>"></script>

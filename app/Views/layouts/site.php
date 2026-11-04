@@ -73,6 +73,6 @@ $siteHtmlLang    = (string) ($site['html_lang'] ?? 'th');
 
 <?php include __DIR__ . '/../partials/flash.php'; ?>
 <?php include __DIR__ . '/../partials/js-lang.php'; ?>
-<script src="<?= e(asset('/assets/js/app.js')) ?>" defer></script>
+<script src="<?= e(asset('/assets/js/app.js')) ?>" defer<?php if (csp_nonce() !== ''): ?> nonce="<?= e(csp_nonce()) ?>"<?php endif; ?>></script>
 </body>
 </html>

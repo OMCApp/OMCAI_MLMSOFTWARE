@@ -75,6 +75,7 @@ final class SettingController extends AdminController
                  'value' => (string) ($siteSettings['default_og_image_media_id'] ?? '')],
             ],
             'cmsMediaOptions'  => (new MediaService())->pickerOptions(),
+            'settingsLocales'  => TranslationService::options(),
         ]);
     }
 

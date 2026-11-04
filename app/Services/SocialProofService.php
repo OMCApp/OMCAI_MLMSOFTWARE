@@ -34,6 +34,35 @@ final class SocialProofService
     }
 
     /**
+     * ผลงานในรูปการ์ดของบล็อก case_studies (title, subtitle, image) — เฉพาะที่เผยแพร่ + ได้รับอนุญาต
+     *
+     * @return list<array<string, mixed>>
+     */
+    public function caseStudyItems(): array
+    {
+        $rows   = $this->caseStudies->published();
+        $covers = (new \App\Models\Media())->findMany(array_map(static fn (array $r): int => (int) ($r['cover_image_id'] ?? 0), $rows));
+        $out    = [];
+
+        foreach ($rows as $row) {
+            $item = [
+                'title'    => (string) $row['title'],
+                'subtitle' => implode(' · ', array_filter([(string) ($row['client_name'] ?? ''), (string) ($row['industry'] ?? '')], 'strlen')),
+                'text'     => (string) ($row['summary'] ?? ''),
+                'icon'     => 'chart',
+            ];
+
+            if (isset($covers[(int) ($row['cover_image_id'] ?? 0)])) {
+                $item['image'] = MediaService::imageData($covers[(int) $row['cover_image_id']]);
+            }
+
+            $out[] = $item;
+        }
+
+        return $out;
+    }
+
+    /**
      * รีวิวในรูปที่บล็อก testimonials รับ (quote, name, role, photo) — เฉพาะที่เผยแพร่ + ยืนยันการอนุญาตแล้ว
      *
      * @return list<array<string, mixed>>

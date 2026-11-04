@@ -14,14 +14,28 @@ $settingsLogos   = array_values((array) ($settingsLogos ?? []));
 $settingsStats[] = [];
 $settingsLogos[] = [];
 
-$settingsStatRow = static function (string $index, array $row): void {
-    foreach ([['value', 'cms.settings.stat_value', 'short'], ['prefix', 'cms.settings.stat_prefix', 'short'],
-              ['suffix', 'cms.settings.stat_suffix', 'short'], ['label', 'cms.settings.stat_label', 'medium'],
-              ['icon', 'cms.menus.icon', 'short']] as [$key, $label, $width]) {
+$settingsLangs   = (array) ($settingsLocales ?? []);
+$settingsStatRow = static function (string $index, array $row) use ($settingsLangs): void {
+    foreach ([['value', 'cms.settings.stat_value', 'short', 'cms.settings.stat_value_hint'], ['prefix', 'cms.settings.stat_prefix', 'short', ''],
+              ['icon', 'cms.menus.icon', 'short', '']] as [$key, $label, $width, $hint]) {
         $fieldName = 'stats[' . $index . '][' . $key . ']'; $fieldLabel = __($label); $fieldType = 'text';
-        $fieldValue = (string) ($row[$key] ?? ''); $fieldWidth = $width;
+        $fieldValue = (string) ($row[$key] ?? ''); $fieldWidth = $width; $fieldHint = $hint === '' ? '' : __($hint);
         include __DIR__ . '/../../partials/field.php';
     }
+    // ป้ายและหน่วยแยกตามภาษา (ค่าเดิมแบบเดี่ยว label/suffix = ภาษาหลัก)
+    foreach ($settingsLangs as $settingsCode => $settingsLangName) {
+        $fieldName = 'stats[' . $index . '][labels][' . $settingsCode . ']'; $fieldLabel = __('cms.settings.stat_label') . ' · ' . $settingsLangName;
+        $fieldType = 'text'; $fieldWidth = 'medium';
+        $fieldValue = (string) ($row['labels'][$settingsCode] ?? ($settingsCode === array_key_first($settingsLangs) ? ($row['label'] ?? '') : ''));
+        include __DIR__ . '/../../partials/field.php';
+        $fieldName = 'stats[' . $index . '][suffixes][' . $settingsCode . ']'; $fieldLabel = __('cms.settings.stat_suffix') . ' · ' . $settingsLangName;
+        $fieldType = 'text'; $fieldWidth = 'short';
+        $fieldValue = (string) ($row['suffixes'][$settingsCode] ?? ($settingsCode === array_key_first($settingsLangs) ? ($row['suffix'] ?? '') : ''));
+        include __DIR__ . '/../../partials/field.php';
+    }
+    $fieldName = 'stats[' . $index . '][plain]'; $fieldLabel = __('cms.settings.stat_plain'); $fieldType = 'checkbox';
+    $fieldValue = ($row['format'] ?? '') === 'plain';
+    include __DIR__ . '/../../partials/field.php';
     $fieldName = 'stats[' . $index . '][verified]'; $fieldLabel = __('cms.settings.verified'); $fieldType = 'checkbox';
     $fieldValue = !empty($row['verified']); $fieldHint = __('cms.settings.verified_hint');
     include __DIR__ . '/../../partials/field.php';

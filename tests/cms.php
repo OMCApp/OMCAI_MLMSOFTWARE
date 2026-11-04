@@ -480,10 +480,24 @@ $oldPost = $http('GET', $enc($postUrl));
 $check($oldPost['status'] === 301 && str_contains(rawurldecode($location($oldPost)), $slug . '-x/'), 'slug change → 301 from old URL');
 $check($http('GET', '/admin/posts/' . $postId, ['jar' => 'p3editor'])['status'] === 200 && str_contains($http('GET', '/admin/posts/' . $postId, ['jar' => 'p3editor'])['body'], 'data-html-editor'), 'post edit renders the HTML editor');
 $trPost = $send('POST', '/admin/posts/' . $postId . '/translations', 'p3editor', ['locale' => 'en']);
-$check($trPost['status'] === 302, 'post translation does not crash (created or explained)', (string) $trPost['status']);
-if (preg_match('#/admin/posts/(\d+)$#', $location($trPost), $m) === 1 && (int) $m[1] !== $postId) {
-    $p3['posts'][] = (int) $m[1];
+$enPostId = preg_match('#/admin/posts/(\d+)$#', $location($trPost), $m) === 1 ? (int) $m[1] : 0;
+if ($enPostId > 0 && $enPostId !== $postId) {
+    $p3['posts'][] = $enPostId;
 }
+$postRow->execute(['id' => $enPostId]);
+$enPost = $postRow->fetch() ?: [];
+// migration 040: unique key ของ posts รวม locale → คำแปลใช้ slug + วันที่เดียวกับต้นฉบับได้
+$check($enPostId !== $postId && ($enPost['slug'] ?? '') === $slug . '-x' && ($enPost['locale'] ?? '') === 'en' && ($enPost['status'] ?? '') === 'draft',
+    'post translation shares the slug and date (en draft)', json_encode([$enPost['slug'] ?? null, $enPost['locale'] ?? null]));
+$catEn = $send('POST', '/admin/categories', 'p3editor', ['name' => 'ZZ en', 'slug' => 'zz-test-p3-shared-' . $stamp, 'robots' => 'index', 'locale' => 'en']);
+$catTh = $send('POST', '/admin/categories', 'p3editor', ['name' => 'ZZ th', 'slug' => 'zz-test-p3-shared-' . $stamp, 'robots' => 'index', 'locale' => 'th']);
+foreach ([$catEn, $catTh] as $catRes) {
+    if (preg_match('#/admin/categories/(\d+)$#', $location($catRes), $m) === 1) {
+        $p3['categories'][] = (int) $m[1];
+    }
+}
+$check(preg_match('#/admin/categories/\d+$#', $location($catEn)) === 1 && preg_match('#/admin/categories/\d+$#', $location($catTh)) === 1,
+    'same category slug allowed in two languages');
 
 // ================================================================ 7. หมวด
 
@@ -680,7 +694,17 @@ $csDup = $send('POST', '/admin/case-studies', 'p3editor', ['title' => 'ZZ dup', 
 $check(!preg_match('#/admin/case-studies/\d+$#', $location($csDup)), 'duplicate case study slug rejected (no DB error)', $csDup['status'] . ' ' . $location($csDup));
 $csPub = $send('PATCH', '/admin/case-studies/' . $csId, 'p3editor', ['title' => 'ZZ ผลงาน', 'slug' => 'zz-test-p3-cs-' . $stamp, 'status' => 'published']);
 $check($pdo->query('SELECT status FROM case_studies WHERE id = ' . $csId)->fetchColumn() === 'draft', 'case study cannot be published without permission');
+$portfolioBefore = $http('GET', '/portfolio/');
+$check($portfolioBefore['status'] === 200 && !str_contains($portfolioBefore['body'], 'ZZ ผลงาน'), '/portfolio/ does not list a case study without permission');
+$send('PATCH', '/admin/case-studies/' . $csId, 'p3editor', ['title' => 'ZZ ผลงาน', 'slug' => 'zz-test-p3-cs-' . $stamp, 'status' => 'published', 'consent' => '1',
+    'client_name' => 'ZZ ลูกค้า']);
+foreach (['/portfolio/', '/en/portfolio/', '/zh/portfolio/'] as $portfolioPath) {
+    $portfolio = $http('GET', $enc($portfolioPath));
+    $check($portfolio['status'] === 200 && str_contains($portfolio['body'], 'ZZ ผลงาน') && str_contains($portfolio['body'], 'ZZ ลูกค้า'),
+        "{$portfolioPath} lists the permitted case study (block case_studies, migration 042)");
+}
 $send('DELETE', '/admin/case-studies/' . $csId, 'p3editor');
+$check(!str_contains($http('GET', '/portfolio/')['body'], 'ZZ ผลงาน'), 'deleted case study disappears from /portfolio/');
 $check($pdo->query('SELECT deleted_at FROM case_studies WHERE id = ' . $csId)->fetchColumn() !== null, 'case study deleted');
 
 // ================================================================ 12. lead
@@ -720,13 +744,34 @@ $check($dashAdmin['status'] === 200 && str_contains($dashAdmin['body'], '/admin/
 
 $section('P3 — settings (admin)');
 
+// migration 041: ตัวเลขบนหน้าแรก/about มาจาก settings ที่ยืนยันแล้ว (ปีก่อตั้งจากวันจดทะเบียนที่ผู้ใช้ยืนยัน) ไม่ใช่ตัวเลขฝังในบล็อก
+foreach (['/' => '2552', '/en/' => '2009', '/zh/' => '2009', '/about/' => '2552'] as $statsPath => $year) {
+    $statsPage = $http('GET', $enc($statsPath));
+    $check($statsPage['status'] === 200 && str_contains($statsPage['body'], '>' . $year . '<'), "{$statsPath} shows the verified founding year {$year} from settings");
+}
+foreach ($pdo->query("SELECT path, blocks FROM pages WHERE deleted_at IS NULL AND status = 'published'")->fetchAll() as $statsRow) {
+    foreach ((array) json_decode((string) $statsRow['blocks'], true) as $statsBlockRow) {
+        if (($statsBlockRow['type'] ?? '') === 'stats' && !empty($statsBlockRow['data']['items'])) {
+            $check(false, 'published stats block carries embedded numbers: ' . $statsRow['path']);
+        }
+    }
+}
+
 $badSettings = $send('PATCH', '/admin/settings', 'p3admin', ['company' => ['emails' => "not-an-email"], 'tracking' => ['ga4_id' => 'UA-1']]);
 $check(!str_ends_with($location($badSettings), '/admin/settings') || $pdo->query("SELECT value FROM settings WHERE setting_key = 'tracking'")->fetchColumn() !== '{"ga4_id":"UA-1"}', 'invalid settings rejected');
+$abcSettings = $send('PATCH', '/admin/settings', 'p3admin', [
+    'stats' => [['value' => 'abc', 'labels' => ['th' => 'ไม่ใช่ตัวเลข'], 'verified' => '1']],
+]);
+$check(!str_contains((string) $pdo->query("SELECT value FROM settings WHERE setting_key = 'stats'")->fetchColumn(), 'abc'), 'a non-numeric figure (not a token) is rejected');
 $okSettings = $send('PATCH', '/admin/settings', 'p3admin', [
     'company' => ['name' => 'OMC MLM Software', 'founded' => '2009-04-03', 'phones' => "099-109-5544", 'emails' => "projectyak@hotmail.com\nsale@omc.co.th\ninfo@omc.co.th",
                   'line_id' => 'omc54', 'line_url' => 'https://line.me/ti/p/~omc54', 'facebook' => 'https://www.facebook.com/mlmsoftwarebyomc',
                   'address' => ['th' => 'ที่อยู่ทดสอบ', 'en' => 'Test address', 'zh' => '测试地址'], 'description' => ['en' => 'About EN']],
-    'stats' => [['value' => '17', 'suffix' => ' ปี', 'label' => 'ประสบการณ์', 'verified' => '1'], ['value' => '200', 'label' => 'ไม่ยืนยัน']],
+    'stats' => [
+        ['value' => '17', 'labels' => ['th' => 'ประสบการณ์', 'en' => 'Experience'], 'suffixes' => ['th' => ' ปี', 'en' => ' years'], 'verified' => '1'],
+        ['value' => '{founded_year}', 'plain' => '1', 'labels' => ['th' => 'ปีที่ก่อตั้ง'], 'verified' => '1'],
+        ['value' => '200', 'labels' => ['th' => 'ไม่ยืนยัน']],
+    ],
     'notifications' => ['lead_email' => 'sale@omc.co.th'],
     'tracking' => ['ga4_id' => 'G-ZZTEST123', 'gtm_id' => ''],
 ]);
@@ -735,15 +780,34 @@ App\Services\SettingService::flush();
 $en = App\Services\SiteService::layout('/en/', 'en');
 $check(($en['contact']['emails'] ?? []) === ['projectyak@hotmail.com', 'sale@omc.co.th', 'info@omc.co.th'], 'layout shows all three emails from settings');
 $check(($en['contact']['address'] ?? '') === 'Test address' && ($en['brand']['about'] ?? '') === 'About EN', 'localized address/description (en)');
-$check(array_column(App\Services\SettingService::verifiedStats(), 'label') === ['ประสบการณ์'], 'only verified stats are exposed');
-$statsBlock = App\Services\BlockService::prepare([['type' => 'stats']]);
-$check(count($statsBlock[0]['items'] ?? []) === 1, 'stats block filled from verified settings only');
+$thStats = App\Services\SettingService::verifiedStats('th');
+$check(array_column($thStats, 'label') === ['ประสบการณ์', 'ปีที่ก่อตั้ง'], 'only verified stats are exposed', json_encode(array_column($thStats, 'label'), JSON_UNESCAPED_UNICODE));
+$check(($thStats[1]['value'] ?? null) === 2552 && ($thStats[1]['format'] ?? '') === 'plain', '{founded_year} → พ.ศ. 2552 on Thai pages', json_encode($thStats, JSON_UNESCAPED_UNICODE));
+$enStats = App\Services\SettingService::verifiedStats('en');
+$check(($enStats[0]['label'] ?? '') === 'Experience' && ($enStats[0]['suffix'] ?? '') === ' years' && ($enStats[1]['label'] ?? '') === 'ปีที่ก่อตั้ง'
+    && ($enStats[1]['value'] ?? null) === 2009, 'stat labels per language (Thai fallback) · founding year 2009 on en', json_encode($enStats, JSON_UNESCAPED_UNICODE));
+$statsBlock = App\Services\BlockService::prepare([['type' => 'stats', 'items' => [['value' => 999, 'label' => 'ตัวเลขฝังในบล็อก']]]]);
+$check(array_column($statsBlock[0]['items'] ?? [], 'value') === array_column(App\Services\SettingService::verifiedStats(), 'value'), 'numbers embedded in a stats block are ignored (settings only)');
 $check(App\Services\SettingService::get('organization.email') === 'projectyak@hotmail.com', 'organization schema synced from company');
 $check(App\Services\TrackingService::active('production') === ['ga4' => 'G-ZZTEST123', 'gtm' => ''], 'tracking IDs active on production');
 $check(App\Services\TrackingService::active('staging') === null, 'tracking never active outside production');
 $publicPage = $http('GET', $enc($newPath));
 $check($publicPage['status'] === 200 && !str_contains($publicPage['body'], 'tracking.js') && !str_contains($publicPage['body'], 'G-ZZTEST123'), 'non-production public page has no tracking code');
 $check(!str_contains($header($publicPage, 'content-security-policy'), 'googletagmanager'), 'non-production CSP not widened');
+$check(!str_contains($publicPage['body'], 'nonce='), 'pages without tracking carry no nonce');
+$defaultCsp = $header($publicPage, 'content-security-policy');
+$check(str_contains($defaultCsp, "script-src 'self';") && !str_contains($defaultCsp, 'strict-dynamic'), 'default CSP: script-src self only', $defaultCsp);
+// CSP เมื่อมีรหัสติดตาม (production) — ตรวจรูปของ header ที่ Security::allowTracking ส่ง
+$policy = Core\Security::trackingPolicy('TESTNONCE');
+preg_match("/script-src ([^;]+);/", $policy, $scriptSrc);
+$sources = preg_split('/\s+/', trim($scriptSrc[1] ?? '')) ?: [];
+$check($sources === ["'nonce-TESTNONCE'", "'strict-dynamic'", "'self'", 'https://www.googletagmanager.com/gtag/js', 'https://www.googletagmanager.com/gtm.js'],
+    'tracking CSP script-src = nonce + strict-dynamic + exact Google script paths (no bare host)', $scriptSrc[1] ?? '');
+$check(!str_contains($policy, 'unsafe-inline') && !str_contains($policy, 'unsafe-eval') && str_contains($policy, "object-src 'none'"), 'tracking CSP has no unsafe-* and blocks objects');
+$check(Core\Security::nonce() === '' && csp_nonce() === '', 'no nonce until tracking CSP is enabled');
+$nonce = Core\Security::nonce(true);
+$check(preg_match('/^[A-Za-z0-9_-]{24}$/', $nonce) === 1 && csp_nonce() === $nonce && Core\Security::nonce(true) === $nonce,
+    'per-request nonce is random, URL-safe and stable within the request');
 
 // ================================================================ 14. ผู้ใช้ + สำรองข้อมูล
 

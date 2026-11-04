@@ -406,7 +406,7 @@ return [
             'hero' => '首屏（Hero）', 'trust_bar' => '客户标志', 'stats' => '公司数据', 'feature_grid' => '功能卡片', 'split' => '图文',
             'plan_cards' => '奖金制度卡片', 'industry_grid' => '行业类型', 'dashboard_showcase' => '系统界面展示', 'about_teaser' => '公司介绍',
             'testimonials' => '客户评价', 'faq' => '常见问题', 'cta_band' => '行动号召横幅', 'rich_text' => '长文本', 'steps' => '步骤',
-            'comparison_table' => '对比表', 'lead_form' => '联系表单',
+            'comparison_table' => '对比表', 'lead_form' => '联系表单', 'case_studies' => '客户案例（来自客户案例菜单）',
         ],
         'block_field' => [
             'eyebrow' => '标题上方小字', 'title' => '标题', 'lead' => '导语', 'bullets' => '优点列表', 'actions' => '按钮', 'label' => '按钮/链接文字',
@@ -550,7 +550,7 @@ return [
             'emails' => '邮箱', 'emails_hint' => '每行一个邮箱 — 全部显示在网站上', 'lines_hint' => '每行一项 — 第一项为主要', 'line_id' => 'LINE ID',
             'line_url' => 'LINE 链接', 'facebook' => 'Facebook 链接', 'address' => '地址', 'description' => '公司介绍（页脚）', 'stats' => '公司数据',
             'stats_hint' => '只有勾选“已核实”的行会显示在网站上 — 只填写有证据的数据', 'stat_value' => '数字', 'stat_prefix' => '数字前', 'stat_suffix' => '数字后',
-            'stat_label' => '说明', 'verified' => '已核实', 'verified_hint' => '有证据支持，可以显示', 'logos' => '客户标志',
+            'stat_label' => '说明', 'stat_value_hint' => '数字，或 {years}（经营年数）或 {founded_year}（成立年份 — 泰文页面为佛历）', 'stat_plain' => '直接显示数字（不加千分位、不滚动）', 'verified' => '已核实', 'verified_hint' => '有证据支持，可以显示', 'logos' => '客户标志',
             'logos_hint' => '只有勾选已获许可的标志会显示在网站上', 'logo' => '标志', 'logo_verified' => '已获得展示许可', 'other' => '其他',
             'lead_email' => '新潜在客户通知邮箱', 'lead_email_hint' => '有人提交表单时会发送通知到此邮箱', 'ga4' => 'Google Analytics 4 (G-XXXX)',
             'gtm' => 'Google Tag Manager (GTM-XXXX)', 'tracking_hint' => '只填写 ID · 仅在正式网站（production）运行，不在 staging 运行',

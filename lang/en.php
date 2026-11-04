@@ -421,7 +421,7 @@ return [
             'split' => 'Text with image', 'plan_cards' => 'Compensation plan cards', 'industry_grid' => 'Business types',
             'dashboard_showcase' => 'System screen showcase', 'about_teaser' => 'About the company', 'testimonials' => 'Testimonials',
             'faq' => 'FAQ', 'cta_band' => 'Call to action band', 'rich_text' => 'Long text', 'steps' => 'Steps',
-            'comparison_table' => 'Comparison table', 'lead_form' => 'Contact form',
+            'comparison_table' => 'Comparison table', 'lead_form' => 'Contact form', 'case_studies' => 'Case studies (from the Case studies menu)',
         ],
         'block_field' => [
             'eyebrow' => 'Small text above the heading', 'title' => 'Heading', 'lead' => 'Lead paragraph', 'bullets' => 'Benefits list',
@@ -615,7 +615,7 @@ return [
             'lines_hint' => 'One per line — the first one is the main one', 'line_id' => 'LINE ID', 'line_url' => 'LINE link',
             'facebook' => 'Facebook link', 'address' => 'Address', 'description' => 'Company introduction (footer)',
             'stats' => 'Company figures', 'stats_hint' => 'Only rows ticked "Verified" appear on the site — enter only figures you can prove',
-            'stat_value' => 'Number', 'stat_prefix' => 'Before number', 'stat_suffix' => 'After number', 'stat_label' => 'Label',
+            'stat_value' => 'Number', 'stat_prefix' => 'Before number', 'stat_suffix' => 'After number', 'stat_label' => 'Label', 'stat_value_hint' => 'A number, or {years} (years in business) or {founded_year} (founding year — Buddhist era on Thai pages)', 'stat_plain' => 'Show the number as is (no separators, no count-up)',
             'verified' => 'Verified', 'verified_hint' => 'Backed by evidence, may be shown',
             'logos' => 'Client logos', 'logos_hint' => 'Only logos ticked as permitted appear on the site', 'logo' => 'Logo',
             'logo_verified' => 'Permission to show received', 'other' => 'Other',
