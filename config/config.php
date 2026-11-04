@@ -120,6 +120,9 @@ return [
         'log'      => $root . '/storage/logs/app.log',
         'uploads'  => $root . '/storage/uploads',
         'backups'  => $root . '/storage/backups',
+        // ‼️ รูปของ CMS อยู่ใน public/ โดยตั้งใจ — ต้องเสิร์ฟตรงและ cache ได้ (project/NOTES.md Phase 3)
+        'media'    => $root . '/public/uploads',
+        'public'   => $root . '/public',
         'lang'     => $root . '/lang',
         'maintenance' => $root . '/storage/maintenance.flag',
     ],
@@ -141,6 +144,10 @@ return [
     // ‼️ ปลายทางที่แก้โครงสร้างฐานข้อมูลได้ เปิดอยู่บนอินเทอร์เน็ต
     //    สุ่มใหม่ทุกโปรเจค อย่าใช้ซ้ำ และเปลี่ยนทันทีถ้าเคยหลุด
     'migrate_token' => $get('MIGRATE_TOKEN'),
+
+    // ‼️ กุญแจลงลายเซ็น cookie อุปกรณ์ (Core\DeviceCookie) — ว่าง = ปิดข้อยกเว้นของเจ้าของบัญชี (ปลอดภัย)
+    //    สุ่มต่อ environment · เปลี่ยนแล้ว cookie อุปกรณ์เดิมใช้ไม่ได้ทั้งหมด (ไม่กระทบการล็อกอิน)
+    'app_key' => $get('APP_KEY'),
 
     'features' => [
         'auth'    => $get('FEATURE_AUTH', 'true') === 'true',

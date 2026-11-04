@@ -23,7 +23,9 @@
 
 ## GitHub Secrets
 
-`FTP_SERVER` `FTP_USERNAME` `FTP_PASSWORD` `FTP_SERVER_DIR` `APP_URL` `MIGRATE_TOKEN` `DB_HOST` `DB_NAME` `DB_USER` `DB_PASS` `STAGING_PASS`
+`FTP_SERVER` `FTP_USERNAME` `FTP_PASSWORD` `FTP_SERVER_DIR` `APP_URL` `MIGRATE_TOKEN` `DB_HOST` `DB_NAME` `DB_USER` `DB_PASS` `STAGING_PASS` `APP_KEY`
+
+**`APP_KEY` is required since Phase 3** (the deploy stops if it is missing). It signs the device cookie that lets an account owner log in while their username is being attacked from many IPs (`core/DeviceCookie.php`). Generate one per environment: `php -r "echo bin2hex(random_bytes(32));"` and add it as a repository secret before the next push to `main`. Changing it only invalidates the device cookies (owners may hit the per-username cap once more); it never logs anyone out.
 
 ## Rollback
 
@@ -31,7 +33,15 @@ FTP has no atomic switch, so rollback means deploying an older commit again:
 
 1. **Fastest:** Actions → `deploy` → *Run workflow* → choose the last good commit or tag as the ref.
 2. **Recorded in history:** `git revert <bad merge>` on `main`, then push. CI deploys the reverted state.
-3. If a migration broke the schema: restore the DB from `storage/backups/` (`php scripts/backup.php`) **before** redeploying. Migrations are forward-only.
+3. If a migration broke the schema: restore the DB from `storage/backups/` **before** redeploying. Migrations are forward-only. Backups are made with `php scripts/backup.php` or from CMS → Backups (admin).
+
+### Restoring a database backup (CLI only — there is no one-click restore in the web UI on purpose)
+
+1. Put the site in maintenance: create `storage/maintenance.flag`.
+2. Download the file (`db-YYYYMMDD-HHMMSS.sql.gz`) from CMS → Backups, or take it from `storage/backups/` over FTP.
+3. `gunzip db-....sql.gz` then `mysql --default-character-set=utf8mb4 -u <user> -p <db_name> < db-....sql` (the file starts with `SET NAMES utf8mb4`, but keep the flag on Windows).
+4. Open `/_health`, log in to `/admin`, check a few pages, then delete `storage/maintenance.flag`.
+5. The restore replaces every table, including `audit_logs` and `users`: anything written after the backup time is gone.
 
 The site stays in maintenance (503) when a migration fails. That is intentional: it is safer than serving a half-migrated site.
 

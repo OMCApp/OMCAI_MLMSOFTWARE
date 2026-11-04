@@ -26,8 +26,6 @@ final class Auth
      */
     private const MAX_USER_ATTEMPTS = 50;
     private const LOCK_MINUTES    = 15;
-    /** เครื่อง/IP ที่เคยเข้าบัญชีนั้นสำเร็จภายในกี่วัน ถือว่าเป็นของเจ้าของ — ไม่โดนเพดานต่อ username */
-    private const KNOWN_IP_DAYS   = 90;
 
     /**
      * hash ตายตัวสำหรับเทียบตอนไม่เจอผู้ใช้ — cost เดียวกับ PASSWORD_DEFAULT (bcrypt 10)
@@ -73,7 +71,7 @@ final class Auth
         }
 
         $user = Database::selectOne(
-            'SELECT role, is_active FROM users WHERE id = :id AND deleted_at IS NULL LIMIT 1',
+            'SELECT role, is_active, must_change_password FROM users WHERE id = :id AND deleted_at IS NULL LIMIT 1',
             ['id' => $id]
         );
 
@@ -90,7 +88,15 @@ final class Auth
             Session::put('role', (string) $user['role']);
         }
 
+        Session::put('must_change_password', (int) ($user['must_change_password'] ?? 0) === 1);
+
         return true;
+    }
+
+    /** บัญชีนี้ต้องตั้งรหัสผ่านใหม่ก่อนใช้งาน (ค่าจาก refresh() ล่าสุด) */
+    public static function mustChangePassword(): bool
+    {
+        return Session::get('must_change_password') === true;
     }
 
     /** ใช้ซ่อนเมนูเท่านั้น — การกันจริงต้องอยู่ที่ Middleware */
@@ -151,6 +157,7 @@ final class Auth
 
         self::clearFailures($username, $ip);
         self::login($user);
+        DeviceCookie::issue((int) $user['id']);
 
         return ['ok' => true, 'reason' => '', 'minutes' => 0];
     }
@@ -247,19 +254,19 @@ final class Auth
             return false;
         }
 
-        $known = Database::selectOne(
-            "SELECT 1 AS known
-             FROM audit_logs a
-             JOIN users u ON u.id = a.user_id
-             WHERE u.username = :username AND u.deleted_at IS NULL
-               AND a.action = 'login' AND a.ip_address = :ip
-               AND a.created_at > (NOW() - INTERVAL :days DAY)
-             LIMIT 1",
-            ['username' => $username, 'ip' => self::ip(), 'days' => self::KNOWN_IP_DAYS]
-        );
+        /* ‼️ ข้อยกเว้นผูกกับ cookie อุปกรณ์ที่ลงลายเซ็น (Core\DeviceCookie) ไม่ใช่ IP
+              IP เดียวกันอาจเป็นคนทั้งออฟฟิศ — cookie ออกให้เฉพาะเครื่องที่เคยเข้าบัญชีนี้สำเร็จใน 90 วัน */
+        $deviceUser = DeviceCookie::userId();
 
-        if ($known !== null) {
-            return false;
+        if ($deviceUser !== null) {
+            $owner = Database::selectOne(
+                'SELECT id FROM users WHERE username = :username AND deleted_at IS NULL LIMIT 1',
+                ['username' => $username]
+            );
+
+            if ($owner !== null && (int) $owner['id'] === $deviceUser) {
+                return false;
+            }
         }
 
         Logger::warning('login_user_cap_reached', ['username' => $username, 'ip' => self::ip()]);

@@ -66,10 +66,11 @@ jobs:
           S4: ${{ secrets.DB_NAME }}
           S5: ${{ secrets.DB_USER }}
           S6: ${{ secrets.STAGING_PASS }}
+          S7: ${{ secrets.APP_KEY }}
         run: |
           missing=0
           # STAGING_PASS is no longer used: the user asked for staging without a login (2026-11-04) — noindex stays
-          for n in S1:FTP_SERVER_DIR S2:APP_URL S3:MIGRATE_TOKEN S4:DB_NAME S5:DB_USER; do
+          for n in S1:FTP_SERVER_DIR S2:APP_URL S3:MIGRATE_TOKEN S4:DB_NAME S5:DB_USER S7:APP_KEY; do
             v="${n%%:*}"; if [ -z "${!v}" ]; then echo "::error::secret ${n#*:} is not set"; missing=1; fi
           done
           # Basic Auth has no lockout — a long random password is what makes guessing impractical
@@ -84,11 +85,12 @@ jobs:
           DB_USER: ${{ secrets.DB_USER }}
           DB_PASS: ${{ secrets.DB_PASS }}
           STAGING_PASS: ${{ secrets.STAGING_PASS }}
+          APP_KEY: ${{ secrets.APP_KEY }}
         run: |
           umask 077
           # config.php trims values and strips surrounding quotes — quote them so leading/trailing
           # spaces survive; refuse characters the .env format cannot hold
-          for v in DB_PASS DB_USER DB_NAME STAGING_PASS MIGRATE_TOKEN; do
+          for v in DB_PASS DB_USER DB_NAME STAGING_PASS MIGRATE_TOKEN APP_KEY; do
             case "${!v}" in *$'\n'*|*'"'*) echo "::error::secret $v contains a newline or double quote"; exit 1;; esac
           done
           {
@@ -105,6 +107,8 @@ jobs:
             echo "DB_USER=\"${DB_USER}\""
             echo "DB_PASS=\"${DB_PASS}\""
             echo "MIGRATE_TOKEN=${MIGRATE_TOKEN}"
+            # HMAC key of the signed device cookie (core/DeviceCookie.php) — required secret since Phase 3
+            echo "APP_KEY=${APP_KEY}"
           } > .env
           echo ".env written: yes"
 
