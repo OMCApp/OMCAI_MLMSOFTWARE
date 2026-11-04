@@ -33,6 +33,15 @@ final class SiteController extends PublicController
             return;
         }
 
+        /* ‼️ ชั่วคราวเฉพาะ staging: หน้าแรกในฐานข้อมูลยังเป็น draft (Phase 4 กำลังเขียนเนื้อหา)
+              ให้ / แสดงหน้าแรกตัวอย่างของ design system แทน 404 — ผู้ใช้ขอเห็นเว็บที่ URL หลักของ staging
+              production ไม่เข้าเงื่อนไขนี้เด็ดขาด · หมดผลเองทันทีที่หน้า / ถูก publish */
+        if ($resolution['kind'] === 'not_found' && $path === '/' && config('env', 'production') !== 'production') {
+            (new PreviewController())->home();
+
+            return;
+        }
+
         if ($resolution['kind'] === 'not_found' && ($resolution['log'] ?? false) === true) {
             (new NotFoundService())->record(
                 $path,
