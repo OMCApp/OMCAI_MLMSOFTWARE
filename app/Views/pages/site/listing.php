@@ -8,7 +8,7 @@ declare(strict_types=1);
 $siteItems     = (array) ($siteItems ?? []);
 $siteListIntro = (string) ($siteListIntro ?? '');
 ?>
-<div class="container listing-wrap">
+<div class="container">
 <?php if ($siteListIntro !== ''): ?>
     <p class="page-lead"><?= e(strip_tags($siteListIntro)) ?></p>
 <?php endif; ?>

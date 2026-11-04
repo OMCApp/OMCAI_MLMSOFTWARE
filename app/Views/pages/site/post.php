@@ -18,7 +18,7 @@ $siteImage   = $sitePost['image'] ?? null;
     <p class="card small" role="status"><?= e(__('site.preview_notice')) ?></p>
 <?php endif; ?>
 
-<div class="container post-wrap">
+<div class="container">
 <article class="post">
     <p class="post-meta">
         <?php if ($sitePost['datetime'] !== ''): ?>
