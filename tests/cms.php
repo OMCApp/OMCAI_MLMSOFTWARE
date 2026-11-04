@@ -410,6 +410,25 @@ $check($http('GET', $enc($pagePath))['status'] === 404, 'draft page is 404 for t
 $base = ['title' => 'ZZ หน้าทดสอบ', 'template' => 'default', 'robots' => 'index', 'locale' => 'th', 'blocks' => $blocks];
 $send('PATCH', '/admin/pages/' . $pageId, 'p3editor', array_merge($base, ['path' => $pagePath, 'status' => 'published']));
 $check($http('GET', $enc($pagePath))['status'] === 200, 'published page is public');
+
+// hero photo + headline from the CMS (Phase 6 QA: "เปลี่ยนภาพ Hero และแก้ข้อความได้จาก /admin")
+$mediaId = static function (string $path) use ($pdo): int {
+    $q = $pdo->prepare('SELECT id FROM media WHERE path = :p AND deleted_at IS NULL');
+    $q->execute(['p' => $path]);
+
+    return (int) $q->fetchColumn();
+};
+foreach (['/assets/images/stock/hero-executive.webp' => 'hero-executive-768.webp', '/assets/images/stock/team.webp' => 'team-768.webp'] as $photo => $variant) {
+    $heroBlocks                       = $blocks;
+    $heroBlocks[1]['data']['person']  = ['media_id' => (string) $mediaId($photo)];
+    $heroBlocks[1]['data']['title']   = "หัวข้อจาก CMS\n" . basename($photo);
+    $send('PATCH', '/admin/pages/' . $pageId, 'p3editor', array_merge($base, ['path' => $pagePath, 'status' => 'published', 'blocks' => $heroBlocks]));
+    $live = $http('GET', $enc($pagePath))['body'];
+    $check(preg_match('#class="hero-person-image"[^>]*src="[^"]*' . preg_quote(basename($photo), '#') . '\?v=\d+"[^>]*srcset="[^"]*' . preg_quote($variant, '#') . '#s', $live) === 1
+        && str_contains($live, 'fetchpriority="high"'), "hero photo set from the media library is live (WebP + srcset, LCP eager): " . basename($photo));
+    $check(str_contains($live, 'หัวข้อจาก CMS') && str_contains($live, e(basename($photo))), 'hero headline edited in the CMS is live');
+}
+$send('PATCH', '/admin/pages/' . $pageId, 'p3editor', array_merge($base, ['path' => $pagePath, 'status' => 'published']));
 $newPath = '/zz-test-p3-moved-' . $stamp . '/';
 $moved = $send('PATCH', '/admin/pages/' . $pageId, 'p3editor', array_merge($base, ['path' => $newPath, 'status' => 'published', 'redirect_old_path' => '1']));
 $check($moved['status'] === 302, 'path change saved');

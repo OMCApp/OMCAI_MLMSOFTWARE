@@ -188,9 +188,10 @@ final class Media extends Model
             $bindings['p' . $index] = $path;
         }
 
-        $out = [];
+        $rows = Database::select('SELECT * FROM media WHERE deleted_at IS NULL AND path IN (' . implode(', ', $marks) . ')', $bindings);
+        $out  = [];
 
-        foreach (Database::select('SELECT * FROM media WHERE deleted_at IS NULL AND path IN (' . implode(', ', $marks) . ')', $bindings) as $row) {
+        foreach ($rows as $row) {
             $out[(string) $row['path']] = $row;
         }
 
