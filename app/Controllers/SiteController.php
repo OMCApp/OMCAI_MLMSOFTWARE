@@ -9,6 +9,8 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Services\LeadTrackingService;
+use App\Services\LocaleService;
 use App\Services\NotFoundService;
 use App\Services\PreviewService;
 use App\Services\SiteResolver;
@@ -21,6 +23,13 @@ final class SiteController extends PublicController
     {
         $path       = Path::requested();
         $query      = (string) ($_SERVER['QUERY_STRING'] ?? '');
+
+        // ภาษาของหน้ามาจาก prefix ของ URL เท่านั้น (ไม่ดู Accept-Language / IP · ไม่ redirect ตามภาษา)
+        LocaleService::use(LocaleService::localeOf($path));
+
+        // UTM ของการเข้าชมครั้งแรก — เก็บใน cookie 30 วัน ให้ lead ที่ส่งจากหน้าอื่นทีหลังยังรู้แหล่งที่มา
+        LeadTrackingService::rememberFirstTouch($_GET);
+
         $resolution = (new SiteResolver())->resolve($path, $query, PreviewService::granted());
 
         if ($resolution['kind'] === 'redirect') {

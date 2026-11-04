@@ -4,7 +4,8 @@
  *
  * $block = [
  *   'eyebrow', 'title' (h2), 'lead'
- *   'items' => list<['q' => คำถาม, 'a' => คำตอบ (ข้อความล้วน — ขึ้นบรรทัดใหม่ได้)]>
+ *   'items' => list<['question' => คำถาม, 'answer' => คำตอบ (ข้อความล้วน — ขึ้นบรรทัดใหม่ได้)]>
+ *                (รับ 'q'/'a' แบบเดิมด้วย — แต่ข้อมูลใน DB ใช้ question/answer ชุดเดียวกับ FAQPage schema)
  * ]
  *
  * ‼️ ใช้ <details>/<summary> ของเบราว์เซอร์ — เปิดปิดได้ด้วยคีย์บอร์ดและไม่ต้องมี JS
@@ -15,10 +16,12 @@
 declare(strict_types=1);
 
 $faqBlock = (array) ($block ?? []);
-$faqPairs = array_values(array_filter(
-    (array) ($faqBlock['items'] ?? []),
-    static fn ($pair): bool => is_array($pair) && (string) ($pair['q'] ?? '') !== '' && (string) ($pair['a'] ?? '') !== ''
-));
+$faqPairs = array_values(array_filter(array_map(
+    static fn ($pair): array => is_array($pair)
+        ? ['q' => (string) ($pair['question'] ?? $pair['q'] ?? ''), 'a' => strip_tags((string) ($pair['answer'] ?? $pair['a'] ?? ''))]
+        : ['q' => '', 'a' => ''],
+    (array) ($faqBlock['items'] ?? [])
+), static fn (array $pair): bool => $pair['q'] !== '' && $pair['a'] !== ''));
 
 if ($faqPairs === []) {
     return;

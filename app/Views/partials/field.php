@@ -45,6 +45,8 @@ $fieldWidth = $fieldWidth ?? 'full';
 $fieldValue    = $fieldValue    ?? old($fieldName);
 $fieldError    = field_error($fieldName);
 $fieldId           = 'f-' . preg_replace('/[^a-z0-9_-]/i', '-', $fieldName);
+/* ‼️ คำอธิบายและข้อความผิดพลาดผูกกับช่องด้วย aria-describedby — screen reader อ่าน error ตอนโฟกัสช่อง */
+$fieldDescribedBy  = trim(($fieldHint !== '' ? $fieldId . '-hint' : '') . ($fieldError !== null ? ' ' . $fieldId . '-error' : ''));
 ?>
 <div class="field" data-width="<?= e($fieldWidth) ?>"<?php if ($fieldError !== null): ?> data-invalid="true"<?php endif; ?>>
     <?php if ($fieldType === 'checkbox'): ?>
@@ -54,7 +56,7 @@ $fieldId           = 'f-' . preg_replace('/[^a-z0-9_-]/i', '-', $fieldName);
                    value="<?= e((string) ($fieldChecked === null ? '1' : $fieldChecked)) ?>"
                    <?php if ($fieldValue): ?>checked<?php endif; ?>
                    <?php if ($fieldRequired): ?>required<?php endif; ?>
-                   <?php if ($fieldHint !== ''): ?>aria-describedby="<?= e($fieldId) ?>-hint"<?php endif; ?>>
+                   <?php if ($fieldDescribedBy !== ''): ?>aria-describedby="<?= e($fieldDescribedBy) ?>"<?php endif; ?><?php if ($fieldError !== null): ?> aria-invalid="true"<?php endif; ?>>
             <span class="choice-text">
                 <span><?= e($fieldLabel) ?><?php if ($fieldRequired): ?><span class="required-mark" aria-hidden="true">*</span><?php endif; ?></span>
                 <?php if ($fieldHint !== ''): ?>
@@ -90,7 +92,7 @@ $fieldId           = 'f-' . preg_replace('/[^a-z0-9_-]/i', '-', $fieldName);
                            value="<?= e((string) $optionValue) ?>"
                            <?php if (in_array((string) $optionValue, $fieldChosen, true)): ?>checked<?php endif; ?>
                            <?php if ($fieldRequired && $fieldType === 'radio'): ?>required<?php endif; ?>
-                           <?php if ($fieldHint !== ''): ?>aria-describedby="<?= e($fieldId) ?>-hint"<?php endif; ?>>
+                           <?php if ($fieldDescribedBy !== ''): ?>aria-describedby="<?= e($fieldDescribedBy) ?>"<?php endif; ?><?php if ($fieldError !== null): ?> aria-invalid="true"<?php endif; ?>>
                     <span class="choice-text"><?= e((string) $optionLabel) ?></span>
                 </label>
             <?php endforeach; ?>
@@ -109,14 +111,14 @@ $fieldId           = 'f-' . preg_replace('/[^a-z0-9_-]/i', '-', $fieldName);
     <?php if ($fieldType === 'textarea'): ?>
         <textarea id="<?= e($fieldId) ?>" name="<?= e($fieldName) ?>" rows="<?= e((string) $fieldRows) ?>"
                   <?php if ($fieldRequired): ?>required<?php endif; ?>
-                  <?php if ($fieldHint !== ''): ?>aria-describedby="<?= e($fieldId) ?>-hint"<?php endif; ?>
+                  <?php if ($fieldDescribedBy !== ''): ?>aria-describedby="<?= e($fieldDescribedBy) ?>"<?php endif; ?><?php if ($fieldError !== null): ?> aria-invalid="true"<?php endif; ?>
         ><?= e((string) $fieldValue) ?></textarea>
 
     <?php elseif ($fieldType === 'select'): ?>
         <select id="<?= e($fieldId) ?>" name="<?= e($fieldName) ?>" <?php if ($fieldRequired): ?>required<?php endif; ?>
                 <?php if ($fieldSearch): ?>data-search="true"<?php endif; ?>
                 <?php if ($fieldSource !== ''): ?>data-source="<?= e(url('/admin/options/' . $fieldSource)) ?>"<?php endif; ?>
-                <?php if ($fieldHint !== ''): ?>aria-describedby="<?= e($fieldId) ?>-hint"<?php endif; ?>>
+                <?php if ($fieldDescribedBy !== ''): ?>aria-describedby="<?= e($fieldDescribedBy) ?>"<?php endif; ?><?php if ($fieldError !== null): ?> aria-invalid="true"<?php endif; ?>>
             <?php foreach ($fieldOptions as $optionValue => $optionLabel): ?>
                 <option value="<?= e((string) $optionValue) ?>"
                     <?php if ((string) $optionValue === (string) $fieldValue): ?>selected<?php endif; ?>>
@@ -129,12 +131,12 @@ $fieldId           = 'f-' . preg_replace('/[^a-z0-9_-]/i', '-', $fieldName);
         <input id="<?= e($fieldId) ?>" name="<?= e($fieldName) ?>" type="<?= e($fieldType) ?>"
                value="<?= e((string) $fieldValue) ?>"
                <?php if ($fieldRequired): ?>required<?php endif; ?>
-               <?php if ($fieldHint !== ''): ?>aria-describedby="<?= e($fieldId) ?>-hint"<?php endif; ?>>
+               <?php if ($fieldDescribedBy !== ''): ?>aria-describedby="<?= e($fieldDescribedBy) ?>"<?php endif; ?><?php if ($fieldError !== null): ?> aria-invalid="true"<?php endif; ?>>
     <?php endif; ?>
     <?php endif; ?>
 
     <?php if ($fieldError !== null): ?>
-        <span class="error"><?= e($fieldError) ?></span>
+        <span class="error" id="<?= e($fieldId) ?>-error"><?= e($fieldError) ?></span>
     <?php endif; ?>
 </div>
 <?php
@@ -148,3 +150,5 @@ $fieldHint    = '';
 $fieldSource  = '';
 $fieldSearch  = null;
 $fieldChecked = null;
+// ‼️ ค่าที่กรอกไว้ต้องไม่ค้างไปช่องถัดไป — ไม่ล้างแล้วทุกช่องหลังช่องแรกได้ค่า old() ของช่องแรก (ฟอร์ม lead คืนค่าไม่ได้)
+$fieldValue   = null;

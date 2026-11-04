@@ -41,9 +41,14 @@ final class SiteViewService
     /** @param array<string, mixed> $page */
     private function page(array $page, bool $preview): array
     {
+        $locale      = (string) ($page['locale'] ?? LocaleService::DEFAULT);
         $blocks      = $this->pages->blocks($page);
-        $breadcrumbs = $this->pages->breadcrumbs($page, __('site.home'));
+        $breadcrumbs = $this->pages->breadcrumbs($page, __('site.home'), LocaleService::home($locale));
         $description = SeoService::description((string) ($page['meta_description'] ?? ''));
+
+        // hreflang เฉพาะหน้าที่ index ได้และ canonical เป็นตัวเอง — ชุดเดียวกับ sitemap
+        $indexable  = !$preview && $page['robots'] === 'index' && (string) ($page['canonical_override'] ?? '') === '';
+        $alternates = $indexable ? PageService::hreflangSet($this->pages->translationPaths($page)) : [];
 
         $seo = $this->seo->meta([
             'title'              => (string) $page['title'],
@@ -54,13 +59,15 @@ final class SiteViewService
             'robots'             => (string) $page['robots'],
             'private'            => $preview,
             'image'              => $this->media->image($page['og_image_id'] !== null ? (int) $page['og_image_id'] : null),
+            'locale'             => $locale,
+            'alternates'         => $alternates,
         ]);
 
         return $this->result(200, 'site/page', (string) $page['title'], [
             'siteTemplate' => (string) $page['template'],
             'siteBlocks'   => $this->withPartials($blocks),
             'sitePreview'  => $preview,
-        ], $seo, $breadcrumbs, $preview, ['page' => $page, 'blocks' => $blocks]);
+        ], $seo, $breadcrumbs, $preview, ['page' => $page, 'blocks' => $blocks], $locale, $this->pages->switcherPaths($page));
     }
 
     /**
@@ -74,7 +81,11 @@ final class SiteViewService
         $description = SeoService::description((string) ($post['meta_description'] ?: ($post['excerpt'] ?: $post['content'])));
         $path        = PostService::permalink($post);
 
-        $breadcrumbs = [['label' => __('site.home'), 'url' => '/'], ['label' => $this->blogLabel(), 'url' => '/blog/']];
+        $locale      = (string) ($post['locale'] ?? LocaleService::DEFAULT);
+        $breadcrumbs = [
+            ['label' => __('site.home'), 'url' => LocaleService::home($locale)],
+            ['label' => $this->blogLabel($locale), 'url' => LocaleService::localize('/blog/', $locale)],
+        ];
 
         if ($category !== null) {
             $breadcrumbs[] = ['label' => (string) $category['name'], 'url' => CategoryService::path($category)];
@@ -94,6 +105,7 @@ final class SiteViewService
             'image'              => $ogImage,
             'published_time'     => $post['published_at'],
             'modified_time'      => $post['updated_at'],
+            'locale'             => $locale,
         ]);
 
         return $this->result(200, 'site/post', (string) $post['title'], [
@@ -105,9 +117,11 @@ final class SiteViewService
                 'category_url'  => $category !== null ? Path::encode(CategoryService::path($category)) : '',
                 'image'         => $image,
                 'content'       => $this->withBase($this->sanitizer->clean((string) ($post['content'] ?? ''))),
+                'related'       => $this->related($post),
+                'blog_url'      => LocaleService::localize('/blog/', $locale),
             ],
             'sitePreview' => $preview,
-        ], $seo, $breadcrumbs, $preview, ['post' => $post, 'category' => $category, 'image' => $ogImage]);
+        ], $seo, $breadcrumbs, $preview, ['post' => $post, 'category' => $category, 'image' => $ogImage], $locale, []);
     }
 
     /** @param array<string, mixed> $r */
@@ -115,7 +129,8 @@ final class SiteViewService
     {
         $category = $r['category'];
         $page     = (int) $r['page'];
-        $blogPage = $this->pages->liveByPath('/blog/');
+        $locale   = (string) ($r['locale'] ?? LocaleService::DEFAULT);
+        $blogPage = $this->pages->liveByPath(LocaleService::localize('/blog/', $locale));
 
         if ($category !== null) {
             $name        = (string) $category['name'];
@@ -123,7 +138,7 @@ final class SiteViewService
             $description = (string) ($category['meta_description'] ?: $category['description']);
             $robots      = (string) $category['robots'];
         } else {
-            $name        = $this->blogLabel();
+            $name        = $this->blogLabel($locale);
             $seoTitle    = $blogPage['seo_title'] ?? null;
             $description = (string) ($blogPage['meta_description'] ?? '');
             $robots      = (string) ($blogPage['robots'] ?? 'index');
@@ -134,10 +149,10 @@ final class SiteViewService
         // หน้า 2 ขึ้นไปต้องมี title ไม่ซ้ำกับหน้าแรก (Search Console เตือน title ซ้ำ)
         $pageSuffix = $page > 1 ? ' – ' . __('site.page_n', ['page' => (string) $page]) : '';
 
-        $breadcrumbs = [['label' => __('site.home'), 'url' => '/']];
+        $breadcrumbs = [['label' => __('site.home'), 'url' => LocaleService::home($locale)]];
 
         if ($category !== null) {
-            $breadcrumbs[] = ['label' => $this->blogLabel(), 'url' => '/blog/'];
+            $breadcrumbs[] = ['label' => $this->blogLabel($locale), 'url' => LocaleService::localize('/blog/', $locale)];
         }
 
         $breadcrumbs[] = ['label' => $name, 'url' => null];
@@ -148,18 +163,10 @@ final class SiteViewService
             'description' => SeoService::description($description),
             'path'        => $path,
             'robots'      => $robots,
+            'locale'      => $locale,
         ]);
 
-        $items = [];
-
-        foreach ($r['posts'] as $post) {
-            $items[] = [
-                'url'   => Path::encode(PostService::permalink($post)),
-                'date'  => format_date((string) $post['published_at']),
-                'title' => (string) $post['title'],
-                'lead'  => SeoService::description((string) ($post['excerpt'] ?: $post['content']), 200),
-            ];
-        }
+        $items = $this->cards($r['posts'], 200);
 
         return $this->result(200, 'site/listing', $name, [
             'siteItems'      => $items,
@@ -168,7 +175,7 @@ final class SiteViewService
             'siteBase'       => (string) $r['base'],
             'siteListIntro'  => $page === 1 && $category !== null ? (string) ($category['description'] ?? '') : '',
             'sitePreview'    => false,
-        ], $seo, $breadcrumbs, false, []);
+        ], $seo, $breadcrumbs, false, [], $locale, $category === null && $blogPage !== null ? $this->pages->switcherPaths($blogPage) : []);
     }
 
     private function missing(int $status): array
@@ -179,17 +186,62 @@ final class SiteViewService
             'title'  => $title,
             'path'   => null,
             'robots' => 'noindex',
+            'locale' => LocaleService::current(),
         ]);
 
         return $this->result($status, 'site/not-found', $title, [
             'siteStatus'  => $status,
             'sitePreview' => false,
-        ], $seo, [], false, []);
+        ], $seo, [], false, [], LocaleService::current(), []);
     }
 
-    private function blogLabel(): string
+    /**
+     * บทความหมวดเดียวกันท้ายบทความ — การ์ด (url, title, date)
+     *
+     * @param  array<string, mixed> $post
+     * @return list<array{url:string, title:string, date:string, lead:string}>
+     */
+    private function related(array $post): array
     {
-        $blogPage = $this->pages->liveByPath('/blog/');
+        return $this->cards((new PostService())->related($post, 3), 140);
+    }
+
+    /**
+     * การ์ดบทความ (หน้ารวม · บทความที่เกี่ยวข้อง) — ภาพเด่นดึงทีเดียวทั้งชุด (ไม่ query ทีละบทความ)
+     *
+     * @param  array<int, array<string, mixed>> $posts
+     * @return list<array<string, mixed>>
+     */
+    private function cards(array $posts, int $leadLength): array
+    {
+        $images = $this->media->images(array_map(
+            static fn (array $post): ?int => $post['featured_image_id'] !== null ? (int) $post['featured_image_id'] : null,
+            $posts
+        ));
+        $items  = [];
+
+        foreach ($posts as $post) {
+            $image   = $post['featured_image_id'] !== null ? ($images[(int) $post['featured_image_id']] ?? null) : null;
+            $items[] = [
+                'url'   => Path::encode(PostService::permalink($post)),
+                'date'  => format_date((string) $post['published_at']),
+                'title' => (string) $post['title'],
+                'lead'  => SeoService::description((string) ($post['excerpt'] ?: $post['content']), $leadLength),
+                'cover' => $image === null ? null : [
+                    'src'    => Path::encode($image['path']),
+                    'alt'    => $image['alt'],
+                    'width'  => $image['width'],
+                    'height' => $image['height'],
+                ],
+            ];
+        }
+
+        return $items;
+    }
+
+    private function blogLabel(string $locale): string
+    {
+        $blogPage = $this->pages->liveByPath(LocaleService::localize('/blog/', $locale));
 
         return $blogPage !== null ? (string) $blogPage['title'] : __('site.blog');
     }
@@ -234,9 +286,10 @@ final class SiteViewService
      * @param array<string, mixed>                 $schemaContext
      */
     private function result(int $status, string $view, string $title, array $data, array $seo, array $breadcrumbs,
-        bool $private, array $schemaContext): array
+        bool $private, array $schemaContext, string $locale, array $translations): array
     {
         $graph = $this->schema->graph($schemaContext + [
+            'locale'      => $locale,
             'canonical'   => $seo['canonical'],
             'title'       => $title,
             'description' => $seo['description'],
@@ -252,6 +305,8 @@ final class SiteViewService
             'graph'       => $graph,
             'breadcrumbs' => $breadcrumbs,
             'private'     => $private,
+            'locale'      => $locale,
+            'switch'      => $translations,
         ];
     }
 

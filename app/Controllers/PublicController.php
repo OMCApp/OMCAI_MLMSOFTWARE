@@ -17,6 +17,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Services\SettingService;
+use App\Services\SiteService;
 use Core\Controller;
 use Core\Path;
 
@@ -50,6 +51,8 @@ abstract class PublicController extends Controller
             'jsonLdGraph' => $screen['graph'],
             'breadcrumbs' => $screen['breadcrumbs'],
             'siteBrand'   => SettingService::brand(),
+            // header/footer/เมนูของภาษาของหน้านี้ + ปุ่มสลับภาษาที่ชี้ไปคำแปลของหน้าเดียวกัน
+            'site'        => SiteService::layout(Path::current(), $screen['locale'], $screen['switch']),
         ], self::LAYOUT);
     }
 
@@ -60,11 +63,14 @@ abstract class PublicController extends Controller
     protected function redirectTo(string $location, int $code): never
     {
         if (preg_match('#^https?://#i', $location) !== 1) {
-            [$path, $query] = array_pad(explode('?', $location, 2), 2, null);
-            $location = Path::url(Path::encode((string) $path)) . ($query !== null ? '?' . $query : '');
+            [$location, $fragment] = array_pad(explode('#', $location, 2), 2, null);
+            [$path, $query]        = array_pad(explode('?', $location, 2), 2, null);
+            $location = Path::url(Path::encode((string) $path)) . ($query !== null ? '?' . $query : '')
+                . ($fragment !== null ? '#' . rawurlencode($fragment) : '');
         }
 
-        header('Location: ' . $location, true, in_array($code, [301, 302, 307, 308], true) ? $code : 301);
+        // 303 = หลัง POST ให้เบราว์เซอร์เปิดปลายทางด้วย GET (ฟอร์ม lead)
+        header('Location: ' . $location, true, in_array($code, [301, 302, 303, 307, 308], true) ? $code : 301);
         exit;
     }
 

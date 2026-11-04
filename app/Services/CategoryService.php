@@ -16,9 +16,9 @@ final class CategoryService
     }
 
     /** @return array<string, mixed>|null */
-    public function findBySlug(string $slug): ?array
+    public function findBySlug(string $slug, string $locale = LocaleService::DEFAULT): ?array
     {
-        return $this->categories->findBySlug($slug);
+        return $this->categories->findBySlug($slug, $locale);
     }
 
     /** @return array<string, mixed>|null */
@@ -41,7 +41,7 @@ final class CategoryService
 
     public static function path(array $category): string
     {
-        return '/category/' . $category['slug'] . '/';
+        return LocaleService::prefix((string) ($category['locale'] ?? LocaleService::DEFAULT)) . '/category/' . $category['slug'] . '/';
     }
 
     /**

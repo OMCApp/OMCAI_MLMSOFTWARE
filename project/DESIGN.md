@@ -40,6 +40,7 @@ typography:
     heading: "Prompt"
     body:    "IBM Plex Sans Thai"
     mono:    "ui-monospace"
+    zh:      '"PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", "Noto Sans SC", sans-serif'
   scale:      { xs: 0.75, sm: 0.875, base: 1, lg: 1.125, xl: 1.375, 2xl: 1.75, 3xl: 2.25, 4xl: 3, display: 4 }
   weight:     { normal: 400, medium: 500, bold: 600 }
   lineHeight: { tight: 1.3, snug: 1.45, normal: 1.65, loose: 1.85 }

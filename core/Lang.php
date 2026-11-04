@@ -108,6 +108,23 @@ final class Lang
         return self::$enabled;
     }
 
+    /**
+     * ใช้ภาษานี้กับ request นี้เท่านั้น — ไม่จำลง session
+     *
+     * ‼️ เว็บสาธารณะเลือกภาษาจาก URL (/ = th · /en/ · /zh/) ไม่ใช่จาก session หรือ Accept-Language
+     *    crawler และผู้ใช้ทุกคนต้องเห็นภาษาเดียวกันที่ URL เดียวกัน (App\Services\LocaleService)
+     */
+    public static function useForRequest(string $locale): bool
+    {
+        if (!self::allowed($locale)) {
+            return false;
+        }
+
+        self::$locale = $locale;
+
+        return true;
+    }
+
     public static function switchTo(string $locale): bool
     {
         if (!self::allowed($locale)) {

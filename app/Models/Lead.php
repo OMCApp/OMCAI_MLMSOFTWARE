@@ -17,6 +17,7 @@ final class Lead extends Model
     protected array $fillable = [
         'form_key', 'name', 'company', 'business_type', 'phone', 'email', 'line_id', 'has_system',
         'need', 'member_estimate', 'message', 'source_url', 'utm', 'ip', 'status', 'assigned_to', 'notes',
+        'locale', 'landing_page', 'referrer',
     ];
 
     public const STATUSES  = ['new', 'contacted', 'qualified', 'won', 'lost'];

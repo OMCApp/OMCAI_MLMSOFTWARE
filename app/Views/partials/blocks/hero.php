@@ -26,6 +26,40 @@ $heroBlock   = (array) ($block ?? []);
 $heroLines   = preg_split('/\R/', (string) ($heroBlock['title'] ?? '')) ?: [];
 $heroImage   = is_array($heroBlock['image'] ?? null) && (string) ($heroBlock['image']['src'] ?? '') !== ''
     ? $heroBlock['image'] : null;
+
+/* variant 'page' = ส่วนเปิดของหน้าใน (ไม่มี mockup) — breadcrumb อยู่ในนี้ เพราะ page-head ไม่วาดเมื่อมี hero
+   ‼️ $breadcrumbs มาจาก Controller (view data) — หน้าแรกไม่มี breadcrumb */
+if (($heroBlock['variant'] ?? '') === 'page'):
+    $heroUid = (string) ($heroBlock['_uid'] ?? 'hero');
+?>
+<section class="hero-page" aria-labelledby="<?= e($heroUid) ?>-title">
+    <div class="hero-page-glow" aria-hidden="true"></div>
+    <div class="container hero-page-inner">
+        <?php $breadcrumbItems = (array) ($breadcrumbs ?? []); include __DIR__ . '/../breadcrumb.php'; ?>
+        <?php if ((string) ($heroBlock['eyebrow'] ?? '') !== ''): ?>
+            <p class="eyebrow-pill"><?= e((string) $heroBlock['eyebrow']) ?></p>
+        <?php endif; ?>
+        <h1 class="hero-page-title" id="<?= e($heroUid) ?>-title">
+            <?php foreach ($heroLines as $heroLineIndex => $heroLine): ?>
+                <?php if ($heroLineIndex > 0): ?><br><?php endif; ?><?= e($heroLine) ?>
+            <?php endforeach; ?>
+        </h1>
+        <?php if ((string) ($heroBlock['lead'] ?? '') !== ''): ?>
+            <p class="hero-page-lead"><?= e((string) $heroBlock['lead']) ?></p>
+        <?php endif; ?>
+        <?php $checkListItems = (array) ($heroBlock['bullets'] ?? []); include __DIR__ . '/../check-list.php'; ?>
+        <?php if (!empty($heroBlock['actions'])): ?>
+            <div class="hero-site-actions">
+                <?php foreach ((array) $heroBlock['actions'] as $heroAction): ?>
+                    <?php $siteButton = (array) $heroAction; include __DIR__ . '/../site-button.php'; ?>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+    </div>
+</section>
+<?php
+    return;
+endif;
 ?>
 <section class="hero-site" aria-labelledby="<?= e($heroBlock['_uid'] ?? 'hero') ?>-title">
     <div class="hero-site-glow" aria-hidden="true" data-parallax="0.06"></div>

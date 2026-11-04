@@ -102,9 +102,17 @@ final class SeoService
             $image   = is_string($default) && $default !== '' ? ['path' => $default, 'alt' => '', 'width' => null, 'height' => null] : null;
         }
 
+        $locale     = (string) ($input['locale'] ?? LocaleService::current());
+        $alternates = [];
+
+        // hreflang — App\Services\PageService::hreflangSet() ส่ง path มา · ที่นี่แปลงเป็น URL เต็มบน host ของ production
+        foreach ((array) ($input['alternates'] ?? []) as $alternate) {
+            $alternates[] = ['hreflang' => (string) $alternate['hreflang'], 'href' => self::absolute(self::withSlash((string) $alternate['path']))];
+        }
+
         $type = (string) ($input['type'] ?? 'website');
         $og   = [
-            'og:locale'    => (string) SettingService::get('site.locale', 'th_TH'),
+            'og:locale'    => LocaleService::ogLocale($locale),
             'og:site_name' => SettingService::brand(),
             'og:type'      => $type,
             'og:title'     => $title,
@@ -155,7 +163,9 @@ final class SeoService
             'robots'      => $robots,
             'og'          => $og,
             'twitter'     => $twitter,
-            'feed'        => ['title' => SettingService::brand(), 'href' => self::absolute('/feed/')],
+            'alternates'  => $alternates,
+            'lang'        => LocaleService::htmlLang($locale),
+            'feed'        => ['title' => SettingService::brand(), 'href' => self::absolute(LocaleService::localize('/feed/', $locale))],
         ];
     }
 
