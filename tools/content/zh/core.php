@@ -59,7 +59,7 @@ return [
             [
                 'type'  => 'stats',
                 'items' => [
-                    ['value' => 2009, 'label' => '公司成立年份'],
+                    ['value' => 2009, 'format' => 'plain', 'label' => '公司成立年份'],
                     ['value' => '{years}', 'suffix' => ' 年', 'label' => '持续经营'],
                 ],
             ],
@@ -542,7 +542,7 @@ return [
             [
                 'type'  => 'stats',
                 'items' => [
-                    ['value' => 2009, 'label' => '公司注册年份'],
+                    ['value' => 2009, 'format' => 'plain', 'label' => '公司注册年份'],
                     ['value' => '{years}', 'suffix' => ' 年', 'label' => '持续经营'],
                 ],
             ],

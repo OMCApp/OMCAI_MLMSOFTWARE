@@ -59,7 +59,7 @@ return [
             [
                 'type'  => 'stats',
                 'items' => [
-                    ['value' => 2009, 'label' => "Year the company was founded"],
+                    ['value' => 2009, 'format' => 'plain', 'label' => "Year the company was founded"],
                     ['value' => '{years}', 'suffix' => ' years', 'label' => "Continuously in business"],
                 ],
             ],
@@ -542,7 +542,7 @@ return [
             [
                 'type'  => 'stats',
                 'items' => [
-                    ['value' => 2009, 'label' => "Year the company was registered"],
+                    ['value' => 2009, 'format' => 'plain', 'label' => "Year the company was registered"],
                     ['value' => '{years}', 'suffix' => ' years', 'label' => "Continuously in business"],
                 ],
             ],

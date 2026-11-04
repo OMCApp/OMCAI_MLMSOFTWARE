@@ -2646,9 +2646,10 @@
   @media (min-width: 768px) { .hero-page-inner { padding-block: var(--space-10) var(--space-16); } }
 
   /* ---------------------------------------------------------------- ตัวสลับภาษา (TH | EN | 中文) */
-  .lang-switch { display: inline-flex; align-items: center; gap: var(--space-2); }
+  .lang-switch { display: inline-flex; align-items: center; gap: var(--space-1); white-space: nowrap; }
   .lang-switch-icon { flex: none; color: var(--color-text-muted); }
-  .lang-switch-list { display: inline-flex; align-items: center; margin: 0; padding: 0; list-style: none; }
+  .lang-switch-list { display: inline-flex; flex-direction: row; flex-wrap: nowrap; align-items: center; gap: 0; margin: 0; padding: 0; list-style: none; }
+  .lang-switch-list li { display: inline-flex; align-items: center; margin: 0; }
   .lang-switch-list li + li::before { content: ""; display: inline-block; width: 1px; height: 1em; margin-inline: var(--space-1); background: var(--color-border-strong); vertical-align: middle; opacity: .5; }
   .lang-switch-link {
     display: inline-flex;
@@ -2670,6 +2671,11 @@
   .lang-switch-link:lang(zh) { font-family: var(--font-zh); }
 
   .lang-switch.is-drawer { display: none; }
+  .lang-switch.is-header .lang-switch-icon { display: none; }
+  /* header จอ 1200–1599: เมนู + ตัวสลับภาษา + เบอร์ + ปุ่ม Demo ไม่พอที่ — ซ่อนเม็ดเบอร์โทร (ยังอยู่ใน footer และหน้า Contact) ปุ่ม Demo ต้องเห็นเสมอ */
+  @media (min-width: 1200px) and (max-width: 1599.98px) {
+    .site-actions .site-phone { display: none; }
+  }
   @media (max-width: 1199.98px) {
     .lang-switch.is-header { display: none; }
     .lang-switch.is-drawer { display: inline-flex; justify-content: center; }

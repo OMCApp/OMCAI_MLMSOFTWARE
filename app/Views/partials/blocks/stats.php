@@ -9,6 +9,7 @@
  *     'suffix' => string      เช่น "+" "%" " ปี" — ไม่บังคับ
  *     'label'  => string      คำอธิบายใต้ตัวเลข
  *     'icon'   => string      ชื่อไอคอนจากชุดกลาง — ไม่บังคับ
+ *     'format' => 'plain'     แสดงตัวเลขตรงๆ ไม่ใส่จุลภาค ไม่วิ่ง (เช่น ปี 2552) — ไม่บังคับ
  *   ]>
  * ]
  *
@@ -39,7 +40,7 @@ if ($statsCells === []) {
                     <?php endif; ?>
                     <span class="stat-body">
                         <span class="stat-value">
-                            <?= e((string) ($statsCell['prefix'] ?? '')) ?><span data-count="<?= e((string) $statsCell['value']) ?>"><?= e(format_money((float) $statsCell['value'], fmod((float) $statsCell['value'], 1.0) === 0.0 ? 0 : 1)) ?></span><?= e((string) ($statsCell['suffix'] ?? '')) ?>
+                            <?= e((string) ($statsCell['prefix'] ?? '')) ?><?php if (($statsCell['format'] ?? '') === 'plain'): ?><span><?= e((string) $statsCell['value']) ?></span><?php else: ?><span data-count="<?= e((string) $statsCell['value']) ?>"><?= e(format_money((float) $statsCell['value'], fmod((float) $statsCell['value'], 1.0) === 0.0 ? 0 : 1)) ?></span><?php endif; ?><?= e((string) ($statsCell['suffix'] ?? '')) ?>
                         </span>
                         <span class="stat-label"><?= e((string) $statsCell['label']) ?></span>
                     </span>
