@@ -242,7 +242,10 @@ foreach ($urlMap as $path) {
     $preview = $http('GET', $enc($path) . '?preview=1', ['jar' => 'admin']);
     $anonPreview = $http('GET', $enc($path) . '?preview=1');
 
-    if ($status === 'draft') {
+    if ($status === 'draft' && $path === '/') {
+        // non-production: draft home falls back to the design-system preview (SiteController) — still noindex
+        $check($public['status'] === 200 && str_contains($header($public, 'x-robots-tag'), 'noindex'), 'draft / → preview home (non-production, noindex)', (string) $public['status']);
+    } elseif ($status === 'draft') {
         $check($public['status'] === 404, "draft {$path} → 404 for public", (string) $public['status']);
         $check($anonPreview['status'] === 404, "draft {$path}?preview=1 → 404 when not logged in", (string) $anonPreview['status']);
         $check($preview['status'] === 200, "draft {$path}?preview=1 → 200 for admin", (string) $preview['status']);
