@@ -18,6 +18,7 @@ $siteImage   = $sitePost['image'] ?? null;
     <p class="card small" role="status"><?= e(__('site.preview_notice')) ?></p>
 <?php endif; ?>
 
+<div class="container post-wrap">
 <article class="post">
     <p class="post-meta">
         <?php if ($sitePost['datetime'] !== ''): ?>
@@ -65,6 +66,7 @@ $siteImage   = $sitePost['image'] ?? null;
         <?php $newsItems = (array) $sitePost['related']; include __DIR__ . '/../../partials/news-item.php'; ?>
     </section>
 <?php endif; ?>
+</div>
 
 <?php
 $blocks = \App\Services\BlockService::prepare([[

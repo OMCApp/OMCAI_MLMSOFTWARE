@@ -105,3 +105,4 @@
 - **ดูหน้าบนเครื่อง:** built-in server ต้องใช้ `-t public` (`php -S 127.0.0.1:8000 -t public server.php`) — ไม่ใส่ `-t` ไฟล์ CSS/JS เป็น 404 (tests ไม่กระทบเพราะตรวจแค่ HTML) · headless Chrome `--window-size` แคบกว่า ~500px ไม่ได้ ใช้ DevTools emulation (`Emulation.setDeviceMetricsOverride`) สำหรับภาพ 375px
 - **CI** ตรวจ `/` `/en/` `/zh/` = 200 แล้ว (หน้าแรกเผยแพร่แล้ว · staging ไม่มีรหัส) + `/admin/login` = 200
 - **Lighthouse mobile (2026-11-04, built-in PHP server ไม่มี gzip, noindex เพราะ dev):** th perf 86 · a11y 100 · BP 100 · SEO 69 (หักเฉพาะ is-crawlable = noindex ของ dev/staging) — LCP 3.5 s · en 88/100/100/69 LCP 3.3 s · zh 91/100/100/69 LCP 2.9 s · CLS ≤ 0.022 · TBT ≤ 10 ms — วัดซ้ำบน Apache (gzip) ที่ Phase 6
+- **รูปชื่อไทยใน `wp-content/uploads` เปิดไม่ได้บน PHP built-in server (Windows)** — path ภาษาไทยแบบ percent-encode หาไฟล์ไม่เจอ (404) · Apache บน staging/production ปกติ · ไม่กระทบ tests (Phase 5 ตรวจไฟล์มีจริงบนดิสก์)
