@@ -35,6 +35,18 @@ final class NotFoundService
         }
     }
 
+    /** @return array{rows:array<int,array<string,mixed>>,total:int} เรียงตามจำนวนครั้งมากสุดก่อน (ค่าเริ่มต้น) */
+    public function search(string $term, string $sort, string $dir, int $page, int $perPage): array
+    {
+        return $this->log->adminSearch([], $term, $sort, $dir, $page, $perPage);
+    }
+
+    /** @return array<string, mixed>|null */
+    public function find(int $id): ?array
+    {
+        return $this->log->find($id);
+    }
+
     public function dismiss(int $id): bool
     {
         return $this->log->delete($id);

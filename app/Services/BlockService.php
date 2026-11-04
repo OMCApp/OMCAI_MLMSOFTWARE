@@ -18,7 +18,7 @@ final class BlockService
     public const TYPES = [
         'hero', 'trust_bar', 'stats', 'feature_grid', 'split', 'plan_cards', 'industry_grid',
         'dashboard_showcase', 'about_teaser', 'testimonials', 'faq', 'cta_band', 'rich_text',
-        'steps', 'comparison_table', 'lead_form',
+        'steps', 'comparison_table', 'lead_form', 'case_studies',
     ];
 
     /**
@@ -61,6 +61,23 @@ final class BlockService
                 $block['options']     = self::leadOptions();
                 $block['privacy_url'] = SiteService::privacyUrl();
                 $block['tracking']    = LeadTrackingService::formFields($_GET, isset($_SERVER['HTTP_REFERER']) ? (string) $_SERVER['HTTP_REFERER'] : null);
+            }
+
+            /* ‼️ ตัวเลข / โลโก้ลูกค้า / รีวิว มาจากแหล่งที่ "ยืนยันแล้ว" เท่านั้น (Phase 3 · BRIEF ห้ามของปลอม)
+                  บล็อกที่บันทึกจาก CMS ไม่มีรายการเหล่านี้ — เติมที่นี่ · ไม่มีของจริง = partial ไม่วาดอะไร */
+            // ‼️ ตัวเลขของบริษัทมาจาก Settings ที่ติ๊ก "ยืนยันแล้ว" เท่านั้น — รายการที่ฝังในบล็อก (เนื้อหาเก่า/config) ถูกทิ้งเสมอ
+            if ($block['type'] === 'stats') {
+                $block['items'] = SettingService::verifiedStats();
+            }
+            if ($block['type'] === 'trust_bar' && empty($block['logos'])) {
+                $block['logos'] = SettingService::verifiedLogos();
+            }
+            // ผลงานลูกค้า: เฉพาะที่เผยแพร่ + ได้รับอนุญาต (Phase 3) · ไม่มี = บล็อกไม่วาดอะไร (หน้ามีข้อความ "กำลังรวบรวม" อยู่แล้ว)
+            if ($block['type'] === 'case_studies') {
+                $block['items'] = (new SocialProofService())->caseStudyItems();
+            }
+            if ($block['type'] === 'testimonials' && empty($block['items'])) {
+                $block['items'] = (new SocialProofService())->testimonialItems();
             }
 
             $out[] = $block;

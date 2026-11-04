@@ -33,16 +33,28 @@ final class FaqService
         $errors = [];
 
         if (trim((string) ($data['question'] ?? '')) === '') {
-            $errors['question'] = 'faq.error_question';
+            $errors['question'] = 'cms.faq.error_question';
         }
         if (trim((string) ($data['answer'] ?? '')) === '') {
-            $errors['answer'] = 'faq.error_answer';
+            $errors['answer'] = 'cms.faq.error_answer';
         }
         if (!in_array((string) ($data['status'] ?? 'draft'), Faq::STATUSES, true)) {
-            $errors['status'] = 'faq.error_status';
+            $errors['status'] = 'cms.faq.error_status';
         }
 
         return $errors;
+    }
+
+    /** @return array{rows:array<int,array<string,mixed>>,total:int} */
+    public function search(array $filters, string $term, string $sort, string $dir, int $page, int $perPage): array
+    {
+        return $this->faqs->adminSearch($filters, $term, $sort, $dir, $page, $perPage);
+    }
+
+    /** @return array<string, mixed>|null */
+    public function find(int $id): ?array
+    {
+        return $this->faqs->find($id);
     }
 
     /** @param array<string, mixed> $data */

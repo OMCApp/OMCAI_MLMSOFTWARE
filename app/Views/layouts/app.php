@@ -128,6 +128,9 @@ $navStyle = config('ui.nav') === 'header' ? 'header' : 'sidebar';
 <?php include __DIR__ . '/../partials/support.php'; ?>
 
 <?php include __DIR__ . '/../partials/js-lang.php'; ?>
+<?php include __DIR__ . '/../partials/cms/js-lang.php'; ?>
 <script src="<?= e(asset('/assets/js/app.js')) ?>" defer></script>
+<?php /* ความสะดวกของฟอร์ม CMS (block builder, ตัวนับ SEO, ตัวแก้ HTML) — ฟอร์มใช้ได้ครบโดยไม่มีไฟล์นี้ */ ?>
+<script src="<?= e(asset('/assets/js/cms.js')) ?>" defer></script>
 </body>
 </html>

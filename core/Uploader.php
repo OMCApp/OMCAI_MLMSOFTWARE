@@ -146,7 +146,8 @@ final class Uploader
     /** แยกโฟลเดอร์ตามปี/เดือน ไม่กองไว้โฟลเดอร์เดียว */
     private function resolveDirectory(string $folder): ?string
     {
-        $folder = trim(Security::safeFilename($folder), '/');
+        // ‼️ safeFilename('') คืน 'file' — โฟลเดอร์ว่างต้องคงว่าง ไม่งั้นไฟล์ไปอยู่ใต้ /file/YYYY/MM
+        $folder = $folder === '' ? '' : trim(Security::safeFilename($folder), '/');
         $path   = rtrim($this->baseDir, '/')
             . ($folder === '' ? '' : '/' . $folder)
             . '/' . date('Y/m');

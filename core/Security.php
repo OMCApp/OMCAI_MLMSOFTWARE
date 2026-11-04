@@ -115,6 +115,54 @@ final class Security
     }
 
     /**
+     * ขยาย CSP ของหน้าสาธารณะที่มีรหัสติดตาม (GA4/GTM) — เพิ่มเฉพาะโดเมนของ Google ไม่เพิ่ม unsafe-inline
+     * ‼️ เรียกจาก PublicController เท่านั้น และเฉพาะเมื่อ TrackingService::active() — หลังบ้านไม่ได้รับผลนี้
+     */
+    public static function allowTracking(): void
+    {
+        if (headers_sent()) {
+            return;
+        }
+
+        header('Content-Security-Policy: ' . self::trackingPolicy(self::nonce(true)));
+    }
+
+    /** nonce ของ request นี้ — มีเฉพาะหน้าที่เปิด CSP ของรหัสติดตาม ('' = หน้านี้ไม่ใช้ nonce) */
+    private static string $nonce = '';
+
+    public static function nonce(bool $create = false): string
+    {
+        if ($create && self::$nonce === '') {
+            self::$nonce = rtrim(strtr(base64_encode(random_bytes(18)), '+/', '-_'), '=');
+        }
+
+        return self::$nonce;
+    }
+
+    /**
+     * CSP ของหน้าที่มีรหัสติดตาม
+     *
+     * ‼️ script-src ใช้ nonce + 'strict-dynamic' — สคริปต์ที่รันได้คือที่มี nonce ของ request นี้ (app.js, tracking.js)
+     *    และสคริปต์ที่สคริปต์เหล่านั้นสร้าง (gtag/gtm ของ Google) เท่านั้น · ไม่อนุญาตทั้งโดเมน googletagmanager.com
+     *    (ใครก็สร้าง container บนโดเมนนั้นได้) — host ระบุเป็นไฟล์ตรงตัว /gtag/js และ /gtm.js สำหรับเบราว์เซอร์ CSP2 ที่ไม่รู้จัก strict-dynamic
+     */
+    public static function trackingPolicy(string $nonce): string
+    {
+        $collect = 'https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com';
+
+        return "default-src 'self'; "
+            . "img-src 'self' data: blob: {$collect}; "
+            . "font-src 'self'; "
+            . "style-src 'self'; "
+            . "script-src 'nonce-{$nonce}' 'strict-dynamic' 'self' https://www.googletagmanager.com/gtag/js https://www.googletagmanager.com/gtm.js; "
+            . "connect-src 'self' {$collect}; "
+            . "object-src 'none'; "
+            . "form-action 'self'; "
+            . "frame-ancestors 'self'; "
+            . "base-uri 'self'";
+    }
+
+    /**
      * ทำให้ชื่อไฟล์ปลอดภัยสำหรับใช้เป็นชื่อบนดิสก์
      *
      * ‼️ ใช้กับ "ชื่อที่จะเก็บ" เท่านั้น — ชื่อเดิมของผู้ใช้ต้องเก็บไว้ในฐานข้อมูลเพื่อแสดงผล

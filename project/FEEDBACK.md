@@ -69,6 +69,12 @@
 **ข้อเสนอ:** เลือกอย่างเดียว — แก้ข้อ 6 ให้ตรงกับของจริง (คอมเมนต์ภาษาไทยได้ · ชื่อและ log เป็นอังกฤษ) หรือแปลโค้ดกลางเป็นอังกฤษ
 **ตรวจด้วยเครื่องได้ไหม:** ได้ — นับอักษรไทยในคอมเมนต์
 
+## 2026-11-04 · Phase 3
+- `core/Uploader.php` — `resolveDirectory('')` ได้โฟลเดอร์ `file/` เพราะ `Security::safeFilename('')` คืน `file` · แก้ในโปรเจคแล้ว ควรแก้ที่ repo มาตรฐาน
+- `public/index.php` ตอบ CSRF ล้มเหลวด้วย `http_response_code(419)` + `Location` → PHP เปลี่ยนเป็น 302 เอง รหัส 419 จึงไม่เคยถึง client · ชุดทดสอบต้องตรวจจาก log `csrf_failed` แทน
+- partial ที่ include ใน layout (เช่น `nav.php`) ตั้งตัวแปรชื่อ `$content` แล้วทับเนื้อหาของหน้าเงียบๆ (Array to string) — `partial-generic-var` ของ check.php ไม่จับชื่อ `$content`/`$leads` · ควรเพิ่ม `$content` ในรายการชื่อต้องห้าม
+- regex ใน Phase 2 ใช้ `#` เป็น delimiter แล้วมี `#` ใน character class (`'#^[^/\s?#]+$#u'`) → preg_match คืน false ทุกครั้ง (validate slug ไม่เคยทำงาน) · check.php ไม่จับ
+
 ## [ ] 2026-11-04 · ช่วง C Phase 4 — `partials/field.php` ไม่ล้าง `$fieldValue` ทำให้ฟอร์มคืนค่าที่กรอกไม่ได้
 
 **เกิดอะไร:** `$fieldValue = $fieldValue ?? old($fieldName)` แล้วไม่ล้างตอนจบ — ช่องแรกตั้งค่าเป็น `''` ช่องถัดไปทุกช่องจึงได้ `''` ไม่ใช่ old() ของตัวเอง · ฟอร์มที่ validate ไม่ผ่านคืนค่าได้แค่ช่องแรก (ขัดกฎ "คืนค่าที่กรอกไว้")
@@ -86,3 +92,5 @@
 **เกิดอะไร:** `public/index.php` ตอบ 419 + `Location: <path ของ POST>` → ฟอร์มสาธารณะ (`/lead/`) ได้ 404 แทนกลับหน้าเดิม · แก้ในโปรเจคให้กลับ referer (host เดียวกัน) ด้วย 303
 **ข้อเสนอ:** ใช้แบบเดียวกันในมาตรฐาน
 **ตรวจด้วยเครื่องได้ไหม:** ได้ — test ส่ง token ปลอมแล้วดู Location
+- `Core\Lang::lookup()` คืน null สำหรับค่าที่ไม่ใช่ string → `date.year_offset` (543) ไม่เคยถูกใช้ใน `formatDate()` · วันที่ภาษาไทยจึงไม่เป็น พ.ศ. ทั้งที่ lang ตั้งไว้ (พบตอนทำ `{founded_year}`)
+- ช่วงเลข migration ที่แบ่งให้แต่ละ phase ต้องคำนึงถึงลำดับการพึ่งพา — Migrator รันตามเลข งานที่ต้องต่อจาก migration ของ phase อื่นใช้เลขที่ต่ำกว่าไม่ได้

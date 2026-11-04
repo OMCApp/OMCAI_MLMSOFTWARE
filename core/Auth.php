@@ -25,9 +25,9 @@ final class Auth
      * ตั้งสูงไว้จงใจ: ต่ำเกินไปคนนอกจะใช้ล็อกเจ้าของบัญชีได้ง่าย
      */
     private const MAX_USER_ATTEMPTS = 50;
+    /** เพดานต่อ username สำหรับอุปกรณ์ที่มี cookie อุปกรณ์ถูกต้อง (Core\DeviceCookie) — สูงกว่า แต่ไม่ไม่จำกัด */
+    private const MAX_DEVICE_USER_ATTEMPTS = 200;
     private const LOCK_MINUTES    = 15;
-    /** เครื่อง/IP ที่เคยเข้าบัญชีนั้นสำเร็จภายในกี่วัน ถือว่าเป็นของเจ้าของ — ไม่โดนเพดานต่อ username */
-    private const KNOWN_IP_DAYS   = 90;
 
     /**
      * hash ตายตัวสำหรับเทียบตอนไม่เจอผู้ใช้ — cost เดียวกับ PASSWORD_DEFAULT (bcrypt 10)
@@ -73,7 +73,7 @@ final class Auth
         }
 
         $user = Database::selectOne(
-            'SELECT role, is_active FROM users WHERE id = :id AND deleted_at IS NULL LIMIT 1',
+            'SELECT role, is_active, must_change_password FROM users WHERE id = :id AND deleted_at IS NULL LIMIT 1',
             ['id' => $id]
         );
 
@@ -90,7 +90,15 @@ final class Auth
             Session::put('role', (string) $user['role']);
         }
 
+        Session::put('must_change_password', (int) ($user['must_change_password'] ?? 0) === 1);
+
         return true;
+    }
+
+    /** บัญชีนี้ต้องตั้งรหัสผ่านใหม่ก่อนใช้งาน (ค่าจาก refresh() ล่าสุด) */
+    public static function mustChangePassword(): bool
+    {
+        return Session::get('must_change_password') === true;
     }
 
     /** ใช้ซ่อนเมนูเท่านั้น — การกันจริงต้องอยู่ที่ Middleware */
@@ -115,7 +123,7 @@ final class Auth
         }
 
         $user = Database::selectOne(
-            'SELECT id, username, password_hash, role, locale, theme, is_active
+            'SELECT id, username, password_hash, role, locale, theme, is_active, device_token_version
              FROM users
              WHERE username = :username AND deleted_at IS NULL
              LIMIT 1',
@@ -143,14 +151,17 @@ final class Auth
 
         // รหัสผ่านที่ hash ด้วยอัลกอริทึมเก่า ให้อัปเกรดเงียบๆ ตอนเข้าสำเร็จ
         if (password_needs_rehash($hash, PASSWORD_DEFAULT)) {
+            // cookie อุปกรณ์ลงลายเซ็นทับ hash ปัจจุบัน — ต้องใช้ค่าใหม่ไม่งั้นใบที่ออกวันนี้ใช้ไม่ได้
+            $user['password_hash'] = password_hash($password, PASSWORD_DEFAULT);
             Database::run(
                 'UPDATE users SET password_hash = :hash WHERE id = :id',
-                ['hash' => password_hash($password, PASSWORD_DEFAULT), 'id' => $user['id']]
+                ['hash' => $user['password_hash'], 'id' => $user['id']]
             );
         }
 
         self::clearFailures($username, $ip);
         self::login($user);
+        DeviceCookie::issue($user);
 
         return ['ok' => true, 'reason' => '', 'minutes' => 0];
     }
@@ -247,18 +258,11 @@ final class Auth
             return false;
         }
 
-        $known = Database::selectOne(
-            "SELECT 1 AS known
-             FROM audit_logs a
-             JOIN users u ON u.id = a.user_id
-             WHERE u.username = :username AND u.deleted_at IS NULL
-               AND a.action = 'login' AND a.ip_address = :ip
-               AND a.created_at > (NOW() - INTERVAL :days DAY)
-             LIMIT 1",
-            ['username' => $username, 'ip' => self::ip(), 'days' => self::KNOWN_IP_DAYS]
-        );
-
-        if ($known !== null) {
+        /* ‼️ ข้อยกเว้นผูกกับ cookie อุปกรณ์ที่ลงลายเซ็น (Core\DeviceCookie) ไม่ใช่ IP
+              IP เดียวกันอาจเป็นคนทั้งออฟฟิศ — cookie ออกให้เฉพาะเครื่องที่เคยเข้าบัญชีนี้สำเร็จใน 90 วัน */
+        /* ‼️ ข้อยกเว้นไม่ไร้ขีดจำกัด — เกิน MAX_DEVICE_USER_ATTEMPTS ใน 15 นาที อุปกรณ์ที่รู้จักก็ถูกล็อกด้วย
+              (cookie ที่หลุดไปต้องไม่เปิดทางเดารหัสได้ไม่จำกัด) */
+        if ((int) ($row['by_user'] ?? 0) < self::MAX_DEVICE_USER_ATTEMPTS && DeviceCookie::validFor($username)) {
             return false;
         }
 

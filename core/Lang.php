@@ -169,6 +169,24 @@ final class Lang
         return $value;
     }
 
+    /** ปีศักราชที่บวกเพิ่มของภาษานั้น (พ.ศ. = 543) — date.year_offset เป็นตัวเลข lookup() จึงอ่านไม่ได้ */
+    public static function yearOffset(string $locale): int
+    {
+        if (preg_match('/^[a-z]{2}(-[a-z0-9]+)?$/i', $locale) !== 1) {
+            return 0;
+        }
+
+        // ภาษาของเนื้อหา (th/en/zh) ไม่จำเป็นต้องเป็นภาษาที่เปิดใน APP_LOCALES ของหลังบ้าน — อ่านไฟล์ตรง
+        $path = (self::$dir !== '' ? self::$dir : dirname(__DIR__) . '/lang') . '/' . $locale . '.php';
+        $data = self::$loaded[$locale] ?? [];
+
+        if (!isset($data['date']) && is_file($path)) {
+            $data = include $path;
+        }
+
+        return (int) ((is_array($data) ? $data : [])['date']['year_offset'] ?? 0);
+    }
+
     private static function lookup(string $key, string $locale): ?string
     {
         $data  = self::load($locale);

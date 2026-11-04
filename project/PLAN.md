@@ -103,12 +103,28 @@
 - [x] tests: `php tests/run.php` — router (ทุกแถวใน URL map + redirect map), sitemap, canonical, noindex ตาม env (397 ผ่าน)
 - [ ] เปลี่ยน `PublicController::LAYOUT` เป็น `site` เมื่อ Phase 1 ส่ง `layouts/site.php` (บรรทัดเดียว)
 
-## Phase 3 — CMS admin  ⬜
-### ครบลูป (ทุกตัว ดู/เพิ่ม/แก้/ลบ + สิทธิ์)
-- [ ] หน้า (block builder, draft/preview/publish, revisions) · บทความ · หมวด · media library (อัปโหลด → WebP + ขนาดย่อย, alt บังคับ) · เมนู · redirects (+ จาก 404 log) · FAQ · testimonials · case studies · leads (สถานะ, มอบหมาย, notes, export CSV) · settings (ติดต่อ, social, ตัวเลขที่ยืนยันแล้ว, tracking code) · users/roles (admin, editor, sales)
-- [ ] SEO panel ทุกหน้า/บทความ: title/description พร้อมตัวนับ + preview แบบ Google · slug · canonical · robots · OG image
-- [ ] backup/restore (ใช้ `scripts/backup.php`) · audit log viewer (มีแล้ว)
-- [ ] device cookie ลงลายเซ็นแทนข้อยกเว้นผูก IP (NOTES)
+## Phase 3 — CMS admin  🔨
+### ครบลูป (ทุกตัว ดู/เพิ่ม/แก้/ลบ + สิทธิ์ที่ middleware)
+- [x] บทบาท admin · editor · sales — `ContentRoleMiddleware` (admin+editor) · `LeadRoleMiddleware` (admin+sales) · `admin` · users: รายการ/เพิ่ม/แก้บทบาท/ปิดบัญชี/ตั้งรหัสใหม่/ลบ/ออกจากทุกอุปกรณ์ · เปลี่ยนรหัสของตัวเอง · **บังคับเปลี่ยนรหัสครั้งแรก** (admin ที่ seed ด้วยรหัสตั้งต้น + ผู้ใช้ที่แอดมินสร้าง/ตั้งรหัสให้)
+- [x] หน้า: รายการ (กรองสถานะ/ภาษา · ค้นหา · ธงขาดคำแปล) · block builder ทุกชนิดใน `BlockService::TYPES` (คีย์ตรงกับ partial 1:1 · แถวซ้ำได้ · รูปจากคลัง · ใช้ได้โดยไม่มี JS) · SEO panel · draft/publish + วันเผยแพร่ · ดูตัวอย่าง `?preview=1` · revisions (ดู/ย้อน) · soft delete · เปลี่ยน path ของหน้าที่เผยแพร่ → 301 อัตโนมัติ · คำแปล (สร้าง draft ใต้ /en/ /zh/ กลุ่มเดียวกัน)
+- [x] บทความ: SEO panel · slug ไทย · ตัวแก้ HTML (ไม่มี dependency ใหม่) + แทรกรูปจากคลัง · ผ่าน HtmlSanitizer ตอนบันทึก (ไม่มี H1) · เปลี่ยน slug/วันที่ → 301 · revisions · คำแปล
+- [x] หมวด: CRUD + SEO + คำแปล (ลบได้เฉพาะหมวดว่าง)
+- [x] คลังสื่อ: อัปโหลด jpg/png/gif/webp (ไม่รับ SVG · ตรวจ mime) · alt บังคับ · WebP + 480/768/1200/1600 ด้วย GD ใน `public/uploads/YYYY/MM/` · width/height/sizes · ค้นหา · แก้ alt/title · ลบไม่ได้ถ้าถูกใช้ (แสดงว่าใช้ที่ไหน) · ลงทะเบียนรูปเดิมใน `/wp-content/uploads/` โดยไม่ย้ายไฟล์
+- [x] เมนู header/footer แยกภาษา · ซ้อน 2 ชั้น · เลื่อนขึ้น/ลง · คัดลอกเมนูตั้งต้นจาก config · `SiteService` อ่านเมนู/ข้อมูลบริษัทจาก DB แล้วตกไป config (view-model รูปเดิม + `contact.emails`/`phones`)
+- [x] redirects: CRUD · 301/302/410 · exact/prefix · เปิด/ปิด · hits · ห้ามวน · ห้าม chain (เสนอปลายทางสุดท้าย) · 404 log เรียงตาม hits + สร้าง redirect คลิกเดียว + ซ่อน
+- [x] FAQ (กลุ่ม/ลำดับ/สถานะ/ภาษา) · testimonials · case studies — **เผยแพร่ต้องติ๊ก "ได้รับอนุญาตเผยแพร่จากลูกค้าแล้ว"** บันทึกใคร/เมื่อไหร่ · เว็บแสดงเฉพาะที่ยืนยันแล้ว (query)
+- [x] leads (admin+sales): กรองสถานะ/ฟอร์ม/วันที่/ภาษา/landing page/referrer/UTM · รายละเอียดทุกช่อง · สถานะ · มอบหมาย · โน้ตเพิ่มอย่างเดียว · CSV UTF-8+BOM (กันสูตร Excel) · widget lead ใหม่ที่ dashboard
+- [x] settings (admin): บริษัท (ก่อตั้ง 2009-04-03 · 3 อีเมล · เบอร์ · LINE · Facebook · ที่อยู่/แนะนำแยกภาษา) · ตัวเลขพร้อม "ยืนยันแล้ว" · โลโก้ลูกค้าที่ได้รับอนุญาต · อีเมลรับ lead · GA4/GTM (ส่งออกเฉพาะ production) · OG เริ่มต้น
+- [x] dashboard `/admin`: หน้า/บทความ draft vs published · lead ใหม่ · 404 ใน 7 วัน · redirect hits · รูปขาด alt · ทางลัด
+### ขั้นตอน
+- [x] SEO panel ทุกหน้า/บทความ/หมวด: title/description + ตัวนับ + preview แบบ Google · canonical · robots · OG image (ต่อแถว = ต่อภาษา)
+- [x] backup: สร้าง/ดาวน์โหลด/ลบที่ `/admin/backups` (audit) · **restore = CLI เท่านั้น** (DEPLOY.md + คู่มือ)
+- [x] device cookie ลงลายเซ็น (HMAC `APP_KEY` + ความลับต่อผู้ใช้: password_hash · role · is_active · device_token_version) แทนข้อยกเว้นผูก IP · อายุ ≤ 90 วันตรวจที่ server · HttpOnly · SameSite=Strict · Secure ตาม `config('https')` · ข้อยกเว้นมีเพดาน 200 ครั้ง/15 นาที · **secret ใหม่ `APP_KEY`**
+- [x] คู่มือ th + en 10 บทความ (`cms-*`) พร้อมรูป · ข้อความ UI ผ่าน `__()` th/en (zh อยู่ที่ `tools/i18n/zh-cms.php` รอรวมกับ `lang/zh.php` ของ Phase 4)
+- [x] tests: `tests/cms.php` (ต่อจาก `tests/run.php`) — ทุก route ใต้ /admin จากตาราง route (ต้องล็อกอิน · เขียนต้องมี CSRF) · สิทธิ์ 3 บทบาททุกโมดูล · บังคับเปลี่ยนรหัส · ล็อก pair/IP/user cap · device cookie · session fixation/revoke · CRUD + audit ทุกโมดูล — **ชุดรวมกับ Phase 4: 4972+ ผ่าน**
+- [x] ดูหน้าจริงด้วย headless Chrome: desktop + 375px + โหมดมืด (`project/design/built/cms-*.png`)
+- [x] merge กับ Phase 4: ภาษาอ่านจาก config/locales.php (LocaleService) · unique key รวม locale (040) · ตัวเลขจาก settings ที่ยืนยันแล้วเท่านั้น (041) · บล็อก case_studies ใน /portfolio/ 3 ภาษา (042) · CSP nonce + strict-dynamic สำหรับรหัสติดตาม
+- [ ] ตรวจรวมช่วง D (โหมดเร็ว: ข้อ 4/6/8 ของนิยามเสร็จ — ทำแล้วด้วยชุดทดสอบ แต่รอตรวจรวม)
 
 ## Phase 4 — หน้า public + copy + lead + 3 ภาษา  🔨
 ### ครบลูป

@@ -11,10 +11,18 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Core\Database;
+use App\Models\Concerns\AdminSearch;
 use Core\Model;
 
 final class Post extends Model
 {
+    use AdminSearch;
+
+    protected array $searchColumns = ['title', 'slug', 'excerpt'];
+    protected array $filterColumns = ['status', 'locale', 'category_id'];
+
+    public const SORTABLE = ['id', 'title', 'status', 'published_at', 'updated_at'];
+
     protected string $table = 'posts';
 
     protected array $fillable = [

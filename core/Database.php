@@ -148,6 +148,34 @@ final class Database
         }
     }
 
+    /** @var array<string, bool> */
+    private static array $columns = [];
+
+    /**
+     * ตารางนี้มีคอลัมน์นี้ไหม — ใช้กับคอลัมน์ที่ phase อื่นเพิ่มเข้ามาทีหลัง (เช่น locale ของ pages)
+     * ‼️ ชื่อตาราง/คอลัมน์ผูกเป็น placeholder ใน information_schema ได้ จึงไม่ต้องต่อ string
+     */
+    public static function hasColumn(string $table, string $column): bool
+    {
+        $key = $table . '.' . $column;
+
+        if (!array_key_exists($key, self::$columns)) {
+            self::$columns[$key] = self::selectOne(
+                'SELECT 1 AS present FROM information_schema.COLUMNS
+                 WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :t AND COLUMN_NAME = :c LIMIT 1',
+                ['t' => $table, 'c' => $column]
+            ) !== null;
+        }
+
+        return self::$columns[$key];
+    }
+
+    /** ล้างผลที่จำไว้ของ hasColumn() — ใช้ในชุดทดสอบหลังเปลี่ยนโครงตาราง */
+    public static function forgetColumns(): void
+    {
+        self::$columns = [];
+    }
+
     /** ใช้ตอนทดสอบเท่านั้น */
     public static function swap(?PDO $pdo): void
     {

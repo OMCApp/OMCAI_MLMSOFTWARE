@@ -8,10 +8,18 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Core\Database;
+use App\Models\Concerns\AdminSearch;
 use Core\Model;
 
 final class Redirect extends Model
 {
+    use AdminSearch;
+
+    protected array $searchColumns = ['from_path', 'to_path', 'note'];
+    protected array $filterColumns = ['code', 'match_type', 'enabled'];
+
+    public const SORTABLE = ['id', 'from_path', 'hits', 'last_hit_at', 'code', 'updated_at'];
+
     protected string $table = 'redirects';
 
     protected array $fillable = ['from_path', 'match_type', 'to_path', 'code', 'note', 'enabled'];
@@ -43,6 +51,29 @@ final class Redirect extends Model
              WHERE match_type = 'prefix' AND enabled = 1 AND deleted_at IS NULL
              ORDER BY CHAR_LENGTH(from_path) DESC, id"
         );
+    }
+
+    /** กฎที่ต้นทางนี้ (เปิดหรือปิดก็ได้) — from_path ไม่ซ้ำกันในแถวที่ยังไม่ถูกลบ */
+    public function findByFrom(string $path): ?array
+    {
+        return Database::selectOne(
+            'SELECT * FROM redirects WHERE from_path = :path AND deleted_at IS NULL LIMIT 1',
+            ['path' => $path]
+        );
+    }
+
+    /** @return array<int, array<string, mixed>> กฎที่เปิดอยู่และชี้มาที่ path นี้ */
+    public function pointingTo(string $path): array
+    {
+        return Database::select(
+            'SELECT * FROM redirects WHERE to_path = :path AND enabled = 1 AND deleted_at IS NULL',
+            ['path' => $path]
+        );
+    }
+
+    public function totalHits(): int
+    {
+        return (int) (Database::selectOne('SELECT COALESCE(SUM(hits), 0) AS n FROM redirects WHERE deleted_at IS NULL')['n'] ?? 0);
     }
 
     /** @return array<int, string> path ต้นทางของกฎแบบตรงตัวที่เปิดอยู่ — sitemap ต้องไม่มี URL เหล่านี้ */

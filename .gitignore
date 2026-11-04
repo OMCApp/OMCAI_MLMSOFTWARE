@@ -10,6 +10,10 @@ vendor/
 storage/logs/*
 storage/uploads/*
 storage/backups/*
+# CMS uploads (public by design — project/NOTES.md Phase 3): keep the folder rules, not the files
+public/uploads/*
+!public/uploads/.htaccess
+!public/uploads/.gitkeep
 !storage/*/.gitkeep
 
 # Local / OS

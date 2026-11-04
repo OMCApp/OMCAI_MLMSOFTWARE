@@ -49,6 +49,8 @@ $siteHtmlLang    = (string) ($site['html_lang'] ?? 'th');
     <?php endforeach; ?>
     <?php include __DIR__ . '/../partials/favicon.php'; ?>
     <link rel="stylesheet" href="<?= e(asset('/assets/css/app.css')) ?>">
+    <?php /* GA4/GTM จาก CMS → ตั้งค่าเว็บ — วาดเฉพาะ production (Phase 3) */ ?>
+    <?php if (empty($sitePreview)) { include __DIR__ . '/../partials/tracking.php'; } ?>
 </head>
 <body class="site-body">
 
@@ -71,6 +73,6 @@ $siteHtmlLang    = (string) ($site['html_lang'] ?? 'th');
 
 <?php include __DIR__ . '/../partials/flash.php'; ?>
 <?php include __DIR__ . '/../partials/js-lang.php'; ?>
-<script src="<?= e(asset('/assets/js/app.js')) ?>" defer></script>
+<script src="<?= e(asset('/assets/js/app.js')) ?>" defer<?php if (csp_nonce() !== ''): ?> nonce="<?= e(csp_nonce()) ?>"<?php endif; ?>></script>
 </body>
 </html>

@@ -69,6 +69,338 @@ final class SettingService
         self::flush();
     }
 
+    // ------------------------------------------------------------- CMS (Phase 3)
+
+    /** กลุ่มค่าตั้งที่หน้า Settings แก้ได้ — คีย์ในตาราง settings */
+    public const GROUPS = ['company', 'stats', 'trust_logos', 'notifications', 'tracking', 'site'];
+
+    /** @return array<string, mixed> ค่าทั้งกลุ่ม (ว่าง = ยังไม่ตั้ง) */
+    public static function group(string $key): array
+    {
+        $value = self::all()[$key] ?? null;
+
+        return is_array($value) ? $value : [];
+    }
+
+    /**
+     * ตัวเลขของบริษัทที่ "ยืนยันแล้ว" เท่านั้น — บล็อก stats แสดงชุดนี้ชุดเดียว
+     *
+     * @return list<array{value:float|int, prefix:string, suffix:string, label:string, icon:string}>
+     */
+    public static function verifiedStats(?string $locale = null): array
+    {
+        $locale = $locale ?? LocaleService::current();
+        $out    = [];
+
+        foreach ((array) (self::group('stats')['items'] ?? []) as $item) {
+            if (!is_array($item) || empty($item['verified'])) {
+                continue;
+            }
+
+            $value = self::statValue($item['value'] ?? null, $locale);
+            $label = self::localized($item, 'labels', 'label', $locale);
+
+            if ($value === null || $label === '') {
+                continue;
+            }
+
+            $cell = [
+                'value'  => $value,
+                'prefix' => (string) ($item['prefix'] ?? ''),
+                'suffix' => self::localized($item, 'suffixes', 'suffix', $locale),
+                'label'  => $label,
+                'icon'   => (string) ($item['icon'] ?? ''),
+            ];
+
+            if (($item['format'] ?? '') === 'plain') {
+                $cell['format'] = 'plain';
+            }
+
+            $out[] = $cell;
+        }
+
+        return $out;
+    }
+
+    /** token ที่ตัวเลขใช้ได้ — คำนวณจากวันจดทะเบียน (ยืนยันแล้ว) ไม่ใช่ตัวเลขตายตัว */
+    public const STAT_TOKENS = ['{years}', '{founded_year}'];
+
+    /**
+     * ตัวเลขจริงของรายการ: ตัวเลข · {years} = ปีที่ดำเนินธุรกิจ · {founded_year} = ปีที่ก่อตั้งตามปฏิทินของภาษาที่แสดง (พ.ศ. สำหรับไทย)
+     */
+    private static function statValue(mixed $value, string $locale): int|float|null
+    {
+        if (is_numeric($value)) {
+            return $value + 0;
+        }
+        if ($value === '{years}') {
+            return BlockService::yearsInBusiness();
+        }
+        if ($value === '{founded_year}') {
+            return (int) substr(SiteService::founded(), 0, 4) + \Core\Lang::yearOffset($locale);
+        }
+
+        return null;
+    }
+
+    /** ข้อความของภาษานั้น — ไม่มีให้ใช้ภาษาหลัก แล้วค่าเดี่ยวแบบเดิม */
+    private static function localized(array $item, string $mapKey, string $single, string $locale): string
+    {
+        $map = (array) ($item[$mapKey] ?? []);
+
+        foreach ([$locale, LocaleService::DEFAULT] as $code) {
+            if (is_string($map[$code] ?? null) && trim($map[$code]) !== '') {
+                // ไม่ trim ค่าที่คืน — หน่วยต่อท้ายมักขึ้นต้นด้วยช่องว่าง (" ปี")
+                return $map[$code];
+            }
+        }
+
+        return (string) ($item[$single] ?? '');
+    }
+
+    /**
+     * โลโก้ลูกค้าที่ "ยืนยันแล้ว" (ได้รับอนุญาต) เท่านั้น — บล็อก trust_bar แสดงชุดนี้ชุดเดียว
+     *
+     * @return list<array{src:string, alt:string, width:?int, height:?int, url?:string}>
+     */
+    public static function verifiedLogos(): array
+    {
+        $items = array_filter(
+            (array) (self::group('trust_logos')['items'] ?? []),
+            static fn ($item): bool => is_array($item) && !empty($item['verified']) && (int) ($item['media_id'] ?? 0) > 0
+        );
+
+        if ($items === []) {
+            return [];
+        }
+
+        $media = (new \App\Models\Media())->findMany(array_map(static fn (array $i): int => (int) $i['media_id'], $items));
+        $out   = [];
+
+        foreach ($items as $item) {
+            $row = $media[(int) $item['media_id']] ?? null;
+
+            if ($row === null) {
+                continue;
+            }
+
+            $logo = MediaService::imageData($row);
+
+            if ((string) ($item['url'] ?? '') !== '') {
+                $logo['url'] = (string) $item['url'];
+            }
+
+            $out[] = $logo;
+        }
+
+        return $out;
+    }
+
+    /** คีย์ของ settings ที่อ้าง media id นี้ (ค่า media_id ใดก็ได้ในโครง JSON) @return array<int, string> */
+    public static function keysReferencingMedia(int $id): array
+    {
+        $found = [];
+        $walk  = static function (mixed $value) use (&$walk, $id): bool {
+            if (!is_array($value)) {
+                return false;
+            }
+
+            foreach ($value as $key => $child) {
+                if (is_string($key) && str_ends_with($key, 'media_id') && (int) $child === $id) {
+                    return true;
+                }
+                if ($walk($child)) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+
+        foreach (self::all() as $key => $value) {
+            if ($walk($value)) {
+                $found[] = (string) $key;
+            }
+        }
+
+        return $found;
+    }
+
+    /**
+     * ตรวจและทำความสะอาดค่าจากฟอร์ม Settings
+     *
+     * @param  array<string, mixed> $input
+     * @return array{values: array<string, array<string, mixed>>, errors: array<string, string>}
+     */
+    public function fromInput(array $input): array
+    {
+        $errors = [];
+        $text   = static fn (mixed $v): string => trim(str_replace("\r\n", "\n", is_string($v) ? $v : ''));
+        $lines  = static fn (mixed $v): array => array_values(array_filter(array_map('trim', explode("\n", str_replace("\r\n", "\n", is_string($v) ? $v : ''))), 'strlen'));
+
+        $company = (array) ($input['company'] ?? []);
+        $emails  = $lines($company['emails'] ?? '');
+
+        foreach ($emails as $email) {
+            if (filter_var($email, FILTER_VALIDATE_EMAIL) === false) {
+                $errors['company[emails]'] = 'cms.settings.error_email';
+            }
+        }
+
+        $founded = $text($company['founded'] ?? '');
+
+        if ($founded !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $founded) !== 1) {
+            $errors['company[founded]'] = 'cms.settings.error_date';
+        }
+
+        $localized = static function (mixed $v) use ($text): array {
+            $out = [];
+
+            foreach (TranslationService::locales() as $locale) {
+                $out[$locale] = $text(is_array($v) ? ($v[$locale] ?? '') : '');
+            }
+
+            return $out;
+        };
+
+        $values = [];
+        $values['company'] = [
+            'name'        => $text($company['name'] ?? ''),
+            'legal_name'  => $text($company['legal_name'] ?? ''),
+            'founded'     => $founded,
+            'phones'      => $lines($company['phones'] ?? ''),
+            'emails'      => $emails,
+            'line_id'     => $text($company['line_id'] ?? ''),
+            'line_url'    => $text($company['line_url'] ?? ''),
+            'facebook'    => $text($company['facebook'] ?? ''),
+            'address'     => $localized($company['address'] ?? []),
+            'description' => $localized($company['description'] ?? []),
+        ];
+
+        foreach (['line_url', 'facebook'] as $field) {
+            if ($values['company'][$field] !== '' && preg_match('#^https://#i', $values['company'][$field]) !== 1) {
+                $errors['company[' . $field . ']'] = 'cms.settings.error_url';
+            }
+        }
+
+        $stats = [];
+
+        foreach ((array) ($input['stats'] ?? []) as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+
+            $labels   = $localized($row['labels'] ?? []);
+            // หน่วยต่อท้ายเก็บช่องว่างนำหน้าไว้ (" ปี") — ตัดแค่บรรทัดใหม่
+            $suffixes = [];
+
+            foreach (TranslationService::locales() as $code) {
+                $raw              = $row['suffixes'][$code] ?? '';
+                $suffixes[$code] = mb_substr(str_replace(["\r", "\n"], '', is_string($raw) ? $raw : ''), 0, 20);
+            }
+
+            if (implode('', $labels) === '') {
+                continue; // แถวว่างที่เผื่อไว้
+            }
+
+            $value = $text($row['value'] ?? '');
+
+            if (!is_numeric($value) && !in_array($value, self::STAT_TOKENS, true)) {
+                $errors['stats'] = 'cms.settings.error_stat_value';
+                continue;
+            }
+
+            $stats[] = [
+                'value'    => is_numeric($value) ? $value + 0 : $value,
+                'format'   => !empty($row['plain']) ? 'plain' : '',
+                'prefix'   => $text($row['prefix'] ?? ''),
+                'labels'   => $labels,
+                'suffixes' => $suffixes,
+                'icon'     => $text($row['icon'] ?? ''),
+                'verified' => !empty($row['verified']),
+            ];
+        }
+
+        $values['stats'] = ['items' => $stats];
+
+        $logos = [];
+
+        foreach ((array) ($input['trust_logos'] ?? []) as $row) {
+            if (!is_array($row) || (int) ($row['media_id'] ?? 0) <= 0) {
+                continue;
+            }
+
+            $logos[] = ['media_id' => (int) $row['media_id'], 'url' => $text($row['url'] ?? ''), 'verified' => !empty($row['verified'])];
+        }
+
+        $values['trust_logos'] = ['items' => $logos];
+
+        $leadEmail = $text($input['notifications']['lead_email'] ?? '');
+
+        if ($leadEmail !== '' && filter_var($leadEmail, FILTER_VALIDATE_EMAIL) === false) {
+            $errors['notifications[lead_email]'] = 'cms.settings.error_email';
+        }
+
+        $values['notifications'] = ['lead_email' => $leadEmail];
+
+        $ga4 = strtoupper($text($input['tracking']['ga4_id'] ?? ''));
+        $gtm = strtoupper($text($input['tracking']['gtm_id'] ?? ''));
+
+        if ($ga4 !== '' && preg_match('/^G-[A-Z0-9]{4,20}$/', $ga4) !== 1) {
+            $errors['tracking[ga4_id]'] = 'cms.settings.error_ga4';
+        }
+        if ($gtm !== '' && preg_match('/^GTM-[A-Z0-9]{4,20}$/', $gtm) !== 1) {
+            $errors['tracking[gtm_id]'] = 'cms.settings.error_gtm';
+        }
+
+        $values['tracking'] = ['ga4_id' => $ga4, 'gtm_id' => $gtm];
+
+        // site: คงค่าเดิมที่หน้านี้ไม่ได้แก้ (brand/locale) — เปลี่ยนแค่รูป OG เริ่มต้น
+        $site    = self::group('site');
+        $ogId    = (int) ($input['site']['default_og_image_media_id'] ?? 0);
+        $ogMedia = $ogId > 0 ? (new \App\Models\Media())->find($ogId) : null;
+
+        $site['default_og_image_media_id'] = $ogMedia !== null ? $ogId : null;
+        $site['default_og_image']          = $ogMedia !== null ? (string) $ogMedia['path'] : null;
+
+        if ($text($input['site']['brand'] ?? '') !== '') {
+            $site['brand'] = $text($input['site']['brand']);
+        }
+
+        $values['site'] = $site;
+
+        return ['values' => $values, 'errors' => $errors];
+    }
+
+    /**
+     * บันทึกทุกกลุ่ม + ปรับ organization (schema.org) ให้ตรงกับข้อมูลบริษัท
+     *
+     * @param array<string, array<string, mixed>> $values
+     */
+    public function saveAll(array $values): void
+    {
+        \Core\Database::transaction(function () use ($values): void {
+            foreach ($values as $key => $value) {
+                if (in_array($key, self::GROUPS, true) && $value !== self::group($key)) {
+                    $this->save($key, $value);
+                }
+            }
+
+            $company      = $values['company'] ?? [];
+            $organization = self::group('organization');
+            $next         = array_merge($organization, [
+                'legal_name' => ($company['legal_name'] ?? '') !== '' ? $company['legal_name'] : ($organization['legal_name'] ?? null),
+                'telephone'  => $company['phones'][0] ?? ($organization['telephone'] ?? null),
+                'email'      => $company['emails'][0] ?? ($organization['email'] ?? null),
+                'same_as'    => array_values(array_filter([$company['facebook'] ?? '', $company['line_url'] ?? ''], 'strlen')),
+            ]);
+
+            if ($next !== $organization) {
+                $this->save('organization', $next);
+            }
+        });
+    }
+
     /** @return array<string, mixed> */
     private static function all(): array
     {
