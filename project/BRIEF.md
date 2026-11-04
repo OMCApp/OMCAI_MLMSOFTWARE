@@ -47,3 +47,7 @@ modern · clean · premium · corporate · trustworthy · technology-driven · �
 - เก็บบทความเดิม 36 เรื่อง (ข่าวขายตรง 27 + ประกัน 9)ไว้ก่อน ห้ามลบหรือ redirect จนกว่าดู SEO performance/backlinks
 - ห้ามสลับ production จนผ่าน SEO Migration Gate + Rollback Readiness
 - Deploy: ผู้ใช้เลือก FTP ธรรมดา (ไม่ใช่ FTPS)
+
+## เพิ่มเติม 2026-11-04
+- **เว็บ 3 ภาษา: ไทย · อังกฤษ · จีน** (ผู้ใช้สั่ง)
+- staging ไม่ต้องมี login (ผู้ใช้สั่ง — ยังคง noindex)
