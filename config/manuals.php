@@ -62,6 +62,48 @@ return [
         'routes' => ['/admin/audit-logs'],
     ],
 
+    // ---- CMS (Phase 3) — roles ตรงกับ middleware ของกลุ่ม route
+    'cms-pages' => [
+        'group' => 'content', 'icon' => 'file', 'order' => 10, 'roles' => ['admin', 'editor'],
+        'routes' => ['/admin/pages', '/admin/pages/create'],
+    ],
+    'cms-posts' => [
+        'group' => 'content', 'icon' => 'book', 'order' => 20, 'roles' => ['admin', 'editor'],
+        'routes' => ['/admin/posts', '/admin/posts/create', '/admin/categories', '/admin/categories/create'],
+    ],
+    'cms-media' => [
+        'group' => 'content', 'icon' => 'image', 'order' => 30, 'roles' => ['admin', 'editor'],
+        'routes' => ['/admin/media'],
+    ],
+    'cms-menus' => [
+        'group' => 'content', 'icon' => 'menu', 'order' => 40, 'roles' => ['admin', 'editor'],
+        'routes' => ['/admin/menus'],
+    ],
+    'cms-redirects' => [
+        'group' => 'content', 'icon' => 'link', 'order' => 50, 'roles' => ['admin', 'editor'],
+        'routes' => ['/admin/redirects', '/admin/redirects/create', '/admin/not-found'],
+    ],
+    'cms-reviews' => [
+        'group' => 'content', 'icon' => 'quote', 'order' => 60, 'roles' => ['admin', 'editor'],
+        'routes' => ['/admin/faqs', '/admin/faqs/create', '/admin/testimonials', '/admin/testimonials/create', '/admin/case-studies', '/admin/case-studies/create'],
+    ],
+    'cms-leads' => [
+        'group' => 'sales', 'icon' => 'inbox', 'order' => 10, 'roles' => ['admin', 'sales'],
+        'routes' => ['/admin/leads'],
+    ],
+    'cms-users' => [
+        'group' => 'admin', 'icon' => 'users', 'order' => 30, 'roles' => [],
+        'routes' => ['/admin/users', '/admin/users/create', '/admin/account/password'],
+    ],
+    'cms-settings' => [
+        'group' => 'admin', 'icon' => 'settings', 'order' => 40, 'roles' => ['admin'],
+        'routes' => ['/admin/settings'],
+    ],
+    'cms-backups' => [
+        'group' => 'admin', 'icon' => 'download', 'order' => 50, 'roles' => ['admin'],
+        'routes' => ['/admin/backups'],
+    ],
+
     'handling-support-requests' => [
         'group'  => 'admin',
         'icon'   => 'inbox',

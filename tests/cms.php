@@ -676,6 +676,8 @@ preg_match('#/admin/case-studies/(\d+)$#', $location($cs), $m);
 $csId = (int) ($m[1] ?? 0);
 $p3['case_studies'][] = $csId;
 $check($csId > 0 && !str_contains((string) $pdo->query('SELECT content FROM case_studies WHERE id = ' . $csId)->fetchColumn(), '<script'), 'case study created (content sanitized)');
+$csDup = $send('POST', '/admin/case-studies', 'p3editor', ['title' => 'ZZ dup', 'slug' => 'zz-test-p3-cs-' . $stamp, 'status' => 'draft']);
+$check(!preg_match('#/admin/case-studies/\d+$#', $location($csDup)), 'duplicate case study slug rejected (no DB error)', $csDup['status'] . ' ' . $location($csDup));
 $csPub = $send('PATCH', '/admin/case-studies/' . $csId, 'p3editor', ['title' => 'ZZ ผลงาน', 'slug' => 'zz-test-p3-cs-' . $stamp, 'status' => 'published']);
 $check($pdo->query('SELECT status FROM case_studies WHERE id = ' . $csId)->fetchColumn() === 'draft', 'case study cannot be published without permission');
 $send('DELETE', '/admin/case-studies/' . $csId, 'p3editor');
@@ -788,6 +790,13 @@ foreach (array_merge($contentPaths, $leadPaths === [] ? [] : ['/admin/leads'], $
     $res = $http('GET', $path, ['jar' => 'p3admin']);
     $check($res['status'] === 200 && preg_match('/\bcms\.[a-z_]+\.[a-z_0-9]+\b/', $res['body']) !== 1, "{$path} renders without raw cms.* keys", (string) $res['status']);
 }
+
+foreach (['cms-pages', 'cms-posts', 'cms-media', 'cms-menus', 'cms-redirects', 'cms-reviews', 'cms-leads', 'cms-users', 'cms-settings', 'cms-backups'] as $slug) {
+    $res = $http('GET', '/admin/manual/' . $slug, ['jar' => 'p3admin']);
+    $check($res['status'] === 200 && str_contains($res['body'], '/assets/manuals/cms/'), "manual {$slug} renders for admin");
+}
+$check($http('GET', '/admin/manual/cms-leads', ['jar' => 'p3sales'])['status'] === 200, 'sales can read the leads manual');
+$check($http('GET', '/admin/manual/cms-settings', ['jar' => 'p3sales'])['status'] !== 200, 'sales cannot read the settings manual');
 
 $p3Cleanup();
 Database::forgetColumns();

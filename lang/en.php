@@ -241,6 +241,9 @@ return [
         'action_setting_change'    => 'Setting changed',
         'action_export'            => 'Exported data',
         'action_view_sensitive'    => 'Viewed sensitive data',
+        'action_backup_create'     => 'Created a backup',
+        'action_backup_download'   => 'Downloaded a backup',
+        'action_backup_delete'     => 'Deleted a backup',
     ],
 
     'ui' => [
@@ -295,6 +298,8 @@ return [
         'group' => [
             'basics' => 'Getting started',
             'admin'  => 'For administrators',
+            'content' => 'Website content',
+            'sales'   => 'Sales',
         ],
     ],
 
@@ -523,7 +528,7 @@ return [
             'add' => 'Add case study', 'edit' => 'Edit case study', 'client' => 'Client', 'industry' => 'Industry',
         ],
         'case_study' => [
-            'error_slug' => 'Please enter a slug (no /, spaces, ? or #)', 'error_title' => 'Please enter a title', 'error_status' => 'Invalid status',
+            'error_slug' => 'Please enter a slug (no /, spaces, ? or #)', 'error_slug_taken' => 'Another case study already uses this slug', 'error_title' => 'Please enter a title', 'error_status' => 'Invalid status',
         ],
         'social' => [
             'publish_section' => 'Publishing', 'consent' => 'The client has given permission to publish',

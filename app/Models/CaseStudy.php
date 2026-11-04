@@ -29,6 +29,19 @@ final class CaseStudy extends Model
 
     public const STATUSES = ['draft', 'published'];
 
+    public function slugTaken(string $slug, ?int $exceptId): bool
+    {
+        $sql    = 'SELECT id FROM case_studies WHERE slug = :slug AND deleted_at IS NULL';
+        $params = ['slug' => $slug];
+
+        if ($exceptId !== null) {
+            $sql .= ' AND id <> :except';
+            $params['except'] = $exceptId;
+        }
+
+        return Database::selectOne($sql . ' LIMIT 1', $params) !== null;
+    }
+
     /** @return array<int, array<string, mixed>> */
     public function published(): array
     {

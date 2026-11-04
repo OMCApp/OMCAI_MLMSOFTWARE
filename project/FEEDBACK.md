@@ -68,3 +68,9 @@
 **เกิดอะไร:** code review จับว่าคอมเมนต์ใหม่ใน `core/` เป็นภาษาไทย ขัด `CLAUDE.md` ข้อ 6 · แต่ `core/` · `public/index.php` · `config/` ของมาตรฐานเองเป็นภาษาไทยทุกไฟล์ AI จึงเขียนตามไฟล์ข้างเคียง
 **ข้อเสนอ:** เลือกอย่างเดียว — แก้ข้อ 6 ให้ตรงกับของจริง (คอมเมนต์ภาษาไทยได้ · ชื่อและ log เป็นอังกฤษ) หรือแปลโค้ดกลางเป็นอังกฤษ
 **ตรวจด้วยเครื่องได้ไหม:** ได้ — นับอักษรไทยในคอมเมนต์
+
+## 2026-11-04 · Phase 3
+- `core/Uploader.php` — `resolveDirectory('')` ได้โฟลเดอร์ `file/` เพราะ `Security::safeFilename('')` คืน `file` · แก้ในโปรเจคแล้ว ควรแก้ที่ repo มาตรฐาน
+- `public/index.php` ตอบ CSRF ล้มเหลวด้วย `http_response_code(419)` + `Location` → PHP เปลี่ยนเป็น 302 เอง รหัส 419 จึงไม่เคยถึง client · ชุดทดสอบต้องตรวจจาก log `csrf_failed` แทน
+- partial ที่ include ใน layout (เช่น `nav.php`) ตั้งตัวแปรชื่อ `$content` แล้วทับเนื้อหาของหน้าเงียบๆ (Array to string) — `partial-generic-var` ของ check.php ไม่จับชื่อ `$content`/`$leads` · ควรเพิ่ม `$content` ในรายการชื่อต้องห้าม
+- regex ใน Phase 2 ใช้ `#` เป็น delimiter แล้วมี `#` ใน character class (`'#^[^/\s?#]+$#u'`) → preg_match คืน false ทุกครั้ง (validate slug ไม่เคยทำงาน) · check.php ไม่จับ

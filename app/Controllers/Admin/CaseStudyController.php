@@ -94,7 +94,7 @@ final class CaseStudyController extends AdminController
         }
 
         $data   = SocialProofService::withConsent($this->input(), $this->bool('consent'), $before);
-        $errors = $this->proof->validateCaseStudy($data + ['consent_confirmed_at' => $before['consent_confirmed_at']]);
+        $errors = $this->proof->validateCaseStudy($data + ['consent_confirmed_at' => $before['consent_confirmed_at']], (int) $id);
 
         if ($errors !== []) {
             $this->fail($errors);

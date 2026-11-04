@@ -245,6 +245,9 @@ return [
         'action_setting_change'    => 'เปลี่ยนค่าตั้ง',
         'action_export'            => 'ส่งออกข้อมูล',
         'action_view_sensitive'    => 'เปิดดูข้อมูลอ่อนไหว',
+        'action_backup_create'     => 'สร้างไฟล์สำรอง',
+        'action_backup_download'   => 'ดาวน์โหลดไฟล์สำรอง',
+        'action_backup_delete'     => 'ลบไฟล์สำรอง',
     ],
 
     'ui' => [
@@ -299,6 +302,8 @@ return [
         'group' => [
             'basics' => 'เริ่มต้นใช้งาน',
             'admin'  => 'สำหรับผู้ดูแลระบบ',
+            'content' => 'จัดการเนื้อหาเว็บ',
+            'sales'   => 'ฝ่ายขาย',
         ],
     ],
 
@@ -527,7 +532,7 @@ return [
             'add' => 'เพิ่มผลงาน', 'edit' => 'แก้ไขผลงาน', 'client' => 'ลูกค้า', 'industry' => 'ประเภทธุรกิจ',
         ],
         'case_study' => [
-            'error_slug' => 'กรุณาใส่ slug (ห้ามมี / ช่องว่าง ? หรือ #)', 'error_title' => 'กรุณาใส่ชื่อเรื่อง', 'error_status' => 'สถานะไม่ถูกต้อง',
+            'error_slug' => 'กรุณาใส่ slug (ห้ามมี / ช่องว่าง ? หรือ #)', 'error_slug_taken' => 'มีผลงานอื่นใช้ slug นี้แล้ว', 'error_title' => 'กรุณาใส่ชื่อเรื่อง', 'error_status' => 'สถานะไม่ถูกต้อง',
         ],
         'social' => [
             'publish_section' => 'การเผยแพร่', 'consent' => 'ได้รับอนุญาตเผยแพร่จากลูกค้าแล้ว',

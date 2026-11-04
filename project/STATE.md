@@ -17,3 +17,4 @@
 - [2026-11-03] เส้นทางดีไซน์ = ค (ผู้ใช้มีภาพแบบหน้าแรก) · หน้าอื่นสืบทอดจากหน้าแรก
 - [2026-11-03] Phase 1: ช่อง SEO head ของ `layouts/site.php` = include `partials/seo-head.php` (Phase 2 สร้าง) ส่ง `$seo` + `$jsonLd` · ไม่ใช่ string HTML (ชุดตรวจ output-escape)
 - [2026-11-03] Phase 1: preview หน้าแรกที่ `/_preview/home` เฉพาะ env ที่ไม่ใช่ production
+- [2026-11-04] Phase 3 (CMS admin) 🔨 สร้างเสร็จบน branch ของ Phase 3 — migration 012–015 · secret ใหม่ `APP_KEY` (ผู้ใช้ต้องเพิ่ม) · คำแปลจีนของ UI หลังบ้านรอรวมจาก `tools/i18n/zh-cms.php` เข้า `lang/zh.php` (Phase 4) · รายละเอียด NOTES.md หัวข้อ Phase 3

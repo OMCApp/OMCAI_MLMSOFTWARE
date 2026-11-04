@@ -140,12 +140,14 @@ final class SocialProofService
      * @param  array<string, mixed> $data
      * @return array<string, string>
      */
-    public function validateCaseStudy(array $data): array
+    public function validateCaseStudy(array $data, ?int $id = null): array
     {
         $errors = [];
 
         if (preg_match('~^[^/\s?#]+$~u', (string) ($data['slug'] ?? '')) !== 1) {
             $errors['slug'] = 'cms.case_study.error_slug';
+        } elseif ($this->caseStudies->slugTaken((string) $data['slug'], $id)) {
+            $errors['slug'] = 'cms.case_study.error_slug_taken';
         }
         if (trim((string) ($data['title'] ?? '')) === '') {
             $errors['title'] = 'cms.case_study.error_title';
