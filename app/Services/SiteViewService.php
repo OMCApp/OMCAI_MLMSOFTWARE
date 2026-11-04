@@ -19,6 +19,7 @@ final class SiteViewService
         private readonly SeoService $seo = new SeoService(),
         private readonly SchemaService $schema = new SchemaService(),
         private readonly HtmlSanitizer $sanitizer = new HtmlSanitizer(),
+        private readonly ContentImages $contentImages = new ContentImages(),
     ) {
     }
 
@@ -116,7 +117,7 @@ final class SiteViewService
                 'category'      => $category !== null ? (string) $category['name'] : '',
                 'category_url'  => $category !== null ? Path::encode(CategoryService::path($category)) : '',
                 'image'         => $image,
-                'content'       => $this->withBase($this->sanitizer->clean((string) ($post['content'] ?? ''))),
+                'content'       => $this->withBase($this->contentImages->apply($this->sanitizer->clean((string) ($post['content'] ?? '')), $image === null)),
                 'related'       => $this->related($post),
                 'blog_url'      => LocaleService::localize('/blog/', $locale),
             ],
@@ -228,7 +229,8 @@ final class SiteViewService
                 'title' => (string) $post['title'],
                 'lead'  => SeoService::description((string) ($post['excerpt'] ?: $post['content']), $leadLength),
                 'cover' => $image === null ? null : [
-                    'src'    => Path::encode($image['path']),
+                    'src'    => $image['src'],
+                    'srcset' => $image['srcset'],
                     'alt'    => $image['alt'],
                     'width'  => $image['width'],
                     'height' => $image['height'],
@@ -326,6 +328,10 @@ final class SiteViewService
         }
 
         // เฉพาะ "/x" ไม่ใช่ "//x" (protocol-relative = โดเมนอื่น)
-        return (string) preg_replace('#\b(src|href|srcset)="/(?!/)#', '$1="' . $base . '/', $html);
+        $html = (string) preg_replace('#\b(src|href)="/(?!/)#', '$1="' . $base . '/', $html);
+
+        // srcset มีหลาย URL คั่นด้วยจุลภาค — ต้องเติม base ให้ทุกตัว ไม่ใช่แค่ตัวแรก
+        return (string) preg_replace_callback('#\bsrcset="([^"]*)"#', static fn (array $m): string => 'srcset="'
+            . preg_replace('#(^|,\s*)/(?!/)#', '$1' . $base . '/', $m[1]) . '"', $html);
     }
 }

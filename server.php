@@ -15,7 +15,8 @@ declare(strict_types=1);
 if (PHP_SAPI === 'cli-server') {
     // ทำตัวเป็น router ให้ built-in server: ไฟล์จริงเสิร์ฟตรง ที่เหลือเข้า front controller
     $path = parse_url((string) $_SERVER['REQUEST_URI'], PHP_URL_PATH) ?: '/';
-    $file = __DIR__ . '/public' . $path;
+    // ‼️ ไฟล์ชื่อภาษาไทย (/wp-content/uploads/…/ปกบทความ.png) มาเป็น %E0%B8… — Apache decode ให้ built-in server ไม่
+    $file = __DIR__ . '/public' . rawurldecode($path);
 
     if ($path !== '/' && is_file($file)) {
         return false;

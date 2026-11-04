@@ -97,3 +97,12 @@
 
 - [2026-11-04] (AI ทำผิดซ้ำ) แก้ไฟล์ PHP ผ่าน `php -r` ใน Git Bash แล้ว `\$` / `\n` ถูกแปลงเป็น `/` (MSYS path conversion ค้างจาก `MSYS_NO_PATHCONV`) → `core/Lang.php` เสีย ต้อง `git checkout` · เหตุการณ์เดียวกับ Auth.php ก่อนหน้า — **แก้โค้ดด้วย Edit tool เท่านั้น** ไม่ใช้ shell แทรกโค้ด
 - [2026-11-04] Chrome headless (`--headless=new`) มีความกว้างหน้าต่างขั้นต่ำ ~500px — ภาพหน้าจอ 390px ถูกตัดขอบดูเหมือนล้นแนวนอน ทั้งที่ไม่ล้น · ใช้ `chrome-headless-shell` (ms-playwright) สำหรับจอมือถือ
+
+## [ ] 2026-11-04 · ช่วง C Phase 6 — `server.php` เสิร์ฟไฟล์ชื่อภาษาไทยไม่ได้ (404) · hook/check เรียก `php` ตัวแรกใน PATH
+
+**เกิดอะไร:** (1) built-in server ส่ง path แบบ `%E0%B8…` — `is_file()` ไม่เจอ ไฟล์ static ชื่อไทยตกไป front controller ได้ 404 (Apache decode ให้ ไม่เป็น) · แก้ในโปรเจคด้วย `rawurldecode()` (2) pre-commit hook และ `check.php` (design/css-in-sync) เรียก `php` จาก PATH — เครื่องที่ PATH เป็น PHP 7.3 ได้ parse error แล้ว commit ไม่ผ่าน ต้อง export PATH เอง
+**ข้อเสนอ:** (1) ใส่ `rawurldecode()` ใน server.php มาตรฐาน (2) สคริปต์ย่อยใช้ `PHP_BINARY` แทน `php`
+**ตรวจด้วยเครื่องได้ไหม:** (1) ได้ — test ขอไฟล์ชื่อไทยผ่าน server.php (2) ได้ — grep `'php '` ใน scripts/
+
+- [2026-11-04] (AI ทำผิด) ใส่ fade-in ให้ย่อหน้านำของ hero ทั้งที่บนมือถือมันคือ LCP — LCP ช้าลง ~0.7 วินาที · กันแค่ h1 กับภาพ ไม่ได้วัดว่าอะไรคือ LCP จริงก่อน · **วัด LCP element ก่อนใส่ animation ในจอแรก**
+- [2026-11-04] (AI ทำผิด) Unsplash/ภาพประกอบ: ค้นด้วย curl + User-Agent ปลอมถูกบล็อก (ถูกต้อง) — ใช้หน้าค้นหา/ลิงก์ download ทางการแทน

@@ -2880,14 +2880,14 @@
     margin-block-end: calc(-1 * var(--space-6));
   }
 
-  /* เปิดหน้าแบบนุ่ม — h1 และภาพบุคคล (LCP) ไม่ fade เพื่อไม่ให้ LCP ช้าลง */
+  /* เปิดหน้าแบบนุ่ม — h1 · ย่อหน้านำ · ภาพบุคคล ไม่ fade: เป็นตัวเลือก LCP
+     (มือถือ LCP = ย่อหน้านำ — fade แล้ว LCP ช้าไป ~0.7 วินาที วัดจริง 2026-11-04) */
   @media (prefers-reduced-motion: no-preference) {
-    .hero-site-lead, .hero-site .check-list, .hero-site-actions, .hero-person-devices, .hero-site .eyebrow-pill {
+    .hero-site .check-list, .hero-site-actions, .hero-person-devices, .hero-site .eyebrow-pill {
       animation: hero-rise var(--duration-reveal) var(--ease-enter) backwards;
     }
     .hero-site .eyebrow-pill { animation-delay: 0ms; }
-    .hero-site-lead { animation-delay: calc(var(--duration-fast) * .6); }
-    .hero-site .check-list { animation-delay: calc(var(--duration-fast) * 1.2); }
+    .hero-site .check-list { animation-delay: calc(var(--duration-fast) * .8); }
     .hero-site-actions { animation-delay: calc(var(--duration-fast) * 1.8); }
     .hero-person-devices { animation-delay: calc(var(--duration-fast) * 1.4); }
     .hero-person-devices .device-laptop { animation: mock-float calc(var(--duration-reveal) * 14) ease-in-out calc(var(--duration-reveal) * 2) infinite; }

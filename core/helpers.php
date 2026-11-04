@@ -78,10 +78,12 @@ if (!function_exists('asset')) {
      */
     function asset(string $path): string
     {
-        $file = dirname(__DIR__) . '/public' . $path;
+        // ‼️ รับได้ทั้ง path ดิบและที่ encode แล้ว — รูปจากคลังสื่อชื่อภาษาไทย (221202-ปก.webp) ต้อง encode ใน URL
+        $path  = rawurldecode($path);
+        $file  = dirname(__DIR__) . '/public' . $path;
         $stamp = is_file($file) ? (string) filemtime($file) : '0';
 
-        return url($path) . '?v=' . $stamp;
+        return url(Path::encode($path)) . '?v=' . $stamp;
     }
 }
 

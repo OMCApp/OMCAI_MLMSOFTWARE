@@ -31,16 +31,21 @@ final class MediaService
 
     /**
      * @param  array<int, int|null> $ids
-     * @return array<int, array{id:int,path:string,alt:string,width:?int,height:?int,mime:string}>
+     * 'path' = ต้นฉบับ (og:image / schema) · 'src' + 'srcset' = WebP สำหรับแสดงบนหน้า (ถ้ามี)
+     *
+     * @return array<int, array{id:int,path:string,src:string,srcset:array<int,string>,alt:string,width:?int,height:?int,mime:string}>
      */
     public function images(array $ids): array
     {
         $out = [];
 
         foreach ($this->media->findMany(array_filter($ids, static fn ($id) => $id !== null)) as $id => $row) {
+            $display  = self::imageData($row);
             $out[$id] = [
                 'id'     => $id,
                 'path'   => (string) $row['path'],
+                'src'    => $display['src'],
+                'srcset' => $display['srcset'],
                 'alt'    => (string) $row['alt'],
                 'width'  => $row['width'] !== null ? (int) $row['width'] : null,
                 'height' => $row['height'] !== null ? (int) $row['height'] : null,
@@ -288,6 +293,19 @@ final class MediaService
         imagedestroy($source);
 
         return $sizes;
+    }
+
+    /**
+     * WebP ขนาดเต็ม + รูปย่อ ของไฟล์ที่อยู่ใน public/ แล้ว (รูปเดิมของ WordPress) — ใช้โดย tools/media/build-legacy-webp.php
+     *
+     * @return array<string, string> แบบเดียวกับ media.sizes · [] ถ้าแปลงไม่ได้
+     */
+    public function webpVariants(string $path): array
+    {
+        $absolute = (string) config('paths.public') . $path;
+        $info     = is_file($absolute) ? @getimagesize($absolute) : false;
+
+        return $info === false ? [] : $this->variants($absolute, $path, (int) $info[0], (int) $info[1], (string) $info['mime']);
     }
 
     private function writeWebp(\GdImage $image, string $file): bool
