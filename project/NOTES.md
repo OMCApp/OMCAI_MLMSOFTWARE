@@ -47,6 +47,15 @@
 - **CI ตรวจ `/admin/login` = 200 (ด้วยรหัส staging) แทน `/`** — หน้าสาธารณะเป็น draft จน Phase 4 เผยแพร่ `/` จึงเป็น 404 โดยตั้งใจ · เปลี่ยนกลับเป็น `/` เมื่อหน้าแรกเผยแพร่แล้ว
 - **ชุดทดสอบ**: `php tests/run.php` — เปิด built-in server ชี้ฐานข้อมูลจาก config (.env หรือ env vars) ใส่ข้อมูล `zz-test-*` แล้วลบทิ้งตอนจบ · ไม่ deploy ขึ้น server (exclude ใน workflow) · ปฏิเสธการรันเมื่อ APP_ENV=production
 
+## Phase 5 — นำเข้าบทความเดิม
+- **migration `030_import_old_posts.sql` สร้างด้วยสคริปต์** `php tools/migration/build-import.php` จาก `docs/migration/content.json` — ห้ามแก้ไฟล์ SQL ด้วยมือ · ผลลัพธ์ deterministic (ไม่มีเวลาในไฟล์) · **ถ้า 030 ถูก apply ที่ไหนแล้ว ห้าม generate ใหม่ด้วยเนื้อหาต่าง** — แก้ข้อมูลด้วย migration 031–039 หรือแก้ใน CMS
+- ข้อความไทยทั้งหมดใน 030 เป็น hex (ตามแบบ 010/011) ข้อความจริงอยู่ในคอมเมนต์ · ไฟล์ ~1.7 MB, คำสั่งยาวสุด ~120 KB (ต้องการ `max_allowed_packet` ≥ 1 MB — ค่าเริ่ม XAMPP/โฮสต์ทั่วไปพอ)
+- idempotent: media ตาม path · posts ตาม slug + วันที่ · SEO ของหมวดเติมเฉพาะช่องที่ยังว่าง (ไม่ทับที่แก้ใน CMS)
+- การนำเข้าผ่าน SQL ไม่ผ่าน base Model → **ไม่มีแถว audit log** ของการนำเข้า (เหมือน seed 010/011)
+- `title` (H1) = ชื่อบทความเดิมที่เว็บเดิมแสดงเป็น H1 · `seo_title` = ส่วน intent ของ `<title>` เดิม — สองค่านี้ต่างกันใน 15 เรื่องเพราะเว็บเดิมต่างกันอยู่แล้ว (ตารางใน `docs/migration/post-titles.md`)
+- `author_name` เก็บตามเว็บเดิม (`tee` 2 เรื่อง · `Ongart Atipornpanich` 34 เรื่อง) — ใช้เป็น `author` ใน BlogPosting
+- `tools/migration/url-mapping.php` เขียน `docs/migration/url-mapping.md` ใหม่ทุกครั้งที่รัน (ยิงจริงผ่าน `server.php`) — รันอีกครั้งหลัง Phase 4 เผยแพร่หน้า แถว "pending Phase 4" ต้องกลายเป็น 200 หมด
+
 ## เว็บสาธารณะเป็นโหมดสว่างอย่างเดียว (Phase 1)
 - **ต่างตรงไหน:** กฎเหล็กข้อ 19 ให้ทุกระบบสลับสว่าง/มืดได้ · `layouts/site.php` บังคับ `data-theme="light"` ไม่มีปุ่มสลับ
 - **ใครตัดสิน:** ผู้ใช้ — brief ฉบับ 3 "พื้นขาว/สว่างเป็นหลัก · ไม่เอาเว็บมืด" (บันทึกใน SCOPE ด้วย)

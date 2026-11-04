@@ -115,12 +115,14 @@
 - [ ] copy ภาษาไทยใหม่ทั้งหมด (tone ตาม BRIEF · ห้ามตัวเลข/โลโก้/รีวิวปลอม) · internal linking ตาม topic cluster
 - [ ] lead form: ขอ Demo / ใบเสนอราคา / ปรึกษา / ติดต่อ / ย้ายระบบ · CSRF · honeypot + rate limit · บันทึก lead + แจ้งอีเมล (ถ้าตั้ง SMTP) · หน้า thank-you (noindex) · ปุ่ม LINE/โทร
 
-## Phase 5 — Content migration  ⬜
-- [ ] ดึงบทความ 36 เรื่อง + หน้าเดิมจาก HTML เว็บจริง (title, meta description, H1, เนื้อหา, วันที่, หมวด, รูปเด่น, alt) → posts/pages · **URL เดิมตรงทุกตัว**
-- [ ] รูปที่ถูกอ้างถึง → `public/wp-content/uploads/` path เดิม · เติม alt ที่หาย (จากบริบท) · ใส่ width/height
-- [ ] แก้ title ที่ยัด keyword (ตัด suffix ยาวของ WordPress) โดย**รักษาส่วนต้นที่เป็น intent** · เติม meta description ที่หาย · H1 ตัวเดียว
-- [ ] นำเข้า redirect map
-- [ ] รายงาน mapping เก่า→ใหม่ ทุก URL ใน baseline
+## Phase 5 — Content migration  🔨
+- [x] ดึงบทความ 36 เรื่องจาก HTML เว็บจริง (`docs/migration/content.json`) → `posts` ด้วย migration `030_import_old_posts.sql` (สร้างจาก `tools/migration/build-import.php` · idempotent) · ข่าวขายตรง 27 + ประกัน 9 · **URL เดิมตรงทุกตัว** (ทดสอบด้วย URL เดิมแบบ encode ตัวเล็กของ WordPress)
+- [-] หน้าเดิม (policy 2 หน้า, /ocpb-mlm/ ฯลฯ) — เป็นงานของ Phase 4 (เจ้าของเนื้อหาหน้า) · `content.json` มีเนื้อหาที่ทำความสะอาดแล้วครบ จึงไม่ต้องทำ `policy-pages.json`
+- [x] รูปที่ถูกอ้างถึง → `public/wp-content/uploads/` path เดิม (คัดลอกตอนดึงเนื้อหา) · แถว `media` 149 แถว · เติม alt ที่หาย 75 รูป (จาก alt ของผู้เขียนในบทความอื่น → `alt_suggested` → ชื่อบทความ) · width/height ครบ · `loading="lazy"` ในเนื้อหา
+- [x] title: `<title>` = ส่วน intent ของ title เดิม (ตัด keyword list ของ WordPress) · H1 = ชื่อบทความเดิม (แก้ 1 เรื่องที่ H1 ถูกตัดท้าย) · meta description เขียนใหม่ 4 เรื่อง (ยาว/สั้น/เสีย) · H1 ตัวเดียว · ตาราง `docs/migration/post-titles.md` · หมวด 2 ตัวมี description/meta จริง
+- [x] redirect map — นำเข้าแล้วใน `010_seed_redirects.sql` (Phase 2) · ตรวจซ้ำผ่าน url-mapping
+- [x] รายงาน mapping เก่า→ใหม่ ทุก URL ใน baseline: `docs/migration/url-mapping.md` (`tools/migration/url-mapping.php` ยิงจริงผ่านแอป) — 95 URL: 200 = 44 · 301→200 = 4 · 410 = 2 · รอ Phase 4 เผยแพร่หน้า = 45 · **404 จริง = 0**
+- [x] tests: ส่วน "Phase 5" ใน `php tests/run.php` (ทุกบทความ: 200 · H1 เดียว = title · canonical · title/description · BlogPosting datePublished · รูป alt/ขนาด/ไฟล์มีจริง · หมวด · /blog/ แบ่งหน้า · sitemap-posts · feed) — 1401 ผ่าน
 
 ## Phase 6 — QA + launch readiness  ⬜
 - [ ] crawl staging ด้วย `tools/seo-audit/crawl.php` (Basic Auth) เทียบ baseline 95 URL — ทุก URL เดิมได้ 200 หรือ 301 ไปที่ถูก · ไม่มี 404 · ไม่มี redirect loop/chain
