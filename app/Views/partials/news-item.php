@@ -11,21 +11,26 @@
  *   $newsItems  [['image' => ..., 'alt' => ..., 'date' => ..., 'title' => ..., 'lead' => ..., 'url' => ...], ...]
  *               'image' ไม่บังคับ — ข่าวที่ไม่มีภาพยังต้องแสดงได้
  *               'cover' ไม่บังคับ — [src, srcset, alt, width, height] ภาพเด่นของบทความจาก media library (partials/site-image.php)
+ *   $newsItemsEagerFirst  bool — รูปการ์ดแรกโหลดทันที + fetchpriority="high" (หน้ารวมที่การ์ดแรกอยู่จอแรก = LCP)
+ *                         ค่าเริ่ม false — "บทความที่เกี่ยวข้อง" ท้ายบทความอยู่นอกจอแรก ต้อง lazy
  */
 
 declare(strict_types=1);
 
-$newsItems = (array) ($newsItems ?? []);
+$newsItems           = (array) ($newsItems ?? []);
+$newsItemsEagerFirst = (bool) ($newsItemsEagerFirst ?? false);
+$newsItemsFirstKey   = array_key_first($newsItems);
 ?>
 <?php if ($newsItems === []): ?>
     <?php include __DIR__ . '/empty-state.php'; ?>
 <?php else: ?>
     <ul class="news-list">
-        <?php foreach ($newsItems as $newsItem): ?>
+        <?php foreach ($newsItems as $newsItemKey => $newsItem): ?>
             <li>
                 <a class="news-item" href="<?= e(url((string) $newsItem['url'])) ?>">
                     <?php if (is_array($newsItem['cover'] ?? null)): ?>
                         <?php $siteImage = (array) $newsItem['cover']; $siteImageClass = 'news-item-image';
+                              $siteImageEager = $newsItemsEagerFirst && $newsItemKey === $newsItemsFirstKey;
                               $siteImageSizes = '(min-width: 620px) 320px, 100vw'; include __DIR__ . '/site-image.php'; ?>
                     <?php elseif (($newsItem['image'] ?? '') !== ''): ?>
                         <img class="news-item-image"
@@ -44,3 +49,4 @@ $newsItems = (array) ($newsItems ?? []);
         <?php endforeach; ?>
     </ul>
 <?php endif; ?>
+<?php $newsItemsEagerFirst = false; ?>
