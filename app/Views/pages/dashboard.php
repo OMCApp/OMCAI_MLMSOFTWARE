@@ -37,6 +37,24 @@ $dashLinks[] = ['icon' => 'lock', 'label' => __('cms.account.title'), 'url' => '
 $dashLinks[] = ['icon' => 'book', 'label' => __('ui.manual'), 'url' => '/admin/manual'];
 ?>
 <div class="stack">
+    <?php if (!empty($summary['leads']) && ((int) ($summary['notify_backlog'] ?? 0) > 0 || empty($summary['mail_configured']))): ?>
+        <?php /* ‼️ ไม่ใช่ toast — ต้องอยู่จนกว่าจะแก้ (lead ยังอยู่ครบ แต่ทีมขายไม่ได้อีเมล) */ ?>
+        <section class="card stack" role="alert" aria-labelledby="dash-mail">
+            <h2 id="dash-mail" class="row"><?= icon('warning') ?><?= e(__('cms.dashboard.mail_title')) ?></h2>
+            <?php if ((int) ($summary['notify_backlog'] ?? 0) > 0): ?>
+                <p><?= e(__('cms.dashboard.mail_backlog', ['count' => (string) (int) $summary['notify_backlog']])) ?></p>
+                <form method="POST" action="<?= e(url('/admin/leads/notify-retry')) ?>">
+                    <?= csrf_field() ?>
+                    <button type="submit" class="btn btn-primary"><?= icon('mail') ?><?= e(__('cms.leads.notify_retry', ['count' => (string) (int) $summary['notify_backlog']])) ?></button>
+                    <a class="btn btn-secondary" href="<?= e(url('/admin/leads?notify_status=failed')) ?>"><?= e(__('cms.dashboard.mail_view')) ?></a>
+                </form>
+            <?php endif; ?>
+            <?php if (empty($summary['mail_configured'])): ?>
+                <p><?= e(__('cms.dashboard.mail_off')) ?></p>
+            <?php endif; ?>
+        </section>
+    <?php endif; ?>
+
     <section aria-labelledby="dash-numbers">
         <h2 id="dash-numbers" class="visually-hidden"><?= e(__('cms.dashboard.numbers')) ?></h2>
         <ul class="tile-grid">

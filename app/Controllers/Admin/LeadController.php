@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace App\Controllers\Admin;
 
 use App\Models\Lead;
+use App\Services\LeadNotifier;
 use App\Services\LeadService;
 use App\Services\TranslationService;
 use Core\Security;
@@ -38,6 +39,7 @@ final class LeadController extends AdminController
             ['key' => 'company', 'label' => __('cms.leads.company')],
             ['key' => 'form_key', 'label' => __('cms.leads.form'), 'sort' => 'form_key', 'format' => 'badge', 'badgeKind' => 'type', 'lang' => 'cms.leads.form_'],
             ['key' => 'status', 'label' => __('cms.field.status'), 'sort' => 'status', 'format' => 'badge', 'lang' => 'cms.leads.status_'],
+            ['key' => 'notify_status', 'label' => __('cms.leads.notify'), 'format' => 'badge', 'lang' => 'cms.leads.notify_'],
             ['key' => 'assignee', 'label' => __('cms.leads.assignee')],
             ['key' => 'created_at', 'label' => __('cms.leads.received'), 'sort' => 'created_at', 'format' => 'datetime'],
         ];
@@ -49,6 +51,7 @@ final class LeadController extends AdminController
         $listFilters = [
             ['name' => 'status', 'label' => __('cms.field.status'), 'value' => $filters['status'], 'options' => ['' => '—'] + self::statusOptions()],
             ['name' => 'form_key', 'label' => __('cms.leads.form'), 'value' => $filters['form_key'], 'options' => ['' => '—'] + self::formOptions()],
+            ['name' => 'notify_status', 'label' => __('cms.leads.notify'), 'value' => $filters['notify_status'], 'options' => ['' => '—'] + self::notifyOptions()],
             ['name' => 'from', 'label' => __('date.from'), 'type' => 'date', 'value' => $filters['from']],
             ['name' => 'to', 'label' => __('date.to'), 'type' => 'date', 'value' => $filters['to']],
         ];
@@ -62,12 +65,19 @@ final class LeadController extends AdminController
         }
 
         $exportQuery = array_filter($filters + ['q' => $p['q']], static fn ($v): bool => (string) $v !== '');
+        $backlog     = (new LeadNotifier())->backlogCount();
+        $actions     = [['label' => __('common.export'), 'url' => '/admin/leads/export' . ($exportQuery === [] ? '' : '?' . http_build_query($exportQuery)),
+                         'icon' => 'download']];
+
+        if ($backlog > 0) {
+            $actions[] = ['label' => __('cms.leads.notify_retry', ['count' => (string) $backlog]), 'url' => '/admin/leads/notify-retry',
+                          'method' => 'POST', 'icon' => 'mail'];
+        }
 
         $this->view('admin/crud/index', [
             'title'       => __('cms.leads.title'),
             'pageLead'    => __('cms.leads.lead'),
-            'pageActions' => [['label' => __('common.export'), 'url' => '/admin/leads/export' . ($exportQuery === [] ? '' : '?' . http_build_query($exportQuery)),
-                               'icon' => 'download']],
+            'pageActions' => $actions,
             'listQ'       => $p['q'],
             'listFilters' => $listFilters,
             'listColumns' => $columns,
@@ -143,6 +153,16 @@ final class LeadController extends AdminController
         $this->redirect('/admin/leads');
     }
 
+    /** ส่งอีเมลแจ้งทีมขายที่ค้าง (failed / pending) อีกครั้ง — lead ไม่หายอยู่แล้ว ปุ่มนี้แค่ส่งอีเมลซ้ำ */
+    public function retryNotify(): void
+    {
+        $result = (new LeadNotifier())->retryBacklog(50);
+        $this->flash($result['failed'] > 0 ? 'warning' : 'success', __('cms.leads.notify_retry_done', [
+            'sent' => (string) $result['sent'], 'failed' => (string) $result['failed'], 'skipped' => (string) $result['skipped'],
+        ]));
+        $this->redirect('/admin/leads');
+    }
+
     /** ‼️ ส่งออกตามตัวกรองที่ใช้อยู่ · BOM ให้ Excel อ่านไทยได้ · ทุกช่องกัน CSV injection (LeadService) */
     public function export(): never
     {
@@ -168,6 +188,7 @@ final class LeadController extends AdminController
         $filters = $this->filters([
             'status'   => Lead::STATUSES,
             'form_key' => Lead::FORM_KEYS,
+            'notify_status' => Lead::NOTIFY_STATUSES,
             'locale'   => TranslationService::locales(),
         ]);
 
@@ -191,6 +212,18 @@ final class LeadController extends AdminController
 
         foreach (Lead::STATUSES as $status) {
             $out[$status] = __('cms.leads.status_' . $status);
+        }
+
+        return $out;
+    }
+
+    /** @return array<string, string> */
+    private static function notifyOptions(): array
+    {
+        $out = [];
+
+        foreach (Lead::NOTIFY_STATUSES as $status) {
+            $out[$status] = __('cms.leads.notify_' . $status);
         }
 
         return $out;

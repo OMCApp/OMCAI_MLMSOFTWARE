@@ -16,17 +16,37 @@ final class Lead extends Model
     use AdminSearch;
 
     protected array $searchColumns = ['name', 'company', 'phone', 'email', 'line_id'];
-    protected array $filterColumns = ['status', 'form_key', 'assigned_to', 'locale'];
+    protected array $filterColumns = ['status', 'form_key', 'assigned_to', 'locale', 'notify_status'];
 
     protected string $table = 'leads';
 
     protected array $fillable = [
         'form_key', 'name', 'company', 'business_type', 'phone', 'email', 'line_id', 'has_system',
         'need', 'member_estimate', 'message', 'source_url', 'utm', 'ip', 'status', 'assigned_to', 'notes',
-        'locale', 'landing_page', 'referrer',
+        'locale', 'landing_page', 'referrer', 'notify_status', 'notify_attempts', 'notify_error', 'notified_at',
     ];
 
     public const STATUSES  = ['new', 'contacted', 'qualified', 'won', 'lost'];
+    /** ผลอีเมลแจ้งทีมขาย (LeadNotifier) — key ภาษาอังกฤษ แปลตอนแสดง */
+    public const NOTIFY_STATUSES = ['pending', 'sent', 'failed', 'skipped'];
+
+    /** lead ที่อีเมลแจ้งทีมขายยังไม่ถึง (failed + pending ที่ค้างเกิน 10 นาที) — ใหม่สุดก่อน */
+    public function notifyBacklog(int $limit): array
+    {
+        return Database::select(
+            "SELECT * FROM leads WHERE deleted_at IS NULL
+               AND (notify_status = 'failed' OR (notify_status = 'pending' AND created_at < NOW() - INTERVAL 10 MINUTE))
+             ORDER BY created_at DESC LIMIT " . max(1, min(100, $limit))
+        );
+    }
+
+    public function countNotifyBacklog(): int
+    {
+        return (int) (Database::selectOne(
+            "SELECT COUNT(*) AS n FROM leads WHERE deleted_at IS NULL
+               AND (notify_status = 'failed' OR (notify_status = 'pending' AND created_at < NOW() - INTERVAL 10 MINUTE))"
+        )['n'] ?? 0);
+    }
     public const FORM_KEYS = ['demo', 'quote', 'consult', 'contact', 'migration'];
     public const SORTABLE  = ['id', 'created_at', 'status', 'form_key'];
 

@@ -897,6 +897,10 @@ $pdo->prepare('DELETE FROM redirects WHERE id = :id')->execute(['id' => $newId])
 
 require __DIR__ . '/cms.php';
 
+// ------------------------------------------------------------------ Phase 6 — อีเมลแจ้งทีมขาย (SMTP sink ในเครื่อง)
+
+require __DIR__ . '/mail.php';
+
 // ------------------------------------------------------------------ สรุป
 
 echo "\n";

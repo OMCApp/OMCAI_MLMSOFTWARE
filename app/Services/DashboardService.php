@@ -20,7 +20,10 @@ final class DashboardService
         $out     = ['content' => $content, 'leads' => $leads];
 
         if ($leads) {
-            $out['new_leads'] = (new LeadService())->countNew();
+            $out['new_leads']       = (new LeadService())->countNew();
+            // ‼️ อีเมลแจ้งทีมขายที่ส่งไม่ถึง — lead ไม่หาย แต่ทีมขายอาจไม่รู้ว่ามี lead ใหม่ จึงต้องเตือนบนหน้าแรก
+            $out['notify_backlog']  = (new LeadNotifier())->backlogCount();
+            $out['mail_configured'] = MailService::configured();
         }
 
         if ($content) {

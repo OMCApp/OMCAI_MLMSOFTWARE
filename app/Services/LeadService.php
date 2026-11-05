@@ -109,7 +109,11 @@ final class LeadService
             $this->attempts->prune();
         }
 
-        $this->notify($id, $clean, $locale, $sourcePath, $utm);
+        // ‼️ lead อยู่ในฐานข้อมูลแล้ว — อีเมลล้มเหลวไม่ทำให้ผู้ส่งฟอร์มเห็น error (LeadNotifier บันทึกผลและแจ้งเตือนใน CMS)
+        $notifier = new LeadNotifier();
+        if ($notifier->notify($id) === 'sent') {
+            $notifier->retryBacklog(3);
+        }
 
         return ['status' => 'sent', 'id' => $id] + $result;
     }
@@ -231,53 +235,6 @@ final class LeadService
     private static function nullable(string $value): ?string
     {
         return $value === '' ? null : $value;
-    }
-
-    /**
-     * อีเมลแจ้งทีมขาย — ภาษาไทยเสมอ (ทีมขายเป็นคนไทย) ไม่ว่าผู้ส่งฟอร์มจะใช้ภาษาไหน
-     *
-     * @param array<string, string>                                          $data
-     * @param array{first: array<string,string>, current: array<string,string>} $utm
-     */
-    private function notify(int $id, array $data, string $locale, string $sourcePath, array $utm): void
-    {
-        $to = (string) (SettingService::get('lead.notify_email') ?: SiteService::leadEmail());
-
-        $previous = LocaleService::current();
-        LocaleService::use(LocaleService::DEFAULT);
-
-        $options = BlockService::leadOptions();
-        $label   = static fn (string $field, string $value): string => $value === '' ? '-' : (string) ($options[$field][$value] ?? $value);
-        $lines   = [
-            __('lead.mail_intro'),
-            '',
-            '#' . $id . ' · ' . __('lead.forms.' . $data['form_key']),
-            __('lead.name') . ': ' . $data['name'],
-            __('lead.company') . ': ' . ($data['company'] ?: '-'),
-            __('lead.phone') . ': ' . ($data['phone'] ?: '-'),
-            __('lead.email') . ': ' . ($data['email'] ?: '-'),
-            __('lead.line_id') . ': ' . ($data['line_id'] ?: '-'),
-            __('lead.business_type') . ': ' . $label('business_type', $data['business_type']),
-            __('lead.has_system') . ': ' . $label('has_system', $data['has_system']),
-            __('lead.need') . ': ' . $label('need', $data['need']),
-            __('lead.member_estimate') . ': ' . $label('member_estimate', $data['member_estimate']),
-            __('lead.message') . ': ' . ($data['message'] ?: '-'),
-            '',
-            __('lead.locale') . ': ' . $locale,
-            __('lead.source_page') . ': ' . SeoService::absolute($sourcePath),
-            __('lead.utm') . ': ' . (string) json_encode($utm, JSON_UNESCAPED_UNICODE),
-        ];
-        $subject = __('lead.mail_subject', ['form' => __('lead.forms.' . $data['form_key']), 'name' => $data['name']]);
-
-        LocaleService::use($previous);
-
-        // __() escape ค่าที่แทนใน placeholder เป็น HTML entity — อีเมลเป็นข้อความล้วนจึงถอดกลับ
-        (new MailService())->send(
-            $to,
-            html_entity_decode($subject, ENT_QUOTES, 'UTF-8'),
-            html_entity_decode(implode("\n", $lines), ENT_QUOTES, 'UTF-8'),
-            $data['email'] !== '' ? $data['email'] : null
-        );
     }
 
     // ------------------------------------------------------------- CMS (Phase 3)

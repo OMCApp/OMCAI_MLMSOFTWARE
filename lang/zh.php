@@ -133,6 +133,8 @@ return [
         'throttled' => '提交过于频繁，请稍后再试或致电 +66 99 109 5544。',
         'sent' => '信息已提交。',
         'mail_subject' => '新线索（:form）来自 :name',
+        'mail_test_subject' => '潜在客户邮件测试 — :brand', 'mail_test_body' => '此邮件由 CMS → 网站设置 → 发送测试邮件 发出。收到即表示潜在客户邮件通知正常。',
+        'mail_cms_link' => '在 CMS 中打开', 'mail_received' => '提交时间',
         'mail_intro' => '有访客在网站提交了表单，详情如下。',
         'source_page' => '提交页面',
         'referrer' => '来源',
@@ -371,6 +373,8 @@ return [
             'seo_title' => 'SEO 标题', 'meta_description' => 'Meta 描述', 'canonical_override' => 'Canonical', 'robots' => 'Robots', 'blocks' => '页面区块',
         ],
         'dashboard' => [
+            'mail_title' => '潜在客户通知邮件未送达销售团队', 'mail_backlog' => '有 :count 条潜在客户的通知邮件发送失败 — 数据已完整保存在系统中，但销售团队可能尚未知晓',
+            'mail_view' => '查看列表', 'mail_off' => '尚未设置邮件发送（.env 中的 MAIL_*）— 新潜在客户会保存，但不会发送邮件。设置完成前请销售团队定期查看此页面',
             'title' => '概览', 'lead' => '网站关键数据和常用任务快捷方式', 'numbers' => '摘要', 'new_leads' => '尚未联系的新潜在客户',
             'pages_published' => '已发布页面', 'pages_draft' => '草稿页面', 'posts_published' => '已发布文章', 'posts_draft' => '草稿文章',
             'not_found_7d' => '有访问的失效链接（7 天）', 'redirect_hits' => '重定向次数', 'media_no_alt' => '缺少描述（alt）的图片', 'quick_links' => '快捷方式',
@@ -520,6 +524,8 @@ return [
             'consent_col' => '许可', 'consent_yes' => '已许可', 'consent_no' => '未许可', 'error_consent' => '无法发布 — 请先勾选“客户已许可发布”',
         ],
         'leads' => [
+            'notify' => '邮件通知', 'notify_pending' => '待发送', 'notify_sent' => '已发送', 'notify_failed' => '发送失败', 'notify_skipped' => '未发送（邮件未开启）',
+            'notify_retry' => '重新发送待发邮件（:count）', 'notify_retry_done' => '已重新发送 — 成功 :sent · 失败 :failed · 未发送 :skipped',
             'title' => '潜在客户', 'lead' => '来自网站表单的提交 — 跟踪状态、分配负责人并记录备注', 'detail' => '潜在客户详情', 'manage' => '状态和负责人',
             'received' => '收到时间', 'name' => '姓名', 'company' => '公司', 'phone' => '电话', 'email' => '邮箱', 'line_id' => 'LINE ID',
             'business_type' => '业务类型', 'has_system' => '已有系统', 'need' => '需求', 'member_estimate' => '预计会员数', 'message' => '留言',
@@ -548,6 +554,10 @@ return [
             'error_length' => '密码至少需要 10 个字符', 'error_confirm' => '两次输入的密码不一致', 'error_same' => '新密码必须与旧密码不同',
         ],
         'settings' => [
+            'mail_title' => '潜在客户邮件通知', 'mail_status' => '状态', 'mail_on' => '已开启', 'mail_off' => '尚未设置',
+            'mail_driver' => '发送方式', 'mail_from' => '发件人', 'mail_hint' => '邮件服务器（MAIL_*）在服务器的 .env 文件中设置，因含密码不保存在 CMS · 每次修改后请发送测试邮件',
+            'mail_test_to' => '测试邮件发送至', 'mail_test_to_hint' => '留空 = 发送至潜在客户通知邮箱', 'mail_test' => '发送测试邮件',
+            'mail_test_sent' => '测试邮件已发送至 :to — 请查看收件箱（及垃圾邮件文件夹）', 'mail_test_failed' => '测试邮件发送失败：:error',
             'title' => '网站设置', 'lead' => '网站上显示的公司和联系信息、已核实的数据、潜在客户通知邮箱和跟踪代码', 'company' => '公司信息',
             'company_name' => '品牌名称', 'legal_name' => '法定名称', 'founded' => '公司注册日期', 'founded_hint' => '用于自动计算公司年数', 'phones' => '电话',
             'emails' => '邮箱', 'emails_hint' => '每行一个邮箱 — 全部显示在网站上', 'lines_hint' => '每行一项 — 第一项为主要', 'line_id' => 'LINE ID',

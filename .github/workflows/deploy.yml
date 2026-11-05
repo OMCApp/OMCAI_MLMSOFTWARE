@@ -86,6 +86,12 @@ jobs:
           DB_PASS: ${{ secrets.DB_PASS }}
           STAGING_PASS: ${{ secrets.STAGING_PASS }}
           APP_KEY: ${{ secrets.APP_KEY }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          MAIL_HOST: ${{ secrets.MAIL_HOST }}
+          MAIL_PORT: ${{ secrets.MAIL_PORT }}
+          MAIL_USER: ${{ secrets.MAIL_USER }}
+          MAIL_PASS: ${{ secrets.MAIL_PASS }}
+          MAIL_ENCRYPTION: ${{ secrets.MAIL_ENCRYPTION }}
         run: |
           umask 077
           # config.php trims values and strips surrounding quotes — quote them so leading/trailing
@@ -109,6 +115,17 @@ jobs:
             echo "MIGRATE_TOKEN=${MIGRATE_TOKEN}"
             # HMAC key of the signed device cookie (core/DeviceCookie.php) — required secret since Phase 3
             echo "APP_KEY=${APP_KEY}"
+            # Lead e-mail to sales (optional secrets) — empty MAIL_HOST/MAIL_FROM = e-mail off, leads still saved (LeadNotifier)
+            if [ -n "${MAIL_HOST}" ] && [ -n "${MAIL_FROM}" ]; then
+              echo 'MAIL_ENABLED=true'
+              echo "MAIL_FROM=${MAIL_FROM}"
+              echo 'MAIL_DRIVER=smtp'
+              echo "MAIL_HOST=${MAIL_HOST}"
+              echo "MAIL_PORT=${MAIL_PORT:-587}"
+              echo "MAIL_USER=\"${MAIL_USER}\""
+              echo "MAIL_PASS=\"${MAIL_PASS}\""
+              echo "MAIL_ENCRYPTION=${MAIL_ENCRYPTION:-tls}"
+            fi
           } > .env
           echo ".env written: yes"
 
