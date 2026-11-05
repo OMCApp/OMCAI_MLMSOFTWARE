@@ -171,3 +171,14 @@
   · รูปในเนื้อหาบทความเปลี่ยนตอนแสดง (`App\Services\ContentImages` — query เดียวต่อบทความ) ไม่แก้ HTML ในฐานข้อมูล · บทความไม่มีรูปเด่น = รูปแรกในเนื้อหา eager + fetchpriority
   · การ์ดบทความ / รูปเด่น ใช้ `partials/site-image.php` (srcset + sizes) · `asset()` encode path ภาษาไทยให้เอง
 - **Lighthouse ในเครื่องต้องมี gzip** — XAMPP ไม่มี mod_deflate (staging มี: app.css 139→26 KB) · วัดผ่าน gzip proxy ชั่วคราวนอกโปรเจค ไม่งั้นมือถือต่ำกว่าจริง ~10–20 คะแนน
+
+## Pre-launch รอบ 2 (2026-11-05)
+- **อีเมลแจ้ง Lead:** `App\Services\LeadNotifier` (สร้างอีเมลจากแถวในฐานข้อมูล · ส่งซ้ำได้) + `MailService` มี SMTP ในตัว (STARTTLS/SSL · AUTH LOGIN — ไม่เพิ่ม dependency) · ผลอยู่ที่ `leads.notify_status` (pending/sent/failed/skipped · migration 049) — การเปลี่ยนสถานะผ่าน base Model จึงลง audit log
+  · ส่งไม่สำเร็จ: lead ไม่หาย · ผู้ส่งฟอร์มเห็นหน้าขอบคุณตามปกติ · หน้าแรก CMS เตือนค้างจนกว่าจะส่งได้ · ปุ่มส่งซ้ำ · ระบบลองส่งรายการค้างเองเมื่อมี lead ใหม่ส่งสำเร็จ (ไม่ต้องมี cron) · สูงสุด 10 ครั้งต่อ lead
+  · ทดสอบด้วย `tests/support/smtp-sink.php` (SMTP ในเครื่อง 127.0.0.1 เขียนลงไฟล์ ไม่ส่งออกไปไหน) — `tests/mail.php`
+  · staging: GitHub Secrets `MAIL_HOST` `MAIL_FROM` (+ PORT/USER/PASS/ENCRYPTION) — ไม่มี = ปิดอีเมล
+- **`partials/page-head.php` ปุ่ม `'method' => 'POST'`** = ฟอร์ม + CSRF (คำสั่งที่เปลี่ยนข้อมูลห้ามเป็นลิงก์ GET)
+- **วัดความเร็วจากเครื่องทดสอบ:** เบราว์เซอร์บนเครื่องนี้ถูกแทรกสคริปต์ 137 KB ในหน้า HTTP (ชั้นเครือข่ายของเครื่อง — VPN/ตัวกรองเว็บ · curl/Node ไม่โดน) → วัด staging ผ่าน proxy สะอาดในเครื่อง (`C:\tmp\qa-tools\stage-proxy.js` นอกโปรเจค: h1 = แบบ staging · h2 = TLS + HTTP/2 แบบ production) · ผลวัดจากเครื่องที่ CPU ไม่ว่างให้เทียบแบบสลับรอบ (A/B) เท่านั้น
+- **`app.js`: งานที่อ่านตำแหน่ง (reveal/parallax/header) รอหลังภาพแรก** (`afterFirstPaint`) — เดิมบังคับ layout ทั้งหน้าก่อน first paint
+- **เครื่องมือหลังขึ้นจริง:** `tools/launch/postcheck.php` (SEO + กฎ production + PSI) · `tools/launch/staging-smoke.php` (ล็อกอินจริงด้วยบัญชี `zz-qa-*` จาก env)
+- รายการที่รอ OMC รวมไว้ที่ `project/OMC-CHECKLIST.md` ที่เดียว
