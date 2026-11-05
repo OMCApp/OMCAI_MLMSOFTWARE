@@ -12,6 +12,9 @@
 declare(strict_types=1);
 
 $siteImage      = (array) ($siteImage ?? []);
+$siteImageClass = (string) ($siteImageClass ?? '');
+$siteImageSizes = (string) ($siteImageSizes ?? '');
+$siteImageEager = (bool) ($siteImageEager ?? false);
 $siteImageSet   = [];
 foreach ((array) ($siteImage['srcset'] ?? []) as $siteImageWidth => $siteImageUrl) {
     if ((int) $siteImageWidth > 0 && is_string($siteImageUrl) && $siteImageUrl !== '') {
@@ -20,12 +23,12 @@ foreach ((array) ($siteImage['srcset'] ?? []) as $siteImageWidth => $siteImageUr
 }
 
 if ((string) ($siteImage['src'] ?? '') !== ''): ?>
-<img class="<?= e((string) ($siteImageClass ?? '')) ?>" src="<?= e(asset((string) $siteImage['src'])) ?>"
-     <?php if ($siteImageSet !== []): ?>srcset="<?= e(implode(', ', $siteImageSet)) ?>" sizes="<?= e((string) (($siteImageSizes ?? '') !== '' ? $siteImageSizes : '100vw')) ?>"<?php endif; ?>
+<img class="<?= e($siteImageClass) ?>" src="<?= e(asset((string) $siteImage['src'])) ?>"
+     <?php if ($siteImageSet !== []): ?>srcset="<?= e(implode(', ', $siteImageSet)) ?>" sizes="<?= e($siteImageSizes !== '' ? $siteImageSizes : '100vw') ?>"<?php endif; ?>
      alt="<?= e((string) ($siteImage['alt'] ?? '')) ?>"
      width="<?= e((string) (int) ($siteImage['width'] ?? 1200)) ?>"
      height="<?= e((string) (int) ($siteImage['height'] ?? 800)) ?>"
-     <?php if (!empty($siteImageEager)): ?>fetchpriority="high"<?php else: ?>loading="lazy"<?php endif; ?> decoding="async">
+     <?php if ($siteImageEager): ?>fetchpriority="high"<?php else: ?>loading="lazy"<?php endif; ?> decoding="async">
 <?php endif;
 
 $siteImage = []; $siteImageClass = ''; $siteImageSizes = ''; $siteImageEager = false;

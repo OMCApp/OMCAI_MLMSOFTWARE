@@ -43,7 +43,7 @@ $dashLinks[] = ['icon' => 'book', 'label' => __('ui.manual'), 'url' => '/admin/m
             <h2 id="dash-mail" class="row"><?= icon('warning') ?><?= e(__('cms.dashboard.mail_title')) ?></h2>
             <?php if ((int) ($summary['notify_backlog'] ?? 0) > 0): ?>
                 <p><?= e(__('cms.dashboard.mail_backlog', ['count' => (string) (int) $summary['notify_backlog']])) ?></p>
-                <form method="POST" action="<?= e(url('/admin/leads/notify-retry')) ?>">
+                <form class="row" method="POST" action="<?= e(url('/admin/leads/notify-retry')) ?>">
                     <?= csrf_field() ?>
                     <button type="submit" class="btn btn-primary"><?= icon('mail') ?><?= e(__('cms.leads.notify_retry', ['count' => (string) (int) $summary['notify_backlog']])) ?></button>
                     <a class="btn btn-secondary" href="<?= e(url('/admin/leads?notify_status=failed')) ?>"><?= e(__('cms.dashboard.mail_view')) ?></a>

@@ -731,6 +731,12 @@ $check(preg_match('#<img[^>]+fetchpriority="high"#', $thaiPost['body']) === 1, '
 $check(preg_match('#<figure class="post-cover">\s*<img[^>]+src="[^"]+\.webp\?v=\d+"\s+srcset="[^"]+ 480w#', $thaiPost['body']) === 1, 'post cover is WebP with srcset');
 $check(preg_match('#class="prose post-body".*?<img[^>]+src="/wp-content/uploads/[^"]+\.webp"[^>]+srcset="[^"]+ 480w[^"]*"[^>]+sizes="#s', $thaiPost['body']) === 1, 'images inside the article are WebP with srcset + sizes');
 $check(!preg_match('#<img[^>]+src="[^"]+\.(png|jpe?g)(\?[^"]*)?"#i', $thaiPost['body'] . $http('GET', '/blog/')['body']), 'no PNG/JPEG <img> on a post or /blog/');
+$blogImgs = [];
+preg_match_all('#<img class="news-item-image"[^>]*>#', $http('GET', '/blog/')['body'], $blogImgs);
+$check(count($blogImgs[0]) > 2 && str_contains($blogImgs[0][0], 'fetchpriority="high"') && !str_contains($blogImgs[0][0], 'loading="lazy"')
+    && str_contains($blogImgs[0][1], 'loading="lazy"'), '/blog/: first card image eager (LCP), the rest lazy');
+preg_match('#class="post-related".*#s', $thaiPost['body'], $related);
+$check(!str_contains($related[0] ?? '', 'fetchpriority="high"'), 'related posts below an article stay lazy');
 $check(str_contains($thaiPost['body'], '%E0%B8%9B%E0%B8%81') && !str_contains($thaiPost['body'], 'src="/wp-content/uploads/2025/05/ปก'), 'Thai image file names are percent-encoded in src/srcset');
 // the test server (php -S from the project root) does not serve static files — check the original is still on disk
 $check(is_file($root . '/public/wp-content/uploads/2025/05/ปกบทความ.png') && is_file($root . '/public/wp-content/uploads/2025/05/ปกบทความ.webp'),

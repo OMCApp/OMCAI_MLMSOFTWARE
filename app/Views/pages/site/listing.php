@@ -15,6 +15,8 @@ $siteListIntro = (string) ($siteListIntro ?? '');
 
 <?php
 $newsItems = $siteItems;
+// รูปของการ์ดแรกคือ LCP ของหน้ารวมบทความบนมือถือ (วัดจริง 2026-11-05) — โหลดทันที ไม่ lazy
+$newsItemsEagerFirst = true;
 include __DIR__ . '/../../partials/news-item.php';
 
 $pathPaginationBase  = (string) ($siteBase ?? '/blog/');
