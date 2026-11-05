@@ -54,10 +54,23 @@ $get = static function (string $url, bool $body = true, int $timeout = 30) use (
             return strlen($line);
         },
     ]);
+    /* ‼️ ตรวจใบรับรองเสมอ (ห้ามปิด) — PHP ของ XAMPP ไม่มี CA bundle ของตัวเอง: ใช้ CURL_CA_BUNDLE (แนะนำ path ที่ไม่มีช่องว่าง)
+          ตั้งแยกด้วย curl_setopt — ใส่ในอาร์เรย์ด้วย spread แล้ว key ตัวเลข (ค่าคงที่ CURLOPT_*) ถูกเรียงเลขใหม่ ค่าหายเงียบ */
+    $ca = (string) (getenv('CURL_CA_BUNDLE') ?: ini_get('curl.cainfo'));
+    if ($ca !== '' && is_file($ca)) {
+        curl_setopt($ch, CURLOPT_CAINFO, $ca);
+    }
     $b = (string) curl_exec($ch);
 
-    return ['status' => (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE), 'headers' => $headers, 'body' => $b];
+    return ['status' => (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE), 'headers' => $headers, 'body' => $b, 'error' => curl_error($ch)];
 };
+
+// ต่อไม่ได้เลย (TLS/DNS/firewall) = หยุดพร้อมสาเหตุจริง — ไม่ใช่รายงาน "ไม่ผ่าน" ทุกข้อแบบชวนเข้าใจผิด
+$probe = $get($base . '/', false);
+if ($probe['status'] === 0) {
+    fwrite(STDERR, "cannot connect to {$base}: {$probe['error']}\n(set CURL_CA_BUNDLE=<path to cacert.pem> if this is a certificate error)\n");
+    exit(2);
+}
 
 // ------------------------------------------------------------------ 1. 95 baseline URLs
 $urls   = array_values(array_filter(array_map('trim', file($root . '/docs/seo/baseline-2026-11-03/url-list.txt') ?: [])));
@@ -208,7 +221,7 @@ $file = $root . '/docs/seo/postcheck-' . preg_replace('/[^a-z0-9.-]/i', '-', $ho
 file_put_contents($file, implode("\n", $md) . "\n");
 
 foreach ($counts as $k => $v) {
-    echo str_pad($k, 14) . $v . "\n";
+    echo str_pad((string) $k, 14) . $v . "\n";
 }
 foreach ($psiRows as $r) {
     echo $r . "\n";
