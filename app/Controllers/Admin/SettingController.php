@@ -10,6 +10,8 @@ declare(strict_types=1);
 
 namespace App\Controllers\Admin;
 
+use App\Services\LeadNotifier;
+use App\Services\MailService;
 use App\Services\MediaService;
 use App\Services\SettingService;
 use App\Services\SiteService;
@@ -76,7 +78,32 @@ final class SettingController extends AdminController
             ],
             'cmsMediaOptions'  => (new MediaService())->pickerOptions(),
             'settingsLocales'  => TranslationService::options(),
+            'settingsMail'     => [
+                'configured' => MailService::configured(),
+                'driver'     => (string) config('mail.driver', 'mail'),
+                'from'       => (string) config('mail.from', ''),
+                'host'       => (string) config('mail.host', ''),
+                'recipient'  => LeadNotifier::recipient(),
+            ],
         ]);
+    }
+
+    /** ส่งอีเมลทดสอบไปยังผู้รับ lead (หรือที่อยู่ที่กรอก) — แสดงผลจริงของเซิร์ฟเวอร์อีเมล */
+    public function testMail(): void
+    {
+        $to = trim((string) $this->request->input('to', ''));
+        $to = $to !== '' ? $to : LeadNotifier::recipient();
+
+        if (filter_var($to, FILTER_VALIDATE_EMAIL) === false) {
+            $this->fail(['to' => 'cms.settings.error_email']);
+        }
+
+        $result = (new LeadNotifier())->test($to);
+
+        $this->flash($result['ok'] ? 'success' : 'danger', $result['ok']
+            ? __('cms.settings.mail_test_sent', ['to' => $to])
+            : __('cms.settings.mail_test_failed', ['error' => $result['status'] === 'skipped' ? __('cms.settings.mail_off') : $result['error']]));
+        $this->redirect('/admin/settings#mail');
     }
 
     public function update(): void

@@ -179,6 +179,7 @@ $router->group(['prefix' => '/admin'], function (Router $router): void {
     $router->group(['middleware' => ['auth', 'leads']], function (Router $router): void {
         $router->get('/leads', 'Admin\LeadController@index');
         $router->get('/leads/export', 'Admin\LeadController@export');
+        $router->post('/leads/notify-retry', 'Admin\LeadController@retryNotify');
         $router->get('/leads/{id:\d+}', 'Admin\LeadController@show');
         $router->patch('/leads/{id:\d+}', 'Admin\LeadController@update');
         $router->post('/leads/{id:\d+}/notes', 'Admin\LeadController@note');
@@ -204,6 +205,7 @@ $router->group(['prefix' => '/admin'], function (Router $router): void {
 
         $router->get('/settings', 'Admin\SettingController@edit');
         $router->patch('/settings', 'Admin\SettingController@update');
+        $router->post('/settings/test-mail', 'Admin\SettingController@testMail');
 
         $router->get('/backups', 'Admin\BackupController@index');
         $router->post('/backups', 'Admin\BackupController@store');

@@ -99,3 +99,32 @@ $settingsLogoRow = static function (string $index, array $row, array $media): vo
         <button type="submit" class="btn btn-primary" data-submit-once><?= icon('check') ?><?= e(__('common.save')) ?></button>
     </div>
 </form>
+
+<?php
+/* อีเมลแจ้ง lead — ค่าเซิร์ฟเวอร์อีเมลอยู่ใน .env (secret ห้ามเก็บใน CMS) · ที่นี่แสดงสถานะ + ส่งอีเมลทดสอบ
+   ‼️ ฟอร์มแยกจากฟอร์มบันทึกด้านบน (ฟอร์มซ้อนกันไม่ได้) */
+$settingsMail = (array) ($settingsMail ?? []);
+?>
+<form id="mail" class="card group stack" method="POST" action="<?= e(url('/admin/settings/test-mail')) ?>">
+    <?= csrf_field() ?>
+    <h2><?= e(__('cms.settings.mail_title')) ?></h2>
+    <dl class="cms-dl">
+        <dt><?= e(__('cms.settings.mail_status')) ?></dt>
+        <dd><span class="badge"<?php if (empty($settingsMail['configured'])): ?> data-type="warning"<?php endif; ?>><?= e(__(!empty($settingsMail['configured']) ? 'cms.settings.mail_on' : 'cms.settings.mail_off')) ?></span></dd>
+        <dt><?= e(__('cms.settings.mail_driver')) ?></dt>
+        <dd><?= e(strtoupper((string) ($settingsMail['driver'] ?? ''))) ?><?php if ((string) ($settingsMail['host'] ?? '') !== ''): ?> · <?= e((string) $settingsMail['host']) ?><?php endif; ?></dd>
+        <dt><?= e(__('cms.settings.mail_from')) ?></dt>
+        <dd><?= e((string) ($settingsMail['from'] ?? '') !== '' ? (string) $settingsMail['from'] : '—') ?></dd>
+        <dt><?= e(__('cms.settings.lead_email')) ?></dt>
+        <dd><?= e((string) ($settingsMail['recipient'] ?? '')) ?></dd>
+    </dl>
+    <p class="hint"><?= e(__('cms.settings.mail_hint')) ?></p>
+    <?php
+    $fieldName = 'to'; $fieldLabel = __('cms.settings.mail_test_to'); $fieldType = 'email'; $fieldValue = '';
+    $fieldHint = __('cms.settings.mail_test_to_hint'); $fieldWidth = 'medium';
+    include __DIR__ . '/../../partials/field.php';
+    ?>
+    <div class="row">
+        <button type="submit" class="btn btn-secondary" data-submit-once><?= icon('mail') ?><?= e(__('cms.settings.mail_test')) ?></button>
+    </div>
+</form>

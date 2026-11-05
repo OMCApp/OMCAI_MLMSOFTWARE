@@ -21,8 +21,18 @@ $manual_summary = 'See what visitors sent through the website forms, track statu
   <figcaption>① What the visitor sent ② Status and owner ③ Internal notes</figcaption>
 </figure>
 
+<h2>E-mail alerts to sales</h2>
+<p>Every lead is saved first; then an e-mail goes to the <strong>lead alert address</strong> (Site settings). The <strong>E-mail alert</strong> column shows the result.</p>
+<ul>
+  <li><strong>Sent</strong> — sales has the e-mail</li>
+  <li><strong>Failed</strong> — the lead is safe, but sales was not e-mailed · the Overview page warns until it is sent · press <strong>Resend pending e-mails</strong> (the system also retries when the next lead is sent successfully) · open the lead to see why</li>
+  <li><strong>Not sent (e-mail off)</strong> — no mail server is set up yet; check this page regularly</li>
+</ul>
+<p>Admins can test it in <strong>Site settings → Lead e-mail alerts → Send test e-mail</strong> (do this after every mail change).</p>
+
 <h2>Common mistakes</h2>
 <ul>
+  <li>Alerts land in spam — ask the domain owner to set SPF/DKIM for the sender address</li>
   <li>Notes cannot be edited or deleted — check before adding</li>
   <li>Only active administrators and sales users can be owners</li>
   <li>The CSV contains personal data — keep it safe</li>

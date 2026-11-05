@@ -81,10 +81,19 @@ return [
         'canonical_url' => rtrim($get('CANONICAL_URL', 'https://mlmsoftware.omc.co.th'), '/'),
     ],
 
-    // อีเมลแจ้งเตือน lead ใหม่ (App\Services\MailService ใช้ mail() ของ PHP) — ปิด/ไม่มีผู้ส่ง = ไม่ส่ง แค่บันทึก log
+    // อีเมลแจ้งเตือน lead ใหม่ (App\Services\MailService) — ปิด/ไม่มีผู้ส่ง = ไม่ส่ง สถานะ lead เป็น skipped
+    // driver: smtp (แนะนำ — ส่งผ่านกล่องอีเมลจริงที่ยืนยันตัวตน) · mail (mail() ของ PHP ของโฮสต์)
     'mail' => [
-        'enabled' => $get('MAIL_ENABLED', 'false') === 'true',
-        'from'    => $get('MAIL_FROM', ''),
+        'enabled'    => $get('MAIL_ENABLED', 'false') === 'true',
+        'from'       => $get('MAIL_FROM', ''),
+        'driver'     => $get('MAIL_DRIVER', 'mail') === 'smtp' ? 'smtp' : 'mail',
+        'host'       => $get('MAIL_HOST', ''),
+        'port'       => (int) $get('MAIL_PORT', '587'),
+        'user'       => $get('MAIL_USER', ''),
+        'pass'       => $get('MAIL_PASS', ''),
+        // tls = STARTTLS (587) · ssl = TLS ตั้งแต่ต้น (465) · none = ไม่เข้ารหัส (เฉพาะเครื่องทดสอบในเครื่อง)
+        'encryption' => in_array($get('MAIL_ENCRYPTION', 'tls'), ['tls', 'ssl', 'none'], true) ? $get('MAIL_ENCRYPTION', 'tls') : 'tls',
+        'timeout'    => (int) $get('MAIL_TIMEOUT', '10'),
     ],
 
     'db' => [

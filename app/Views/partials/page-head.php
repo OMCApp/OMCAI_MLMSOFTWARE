@@ -45,6 +45,7 @@
  *   $pageTitle       ชื่อหน้า — ไม่ส่งจะใช้ $title ที่ Controller ส่งให้ layout
  *   $pageLead        ประโยคบอกว่าใครใช้ได้และผลของการกระทำ
  *   $pageActions     รายการปุ่ม [['label'=>, 'url'=>, 'icon'=>, 'style'=>'primary|ghost'], ...]
+ *                   + 'method' => 'POST' = ปุ่มในฟอร์ม POST พร้อม CSRF (คำสั่งที่เปลี่ยนข้อมูล)
  *   $pageBreadcrumb  เส้นทาง [['label'=>, 'url'=>], ...] — ตัวสุดท้ายคือหน้านี้ ไม่ต้องมี url · ต่ำกว่า 2 ขั้นไม่แสดง
  *   $pageMedia       ภาพหรือไอคอนข้างหัวเพจ
  *                    ภาพ:    ['src' => '/assets/images/x.webp', 'alt' => __(...), 'width' => 480, 'height' => 320]
@@ -98,6 +99,16 @@ if (hero_rendered() || $pageTitle === '') {
     <?php if ($pageActions !== []): ?>
         <div class="page-actions">
             <?php foreach ($pageActions as $action): ?>
+                <?php if (strtoupper((string) ($action['method'] ?? 'GET')) === 'POST'): ?>
+                    <?php /* คำสั่งที่เปลี่ยนข้อมูล = ฟอร์ม POST + CSRF (ลิงก์ GET ห้ามเปลี่ยนข้อมูล) */ ?>
+                    <form method="POST" action="<?= e(url((string) ($action['url'] ?? '/'))) ?>">
+                        <?= csrf_field() ?>
+                        <button type="submit" class="btn btn-<?= e($action['style'] ?? 'secondary') ?>">
+                            <?php if (($action['icon'] ?? '') !== ''): ?><?= icon((string) $action['icon']) ?><?php endif; ?>
+                            <?= e((string) ($action['label'] ?? '')) ?>
+                        </button>
+                    </form>
+                <?php else: ?>
                 <a class="btn btn-<?= e($action['style'] ?? 'primary') ?>"
                    href="<?= e(url((string) ($action['url'] ?? '/'))) ?>">
                     <?php if (($action['icon'] ?? '') !== ''): ?>
@@ -105,6 +116,7 @@ if (hero_rendered() || $pageTitle === '') {
                     <?php endif; ?>
                     <?= e((string) ($action['label'] ?? '')) ?>
                 </a>
+                <?php endif; ?>
             <?php endforeach; ?>
         </div>
     <?php endif; ?>

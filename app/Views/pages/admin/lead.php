@@ -32,6 +32,15 @@ $leadLabelOf = [
                 <dt><?= e((string) $leadUtmKey) ?></dt>
                 <dd><?= e(is_scalar($leadUtmValue) ? (string) $leadUtmValue : (string) json_encode($leadUtmValue, JSON_UNESCAPED_UNICODE)) ?></dd>
             <?php endforeach; ?>
+            <?php $leadNotify = (string) ($lead['notify_status'] ?? ''); ?>
+            <?php if ($leadNotify !== ''): ?>
+                <dt><?= e(__('cms.leads.notify')) ?></dt>
+                <dd>
+                    <span class="badge"<?php if ($leadNotify === 'failed'): ?> data-type="warning"<?php endif; ?>><?= e(__('cms.leads.notify_' . $leadNotify)) ?></span>
+                    <?php if ((string) ($lead['notified_at'] ?? '') !== ''): ?> <span class="muted small"><?= e(format_date((string) $lead['notified_at'], true)) ?></span><?php endif; ?>
+                    <?php if ((string) ($lead['notify_error'] ?? '') !== ''): ?><br><span class="muted small"><?= e((string) $lead['notify_error']) ?></span><?php endif; ?>
+                </dd>
+            <?php endif; ?>
         </dl>
     </section>
 

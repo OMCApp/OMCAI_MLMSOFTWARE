@@ -133,6 +133,8 @@ return [
         'throttled' => 'Too many submissions. Please wait a while or call +66 99 109 5544.',
         'sent' => 'Your message has been sent.',
         'mail_subject' => 'New lead (:form) from :name',
+        'mail_test_subject' => 'Lead e-mail test — :brand', 'mail_test_body' => 'Sent from CMS → Site settings → Send test e-mail. If you received it, lead e-mail alerts work.',
+        'mail_cms_link' => 'Open in the CMS', 'mail_received' => 'Received',
         'mail_intro' => 'A visitor submitted a form on the website. Details below.',
         'source_page' => 'Submitted from',
         'referrer' => 'Referrer',
@@ -379,6 +381,8 @@ return [
             'canonical_override' => 'Canonical', 'robots' => 'Robots', 'blocks' => 'Page blocks',
         ],
         'dashboard' => [
+            'mail_title' => 'Lead e-mails have not reached the sales team', 'mail_backlog' => ':count lead(s) could not be e-mailed — every lead is saved in the system, but sales may not know yet',
+            'mail_view' => 'View them', 'mail_off' => 'Sending e-mail is not set up yet (MAIL_* in .env) — new leads are saved but no e-mail is sent. Sales should check this page regularly until it is set up',
             'title' => 'Overview', 'lead' => 'Key numbers of the website and shortcuts to frequent tasks', 'numbers' => 'Summary',
             'new_leads' => 'New leads not contacted yet', 'pages_published' => 'Published pages', 'pages_draft' => 'Draft pages',
             'posts_published' => 'Published posts', 'posts_draft' => 'Draft posts', 'not_found_7d' => 'Broken links visited (7 days)',
@@ -572,6 +576,8 @@ return [
             'error_consent' => 'Cannot publish — tick "The client has given permission to publish" first',
         ],
         'leads' => [
+            'notify' => 'E-mail alert', 'notify_pending' => 'Pending', 'notify_sent' => 'Sent', 'notify_failed' => 'Failed', 'notify_skipped' => 'Not sent (e-mail off)',
+            'notify_retry' => 'Resend pending e-mails (:count)', 'notify_retry_done' => 'Resent — sent :sent · failed :failed · not sent :skipped',
             'title' => 'Leads', 'lead' => 'Submissions from the website forms — track status, assign an owner and keep notes',
             'detail' => 'Lead details', 'manage' => 'Status and owner', 'received' => 'Received',
             'name' => 'Name', 'company' => 'Company', 'phone' => 'Phone', 'email' => 'Email', 'line_id' => 'LINE ID',
@@ -611,6 +617,10 @@ return [
             'error_confirm' => 'The passwords do not match', 'error_same' => 'The new password must differ from the old one',
         ],
         'settings' => [
+            'mail_title' => 'Lead e-mail alerts', 'mail_status' => 'Status', 'mail_on' => 'On', 'mail_off' => 'Not set up',
+            'mail_driver' => 'Method', 'mail_from' => 'Sender', 'mail_hint' => 'The mail server (MAIL_*) is set in the server .env file, not in the CMS, because it holds a password · send a test e-mail after every change',
+            'mail_test_to' => 'Send a test e-mail to', 'mail_test_to_hint' => 'Empty = the lead alert address', 'mail_test' => 'Send test e-mail',
+            'mail_test_sent' => 'Test e-mail sent to :to — check the inbox (and spam folder)', 'mail_test_failed' => 'The test e-mail failed: :error',
             'title' => 'Site settings', 'lead' => 'Company details and contact channels shown on the site, verified figures, lead email and tracking codes',
             'company' => 'Company details', 'company_name' => 'Brand name', 'legal_name' => 'Legal name',
             'founded' => 'Registration date', 'founded_hint' => 'Used to calculate the company’s years automatically',

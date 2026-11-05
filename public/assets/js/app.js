@@ -848,33 +848,40 @@
     const canObserve = 'IntersectionObserver' in window;
     const motionOn = !reduceMotion && canObserve;
 
+    /* ‼️ งานที่อ่านตำแหน่ง (getBoundingClientRect / scrollY) ต้องรอหลังภาพแรกขึ้นจอ
+          อ่านตอนสคริปต์เริ่ม = บังคับ layout ทั้งหน้าก่อน first paint → FCP/LCP มือถือช้า (วัดจริง 2026-11-05)
+          รอหนึ่งเฟรม: ของในจอแรกยังไม่ถูกซ่อน (data-motion ใส่หลังทำเครื่องหมายแล้ว) จึงไม่กะพริบ */
+    const afterFirstPaint = (task) => window.requestAnimationFrame(() => window.setTimeout(task, 0));
+
     /* ------------------------------------------------------------ reveal */
 
     const reveals = Array.from(document.querySelectorAll('.reveal'));
 
     if (motionOn && reveals.length > 0) {
-        // ‼️ ของที่อยู่ในจอแรกแล้วต้องไม่ถูกซ่อนแล้วโผล่ใหม่ (กะพริบ) — ทำเครื่องหมายก่อนเปิด data-motion
-        const fold = window.innerHeight;
+        afterFirstPaint(() => {
+            // ‼️ ของที่อยู่ในจอแรกแล้วต้องไม่ถูกซ่อนแล้วโผล่ใหม่ (กะพริบ) — ทำเครื่องหมายก่อนเปิด data-motion
+            const fold = window.innerHeight;
 
-        reveals.forEach((element) => {
-            if (element.getBoundingClientRect().top < fold * 0.92) {
-                element.classList.add('is-visible');
-            }
-        });
-
-        root.dataset.motion = 'on';
-
-        const revealObserver = new IntersectionObserver((entries) => {
-            entries.forEach((entry) => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('is-visible');
-                    revealObserver.unobserve(entry.target);
+            reveals.forEach((element) => {
+                if (element.getBoundingClientRect().top < fold * 0.92) {
+                    element.classList.add('is-visible');
                 }
             });
-        }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
 
-        reveals.filter((element) => !element.classList.contains('is-visible'))
-            .forEach((element) => revealObserver.observe(element));
+            root.dataset.motion = 'on';
+
+            const revealObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        revealObserver.unobserve(entry.target);
+                    }
+                });
+            }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+
+            reveals.filter((element) => !element.classList.contains('is-visible'))
+                .forEach((element) => revealObserver.observe(element));
+        });
     } else {
         reveals.forEach((element) => element.classList.add('is-visible'));
     }
@@ -936,7 +943,7 @@
         const onScroll = () => {
             header.dataset.scrolled = window.scrollY > 8 ? 'true' : 'false';
         };
-        onScroll();
+        afterFirstPaint(onScroll);
         window.addEventListener('scroll', onScroll, { passive: true });
 
         const menus = Array.from(header.querySelectorAll('[data-menu]'));
@@ -1178,7 +1185,7 @@
             }
         }, { passive: true });
 
-        update();
+        afterFirstPaint(update);
     }
 
     /* ------------------------------------------------------------ analytics events */
