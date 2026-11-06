@@ -847,6 +847,24 @@ foreach ($rows as [, $oldUrl, $newStatus, $redirect]) {
     }
 }
 
+// ------------------------------------------------------------------ /_preflight (production readiness)
+
+$section('Pre-production — /_preflight (token, read-only, no secrets)');
+$check($http('GET', '/_preflight')['status'] === 404, '/_preflight without token → 404 (endpoint hidden)');
+$check($http('GET', '/_preflight', ['headers' => ['X-Migrate-Token: wrong']])['status'] === 404, '/_preflight with a wrong token → 404');
+$check($http('GET', '/_preflight?token=' . rawurlencode((string) $config['migrate_token']))['status'] === 404, '/_preflight ignores ?token= (header only — no token in access logs)');
+if ((string) $config['migrate_token'] !== '') {
+    $pre = $http('GET', '/_preflight', ['headers' => ['X-Migrate-Token: ' . $config['migrate_token']]]);
+    $check(in_array($pre['status'], [200, 500], true) && str_contains($pre['body'], 'verdict:') && str_contains($pre['body'], 'not the WordPress DB'),
+        '/_preflight with token → report', (string) $pre['status']);
+    $check(str_contains($pre['body'], 'FAIL  env       APP_ENV'), 'non-production install is flagged (APP_ENV)');
+    // ‼️ เฉพาะค่าลับจริง ≥ 8 ตัว — ชื่อผู้ใช้ฐานข้อมูลในเครื่อง ("root") ชนกับคำว่า "document root" ในรายงาน
+    $secrets = array_filter([(string) $config['migrate_token'], (string) ($config['app_key'] ?? ''), (string) $config['db']['pass'],
+        (string) ($config['mail']['pass'] ?? '')], static fn (string $s): bool => strlen($s) >= 8);
+    $check(array_filter($secrets, static fn (string $s): bool => str_contains($pre['body'], $s)) === [], '/_preflight never prints a secret (token, key, DB password, SMTP password)');
+    $check(str_contains($pre['body'], 'document root = public/'), '/_preflight (web) checks the document root');
+}
+
 // ------------------------------------------------------------------ environment / noindex
 
 $section('noindex by environment');

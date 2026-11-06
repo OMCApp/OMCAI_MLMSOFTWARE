@@ -16,7 +16,7 @@ namespace Core;
 
 final class Staging
 {
-    private const OPEN_PATHS = ['/_migrate', '/_health'];
+    private const OPEN_PATHS = ['/_migrate', '/_health', '/_preflight'];
 
     /** @param array{env:string,staging:array{user:string,pass:string}} $config */
     public static function guard(array $config): void
