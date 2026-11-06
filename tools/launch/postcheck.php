@@ -129,7 +129,12 @@ if ($staging) {
         || $fail('production: robots.txt must Allow and list https://' . $prodHost . '/sitemap.xml');
     str_starts_with($base, 'https://') || $fail('production: base URL is not https');
     isset($home['headers']['strict-transport-security']) || $fail('production: Strict-Transport-Security header missing');
-    foreach (['http://' . $prodHost, 'http://www.' . $prodHost, 'https://www.' . $prodHost] as $variant) {
+    // ‼️ ตัวแปรโดเมน (http/www) ยิงที่ชื่อโดเมนจริงเสมอ — ตรวจเฉพาะเมื่อ base คือโดเมน production ไม่งั้นจะไปตรวจเว็บที่ออนไลน์อยู่ตอนนั้นแทน
+    $variants = ($parts['host'] ?? '') === $prodHost ? ['http://' . $prodHost, 'http://www.' . $prodHost, 'https://www.' . $prodHost] : [];
+    if ($variants === []) {
+        $notes[] = 'www/http variants skipped — base is not ' . $prodHost;
+    }
+    foreach ($variants as $variant) {
         $probe = '/2025/05/20/mlm-software-คำตอบการจัดการสต็อก/?utm_source=postcheck';
         $r     = $get($variant . $probe, false);
         $loc   = rawurldecode($r['headers']['location'] ?? '');
@@ -154,8 +159,14 @@ foreach ($sm[1] as $loc) {
 $get($base . '/_health', false)['status'] === 200 || $fail('/_health is not 200');
 foreach (['/.env', '/.git/config', '/app/Services/LeadService.php', '/config/config.php', '/database/migrations/049_lead_notify_status.sql',
           '/storage/logs/', '/storage/backups/', '/composer.json', '/tools/launch/postcheck.php', '/project/STATE.md'] as $secret) {
-    $s = $get($base . $secret, false)['status'];
-    in_array($s, [401, 403, 404, 410], true) || $fail("{$secret} is reachable ({$s})");
+    // ตามการ redirect ภายในเว็บ (เช่นเติม / ท้าย) — "เปิดได้" คือจบที่ 200 เท่านั้น
+    $target = $base . $secret;
+    for ($hop = 0, $r = $get($target, false); $hop < 3 && in_array($r['status'], [301, 302, 307, 308], true); $hop++) {
+        $loc    = (string) ($r['headers']['location'] ?? '');
+        $target = str_starts_with($loc, '/') ? $origin . $loc : $loc;
+        $r      = str_starts_with($target, $base) ? $get($target, false) : ['status' => 404, 'headers' => []];
+    }
+    in_array($r['status'], [401, 403, 404, 410], true) || $fail("{$secret} is reachable ({$r['status']})");
 }
 
 // ------------------------------------------------------------------ PageSpeed Insights (optional)
@@ -189,6 +200,10 @@ $md   = ['# Post-deploy check — ' . $base, '', 'Run ' . date('Y-m-d H:i') . ' 
 $md[] = $fails === [] ? '**PASS — no problems.**' : '**FAIL — ' . count($fails) . ' problem(s):**';
 foreach ($fails as $f) {
     $md[] = '- ' . $f;
+}
+foreach ($notes as $n) {
+    $md[] = '- note: ' . $n;
+    echo 'note: ' . $n . "\n";
 }
 $md[] = '';
 $md[] = '## 95 baseline URLs';
