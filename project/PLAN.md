@@ -153,9 +153,12 @@
 - [x] 95 URL เดิมบน staging (ยิงจริง): 57 × 200 · 36 × 301 ครั้งเดียว · 2 × 410 · 404 = 0 · ไม่มี chain/loop (staging เปิดสาธารณะ ไม่ต้อง Basic Auth)
 - [x] SEO regression: `tools/seo-audit/regression.php` → `docs/seo/regression.md` — 95 URL + 153 URL ใน sitemap 3 ภาษา + hreflang 27 คู่ · 0 ปัญหาที่กั้น · คำหลักเดิมคืน 2 จุด (047) · www/http → https ใน `public/.htaccess`
 - [x] performance: รูปบทความเดิม → WebP + srcset (048) · Lighthouse 6 หน้า × 2 ฟอร์ม บน staging · desktop 88–100 · มือถือ 88–96
-- [ ] **LCP มือถือ ≤ 2.5 วินาที** — ลดอาการแล้ว ยังไม่ถึงเป้า (staging HTTP/1.1: 1.9–3.4 วินาที) · วัดซ้ำบน production HTTPS/HTTP2
+- [ ] **LCP มือถือ ≤ 2.5 วินาที** — ถึงเป้าใน lab ทุกหน้าสำคัญเมื่อเสิร์ฟแบบ HTTPS + HTTP/2 (1.6–2.5 วิ · แก้ forced layout + การ์ดแรก eager 2026-11-05) · staging HTTP/1.1 ยังเกิน (ข้อจำกัด staging) · **ติ๊กได้หลังวัดบน production** (`LAUNCH.md` ข้อ 13)
+- [x] อีเมลแจ้งฝ่ายขาย: SMTP + สถานะต่อ Lead + เตือนใน CMS + ส่งซ้ำ + อีเมลทดสอบ (049 · `tests/mail.php`) — เหลือทดสอบกับกล่องจริง (OMC B1–B4)
+- [x] เครื่องมือหลังขึ้นจริง `tools/launch/postcheck.php` (staging PASS) · SEO rollback plan (`LAUNCH.md` 11a) · รายการรอ OMC ที่เดียว (`OMC-CHECKLIST.md`)
+- [x] Responsive: 153 หน้า × 3 ขนาด ไม่ล้น ไม่มีรูปเสีย ไม่มี JS/CSP error
 - [x] security: ไฟล์ลับ 403/404 บน staging · headers · CSRF/สิทธิ์ (test) · analytics ไม่ส่งข้อมูลส่วนบุคคล
 - [x] CMS functional (test อัตโนมัติ) รวมเปลี่ยนภาพ/ข้อความ hero จาก /admin · backup → restore ทดสอบแล้ว
-- [ ] login จริงบน staging ด้วยบัญชีทดสอบที่ได้รับอนุญาต — ยังไม่มีบัญชี
+- [ ] login จริงบน staging ด้วยบัญชีทดสอบที่ได้รับอนุญาต — สคริปต์พร้อม (`tools/launch/staging-smoke.php` ผ่าน 3 บทบาทในเครื่อง) · รอ OMC สร้างบัญชี `zz-qa-*` (C1)
 - [x] `QA-REPORT.md` · `LAUNCH.md` (checklist + rollback)
 - [ ] **ไม่สลับ production ใน phase นี้** — ต้องได้อนุมัติ + ผู้ใช้ตั้ง document root/โดเมน/SSL (LAUNCH.md)
