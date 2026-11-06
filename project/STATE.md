@@ -3,13 +3,13 @@
 
 - **ช่วง:** C — ลงมือทีละ phase
 - **โหมด:** เร็ว (ผู้ใช้สั่ง "ทำให้เสร็จเลย ไม่ต้องถามจุกจิก")
-- **Phase:** 1 🔨 · 2 🔨 · 3 🔨 · 4 🔨 · 5 🔨 · 6 🔨 (ปิดงาน pre-launch 2026-11-05 — `QA-REPORT.md` แบ่ง PASS / BLOCKED / PRODUCTION ONLY)
-- **ขั้นใน phase:** งานที่ทำได้โดยไม่มีข้อมูล/สิทธิ์ของ OMC เสร็จหมด · รอ OMC ตาม `OMC-CHECKLIST.md` (อนุมัติ · document root · SMTP · บัญชีทดสอบ) · ห้ามแตะ production/DNS จนได้คำสั่ง
+- **Phase:** 1 🔨 · 2 🔨 · 3 🔨 · 4 🔨 · 5 🔨 · 6 🔨 · Production Preparation ✅ (2026-11-06 — `GO-NO-GO.md`: NO-GO วันนี้ รอ OMC 7 ข้อ)
+- **ขั้นใน phase:** ผู้ใช้อนุมัติ Production Preparation (2026-11-06) แต่ **ยังไม่อนุมัติ deploy ทับ production / เปลี่ยน DNS / ลบ WordPress** · ขั้นตอนจริงใน `LAUNCH.md` · รอ OMC ตาม `OMC-CHECKLIST.md`
 - **ประตูที่ผ่านแล้ว:** A ✅ (2026-11-03 — brief 3 ฉบับแทนการสัมภาษณ์) · B ✅ (2026-11-03 — ผู้ใช้อนุมัติเต็มรูปแบบล่วงหน้า + ส่งแบบอ้างอิงหน้าแรก)
 
 ## ค้างอยู่ที่
-Pre-launch ปิดแล้ว (2026-11-05) — อีเมลแจ้งฝ่ายขาย (SMTP + สถานะ + เตือน + ส่งซ้ำ) · LCP มือถือ ≤ 2.5 วิ ทุกหน้าสำคัญเมื่อเป็น HTTPS/HTTP2 (staging HTTP/1.1 ยังเกิน — ข้อจำกัด staging) · SEO 95 URL ผ่านบน staging · เครื่องมือ postcheck/staging-smoke
-ค้าง: ทั้งหมดอยู่ใน `OMC-CHECKLIST.md` (🔴 A1–A5 · B1–B4) · หลังขึ้นจริง: `LAUNCH.md` ข้อ 12–13
+Production Preparation เสร็จ (2026-11-06) — `/_preflight` · release builder · verify-wp-backup · ซ้อมติดตั้งจากแพ็กเกจลงฐานเปล่า (migrated 28) · runbook แบบโฟลเดอร์ใหม่ (ไม่ทับ WordPress) · ตรวจเซิร์ฟเวอร์ production + อีเมล DNS จากภายนอก · repo GitHub เป็นสาธารณะ (ไม่มีความลับหลุด)
+ค้าง: 🔴 7 ข้อใน `GO-NO-GO.md` (อนุมัติ · backup WordPress · ฐานใหม่ · .env · `/_preflight` บนเครื่องจริง · SMTP · commit) — รายละเอียด `OMC-CHECKLIST.md`
 
 ## ตัดสินใจอะไรไปแล้วที่ไม่ได้อยู่ในไฟล์อื่น
 - [2026-11-03] Phase 2: หลังบ้านย้ายไป `/admin` · หน้าสาธารณะทั้งหมดเป็น draft จน Phase 4 · หลัง merge Phase 1 ให้เปลี่ยน `PublicController::LAYOUT` เป็น `site` · รายละเอียดใน NOTES.md หัวข้อ Phase 2
