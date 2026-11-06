@@ -3,13 +3,13 @@
 
 - **ช่วง:** C — ลงมือทีละ phase
 - **โหมด:** เร็ว (ผู้ใช้สั่ง "ทำให้เสร็จเลย ไม่ต้องถามจุกจิก")
-- **Phase:** 1 🔨 · 2 🔨 · 3 🔨 · 4 🔨 · 5 🔨 · 6 🔨 (QA เสร็จ — รายงาน `QA-REPORT.md` · ผล NOT READY สำหรับ production)
-- **ขั้นใน phase:** Phase 6 ทำครบตามที่ทำได้โดยไม่มีข้อมูล/สิทธิ์ production · รออนุมัติ + เงื่อนไข production (`LAUNCH.md`)
+- **Phase:** 1 🔨 · 2 🔨 · 3 🔨 · 4 🔨 · 5 🔨 · 6 🔨 (ปิดงาน pre-launch 2026-11-05 — `QA-REPORT.md` แบ่ง PASS / BLOCKED / PRODUCTION ONLY)
+- **ขั้นใน phase:** งานที่ทำได้โดยไม่มีข้อมูล/สิทธิ์ของ OMC เสร็จหมด · รอ OMC ตาม `OMC-CHECKLIST.md` (อนุมัติ · document root · SMTP · บัญชีทดสอบ) · ห้ามแตะ production/DNS จนได้คำสั่ง
 - **ประตูที่ผ่านแล้ว:** A ✅ (2026-11-03 — brief 3 ฉบับแทนการสัมภาษณ์) · B ✅ (2026-11-03 — ผู้ใช้อนุมัติเต็มรูปแบบล่วงหน้า + ส่งแบบอ้างอิงหน้าแรก)
 
 ## ค้างอยู่ที่
-Phase 6 QA เสร็จ (2026-11-04, main `a1c030d` บน staging) — หน้าแรกตาม Mockup ชุดที่ 3 (ภาพผู้บริหารตะวันตก) · SEO 95 URL ผ่าน · รูปบทความ WebP
-ค้าง: **LCP มือถือ ≤ 2.5 วิ ยังไม่ถึง** (วัดซ้ำบน production HTTPS) · อนุมัติ + เงื่อนไข production (`LAUNCH.md`) · MAIL_ENABLED/MAIL_FROM · native speaker EN/ZH · login จริงบน staging (ยังไม่มีบัญชีทดสอบ) · ข้อมูลจริงจาก OMC (`QA-REPORT.md` ข้อ 8)
+Pre-launch ปิดแล้ว (2026-11-05) — อีเมลแจ้งฝ่ายขาย (SMTP + สถานะ + เตือน + ส่งซ้ำ) · LCP มือถือ ≤ 2.5 วิ ทุกหน้าสำคัญเมื่อเป็น HTTPS/HTTP2 (staging HTTP/1.1 ยังเกิน — ข้อจำกัด staging) · SEO 95 URL ผ่านบน staging · เครื่องมือ postcheck/staging-smoke
+ค้าง: ทั้งหมดอยู่ใน `OMC-CHECKLIST.md` (🔴 A1–A5 · B1–B4) · หลังขึ้นจริง: `LAUNCH.md` ข้อ 12–13
 
 ## ตัดสินใจอะไรไปแล้วที่ไม่ได้อยู่ในไฟล์อื่น
 - [2026-11-03] Phase 2: หลังบ้านย้ายไป `/admin` · หน้าสาธารณะทั้งหมดเป็น draft จน Phase 4 · หลัง merge Phase 1 ให้เปลี่ยน `PublicController::LAYOUT` เป็น `site` · รายละเอียดใน NOTES.md หัวข้อ Phase 2

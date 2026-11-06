@@ -99,7 +99,7 @@ Lead e-mail: CMS → Settings → **Send test e-mail** → confirm it arrives (a
 |---|---|---|
 | Staging as served today (HTTP/1.1) | 2.6–3.5 s | staging limitation: no TLS → no HTTP/2 |
 | Same staging over TLS + HTTP/2 (local proxy, same server) | **2.3–2.5 s** | what production HTTPS will be |
-| Other key pages over HTTP/2 | services 1.8 · article 2.5 · EN home 1.6 · ZH home 1.7 · contact 1.9 · blog 2.7 s | blog: first card image was lazy → now eager (deployed after this run) |
+| Other key pages over HTTP/2 | services 1.8 · article 2.5 · EN home 1.6 · ZH home 1.7 · contact 1.9 · blog 2.7 → **1.9 s** | blog: first card image was lazy → now eager (median of 3, perf 98) |
 
 Code fixes done: no forced synchronous layout before first paint (reveal/parallax/header reads after the first frame — A/B: perf 61 → 68, LCP 3.8 → 3.3 s on a loaded test PC) · first blog card eager · WebP + srcset for all old images · fonts self-hosted, subset, `swap`, preloaded.
 Measurement caveats on the test PC (not the site): its browser traffic to plain-HTTP staging gets a 137 KB script injected by a local network layer (VPN/web filter) — staging Lighthouse runs from that PC were pessimistic; CPU at ~55 % from desktop apps makes TBT noisy.
