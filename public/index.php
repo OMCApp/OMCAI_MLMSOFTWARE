@@ -75,6 +75,30 @@ if (Path::current() === '/_health') {
     exit;
 }
 
+// ------------------------------------------------- ตรวจความพร้อมเซิร์ฟเวอร์ (ก่อนเปิดจริง)
+//
+// ‼️ token เดียวกับ /_migrate (header เท่านั้น) · ไม่ตรง = 404 · อ่านอย่างเดียว ไม่คืนค่าลับ (App\Services\PreflightService)
+//    อยู่ก่อนโหมดปิดปรับปรุง — ตรวจได้ทั้งตอนเว็บยังปิดอยู่
+
+if (Path::current() === '/_preflight') {
+    $expected = (string) $config['migrate_token'];
+    $given    = (string) ($_SERVER['HTTP_X_MIGRATE_TOKEN'] ?? '');
+
+    Logger::warning('preflight_endpoint_called', ['ip' => Auth::ip()]);
+
+    if ($expected === '' || $given === '' || !hash_equals($expected, $given)) {
+        http_response_code(404);
+        exit;
+    }
+
+    header('Content-Type: text/plain; charset=utf-8');
+    header('Cache-Control: no-store');
+    $preflight = (new App\Services\PreflightService())->run($config, $root, $_SERVER);
+    http_response_code(App\Services\PreflightService::verdict($preflight) === 'fail' ? 500 : 200);
+    echo App\Services\PreflightService::text($preflight);
+    exit;
+}
+
 // ------------------------------------------------------------- maintenance
 
 if (is_file($config['paths']['maintenance']) && !str_starts_with(Path::current(), '/_migrate')) {
