@@ -28,7 +28,7 @@ final class Post extends Model
     protected array $fillable = [
         'slug', 'title', 'excerpt', 'content', 'featured_image_id', 'category_id', 'author_name',
         'status', 'published_at', 'seo_title', 'meta_description', 'canonical_override', 'robots',
-        'og_image_id', 'legacy_url', 'locale', 'translation_group',
+        'og_image_id', 'legacy_url', 'locale', 'translation_group', 'tags',
     ];
 
     public const STATUSES = ['draft', 'published'];
@@ -63,6 +63,25 @@ final class Post extends Model
             . ' ORDER BY published_at DESC, id DESC'
             . ' LIMIT ' . $limit . ' OFFSET ' . $offset,
             $params
+        );
+    }
+
+    /**
+     * ค้นบทความที่เผยแพร่แล้ว — ‼️ prepared · ตัว % _ \ ในคำค้นถูก escape (ไม่ใช่ wildcard)
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function searchPublished(string $term, string $locale, int $limit): array
+    {
+        $like  = '%' . addcslashes($term, '%_\\') . '%';
+        $limit = max(1, min($limit, 100));
+
+        return Database::select(
+            'SELECT * FROM posts WHERE locale = :locale AND ' . self::PUBLISHED . '
+               AND (title LIKE :q1 OR excerpt LIKE :q2 OR content LIKE :q3 OR tags LIKE :q4)
+             ORDER BY (title LIKE :q5) DESC, published_at DESC, id DESC'
+            . ' LIMIT ' . $limit,
+            ['locale' => $locale, 'q1' => $like, 'q2' => $like, 'q3' => $like, 'q4' => $like, 'q5' => $like]
         );
     }
 

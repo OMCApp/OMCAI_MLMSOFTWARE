@@ -28,6 +28,10 @@ return [
     // ---- Public site: layout (header · menu · footer) and block UI strings
     // ‼️ Page content (headings, paragraphs, menu labels) does not live here — it lives in the CMS / config/site.php
     'site' => [
+        'blog_filter' => '文章分类', 'blog_all' => '全部', 'blog_search_label' => '搜索文章', 'blog_search_placeholder' => '搜索文章…',
+        'blog_search_button' => '搜索', 'blog_search_clear' => '清除搜索', 'blog_results' => '“:q”的搜索结果 — 共 :count 篇', 'search_title' => '搜索“:q”',
+        'blog_cta_title' => '正在规划MLM业务？', 'blog_cta_text' => '让OMC为您的业务设计合适的直销系统与奖金制度',
+        'blog_cta_consult' => '免费咨询专家', 'blog_cta_demo' => '预约系统演示', 'read_minutes' => '阅读约 :min 分钟',
         'lang_switch' => '选择语言',
         'related_posts' => '相关文章',
         'post_by' => '作者：:name',
@@ -367,6 +371,7 @@ return [
         'role' => ['admin' => '管理员', 'editor' => '内容编辑', 'sales' => '销售'],
         'template' => ['default' => '标准', 'home' => '首页', 'product' => '产品', 'landing' => '落地页', 'legal' => '政策/法律', 'contact' => '联系'],
         'field' => [
+            'tags' => '标签',
             'title' => '标题', 'path' => 'URL（路径）', 'status' => '状态', 'locale' => '语言', 'updated_at' => '最后编辑', 'published_at' => '发布日期',
             'template' => '模板', 'parent' => '上级页面', 'slug' => 'Slug', 'excerpt' => '摘要', 'content' => '内容', 'category' => '分类',
             'author_name' => '作者', 'featured_image' => '主图', 'name' => '名称', 'description' => '描述', 'sort' => '排序',
@@ -387,6 +392,7 @@ return [
             'redirect_old_hint' => '当前 URL :path 已发布 — 来自 Google 或旧链接的访客将被引导到新 URL',
         ],
         'posts' => [
+            'tags_hint' => '用逗号分隔，例如 MLM, 奖金制度 — 显示在文章卡片上并用于搜索（最多 8 个）',
             'title' => '文章', 'lead' => '博客文章 — URL 为 /年/月/日/slug/，取自发布日期', 'add' => '写文章', 'edit' => '编辑文章', 'section_main' => '内容',
             'slug_hint' => 'URL 的最后部分 — 可用泰文，不能有 / 或空格',
             'redirect_old' => '如果 slug 或发布日期改变，自动从旧 URL 创建 301 重定向',

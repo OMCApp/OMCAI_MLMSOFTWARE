@@ -56,7 +56,7 @@ $siteImage   = $sitePost['image'] ?? null;
 <?php if ((array) ($sitePost['related'] ?? []) !== []): ?>
     <section class="post-related" aria-labelledby="post-related-title">
         <h2 id="post-related-title"><?= e(__('site.related_posts')) ?></h2>
-        <?php $newsItems = (array) $sitePost['related']; include __DIR__ . '/../../partials/news-item.php'; ?>
+        <?php $newsItems = (array) $sitePost['related']; $newsItemsHeading = 'h3'; include __DIR__ . '/../../partials/news-item.php'; ?>
     </section>
 <?php endif; ?>
 </div>

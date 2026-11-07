@@ -169,7 +169,7 @@ final class PostController extends AdminController
                                   ['label' => (string) $post['title'], 'url' => '/admin/posts/' . (int) $id],
                                   ['label' => __('cms.revisions.view')]],
             'revisionFields'  => PageController::diff($post, $snapshot,
-                ['title', 'excerpt', 'content', 'seo_title', 'meta_description', 'canonical_override', 'robots', 'author_name']),
+                ['title', 'excerpt', 'content', 'tags', 'seo_title', 'meta_description', 'canonical_override', 'robots', 'author_name']),
             'revisionRestore' => '/admin/posts/' . (int) $id . '/revisions/' . (int) $revisionId . '/restore',
         ]);
     }
@@ -198,6 +198,7 @@ final class PostController extends AdminController
             'content'            => (string) $this->request->input('content', ''),
             'featured_image_id'  => $this->intOrNull('featured_image_id'),
             'category_id'        => $this->intOrNull('category_id'),
+            'tags'               => \App\Services\PostTags::normalize($this->str('tags', 600)),
             'author_name'        => $this->nullable('author_name', 100),
             'status'             => $status,
             'published_at'       => $this->datetime('published_at') ?? ($status === 'published' ? date('Y-m-d H:i:s') : null),
@@ -245,6 +246,7 @@ final class PostController extends AdminController
              'hint' => __('cms.posts.date_hint')],
             ['name' => 'category_id', 'label' => __('cms.field.category'), 'type' => 'select', 'value' => (string) ($post['category_id'] ?? ''),
              'options' => ['' => '—'] + (new CategoryService())->names(), 'width' => 'medium'],
+            ['name' => 'tags', 'label' => __('cms.field.tags'), 'value' => $post['tags'] ?? '', 'hint' => __('cms.posts.tags_hint')],
             ['name' => 'author_name', 'label' => __('cms.field.author_name'), 'value' => $post['author_name'] ?? '', 'width' => 'medium'],
             ['name' => 'featured_image_id', 'label' => __('cms.field.featured_image'), 'type' => 'media', 'value' => (string) ($post['featured_image_id'] ?? '')],
         ];

@@ -83,6 +83,24 @@ final class PostService
     /**
      * @return array{posts: array<int, array<string,mixed>>, total: int, pages: int}
      */
+    /** คำค้นที่ใช้ได้: ตัดช่องว่างเกิน · ยาวไม่เกิน 100 ตัว · ว่าง = ไม่ค้น */
+    public static function searchTerm(string $raw): string
+    {
+        $term = trim((string) preg_replace('/\s+/u', ' ', $raw));
+
+        return mb_check_encoding($term, 'UTF-8') ? mb_substr($term, 0, 100) : '';
+    }
+
+    /**
+     * ค้นบทความที่เผยแพร่แล้ว (ชื่อ · ย่อหน้านำ · เนื้อหา · แท็ก) — ชื่อตรงขึ้นก่อน แล้วใหม่สุด
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function searchPublished(string $term, string $locale = LocaleService::DEFAULT, int $limit = 50): array
+    {
+        return $term === '' ? [] : $this->posts->searchPublished($term, $locale, $limit);
+    }
+
     public function listing(int $page, int $perPage, ?int $categoryId = null, string $locale = LocaleService::DEFAULT): array
     {
         $total = $this->posts->countPublished($categoryId, $locale);
@@ -263,7 +281,7 @@ final class PostService
         }
 
         return $this->update($id, array_intersect_key($snapshot, array_flip([
-            'title', 'excerpt', 'content', 'featured_image_id', 'category_id', 'author_name',
+            'title', 'excerpt', 'content', 'featured_image_id', 'category_id', 'tags', 'author_name',
             'seo_title', 'meta_description', 'canonical_override', 'robots', 'og_image_id',
         ])));
     }
@@ -316,7 +334,7 @@ final class PostService
             }
 
             $copy = array_intersect_key($source, array_flip([
-                'slug', 'title', 'excerpt', 'content', 'featured_image_id', 'category_id', 'author_name',
+                'slug', 'title', 'excerpt', 'content', 'featured_image_id', 'category_id', 'tags', 'author_name',
                 'seo_title', 'meta_description', 'robots', 'og_image_id',
             ]));
 

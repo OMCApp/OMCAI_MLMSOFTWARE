@@ -35,9 +35,12 @@ $heroPerson  = is_array($heroBlock['person'] ?? null) && (string) ($heroBlock['p
 /* variant 'page' = ส่วนเปิดของหน้าใน (ไม่มี mockup) — breadcrumb อยู่ในนี้ เพราะ page-head ไม่วาดเมื่อมี hero
    ‼️ $breadcrumbs มาจาก Controller (view data) — หน้าแรกไม่มี breadcrumb */
 if (($heroBlock['variant'] ?? '') === 'page'):
-    $heroUid = (string) ($heroBlock['_uid'] ?? 'hero');
+    $heroUid    = (string) ($heroBlock['_uid'] ?? 'hero');
+    // tone 'dark' = พื้นน้ำเงินหมึก (หน้ารวมบทความ) · visual 'network' = แล็ปท็อปหน้าจอสายงาน (ตกแต่ง — ซ่อนบนมือถือ)
+    $heroDark   = ($heroBlock['tone'] ?? '') === 'dark';
+    $heroVisual = (string) ($heroBlock['visual'] ?? '');
 ?>
-<section class="hero-page" aria-labelledby="<?= e($heroUid) ?>-title">
+<section class="hero-page<?= e(($heroDark ? ' is-dark' : '') . ($heroVisual !== '' ? ' has-visual' : '')) ?>" aria-labelledby="<?= e($heroUid) ?>-title">
     <div class="hero-page-glow" aria-hidden="true"></div>
     <div class="container hero-page-inner">
         <?php $breadcrumbItems = (array) ($breadcrumbs ?? []); include __DIR__ . '/../breadcrumb.php'; ?>
@@ -59,6 +62,12 @@ if (($heroBlock['variant'] ?? '') === 'page'):
                     <?php $siteButton = (array) $heroAction; include __DIR__ . '/../site-button.php'; ?>
                 <?php endforeach; ?>
             </div>
+        <?php endif; ?>
+        <?php if ($heroVisual === 'network'): ?>
+            <figure class="hero-page-visual">
+                <?php $dashboardMockFrame = 'laptop'; $dashboardMockView = 'team'; include __DIR__ . '/../dashboard-mock.php'; ?>
+                <figcaption class="mock-caption"><?= e(__('showcase.caption')) ?></figcaption>
+            </figure>
         <?php endif; ?>
     </div>
 </section>
