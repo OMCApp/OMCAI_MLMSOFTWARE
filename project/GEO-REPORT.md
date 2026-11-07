@@ -11,7 +11,7 @@
 | Organization schema ที่ตรวจสอบได้ | ชื่อทางการไทย/อังกฤษ, วันจดทะเบียน 2009-04-03, ที่อยู่, เบอร์ E.164, อีเมลขายสาธารณะ, Facebook · ไม่มี rating/review/award | `app/Services/SchemaService.php` |
 | sitemap WordPress เดิม → 301 | 7 URL (`/wp-sitemap*.xml`, `/sitemap_index.xml`) | migration `052` |
 | IndexNow | แจ้ง URL อัตโนมัติเมื่อเผยแพร่/แก้ · เฉพาะ production + มีคีย์ · `/<key>.txt` ตอบเฉพาะคีย์ถูก | `app/Services/IndexNowService.php` |
-| แก้จาก security review อัตโนมัติ | schema + llms.txt เลิกใช้อีเมลผู้รับแจ้งเตือน lead (ตั้งเป็นอีเมลภายในได้) → ใช้อีเมลสาธารณะท้ายเว็บ | — |
+| แก้จาก security review อัตโนมัติ | schema + llms.txt เลิกใช้อีเมลผู้รับแจ้งเตือน lead (ตั้งเป็นอีเมลภายในได้) → ใช้อีเมลท้ายเว็บตัวแรกที่อยู่บนโดเมนบริษัท (sale@omc.co.th) แทน projectyak@hotmail.com ที่ขึ้นก่อน | — |
 
 ## เอกสารที่ส่งมอบ
 
@@ -25,7 +25,7 @@
 
 ## QA
 
-- tests: **5052 passed · 0 failed** (รวมชุด GEO: llms.txt, Organization facts, ไม่มี rating/award, sitemap 301, `.txt` สุ่ม → 404)
+- tests: **5053 passed · 0 failed** (รวมชุด GEO: llms.txt, Organization facts, ไม่มี rating/award, sitemap 301, `.txt` สุ่ม → 404)
 - `scripts/check.php`: 0 ต้องแก้ · 19 ควรดู (เท่า baseline)
 - SEO regression 95 URL: **0 ปัญหา** (410 สองตัวตามตั้งใจ)
 
