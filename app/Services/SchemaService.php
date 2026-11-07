@@ -129,7 +129,7 @@ final class SchemaService
                 '@type'       => 'ContactPoint',
                 'contactType' => 'sales',
                 'telephone'   => (string) $contact['phone_e164'],
-                'email'       => SiteService::leadEmail(),
+                'email'       => (string) ($contact['email'] ?? ''),
                 'areaServed'  => 'TH',
             ]];
         }
