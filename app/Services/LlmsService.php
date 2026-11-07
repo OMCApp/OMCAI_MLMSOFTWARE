@@ -43,7 +43,7 @@ final class LlmsService
         $out[] = '- Registered: ' . $founded . ' · Nonthaburi, Thailand';
         $out[] = '- What OMC does: develops and maintains MLM / direct selling software (members, genealogy, commission calculation, orders, stock, back office), configured to each company\'s compensation plan';
         $out[] = '- Languages of the website: Thai (main), English (/en/), Chinese (/zh/)';
-        $out[] = '- Contact: ' . (string) ($contact['phone'] ?? '') . ' · ' . (string) ($contact['email'] ?? '') . ' · ' . $link('/contact/');
+        $out[] = '- Contact: ' . (string) ($contact['phone'] ?? '') . ' · ' . SchemaService::entityEmail($contact) . ' · ' . $link('/contact/');
         $out[] = '- Live demo of the system: https://demomlm.omc.co.th/ · book a guided demo: ' . $link('/demo/');
         $out[] = '';
 

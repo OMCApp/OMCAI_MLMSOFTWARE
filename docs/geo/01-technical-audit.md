@@ -49,7 +49,7 @@
 | สิ่งที่เพิ่ม | ที่ | หมายเหตุ |
 |---|---|---|
 | `/llms.txt` | `LlmsService` | Markdown สรุปบริษัท + หน้าทั้งหมดที่ index ได้ (3 ภาษา) + บทความ 50 เรื่อง · สร้างจากข้อมูลจริงทุกครั้ง · ไม่มี `/admin/`, `/thank-you/`, หน้า noindex |
-| Organization schema | `SchemaService::organization()` | ชื่อทางการ (ไทย/อังกฤษ), วันจดทะเบียน 3 เม.ย. 2552, ที่อยู่, เบอร์ E.164, อีเมลขายสาธารณะ (sale@), Facebook · **ไม่มี** rating / review / award / จำนวนลูกค้า |
+| Organization schema | `SchemaService::organization()` | ชื่อทางการ (ไทย/อังกฤษ), วันจดทะเบียน 3 เม.ย. 2552, ที่อยู่, เบอร์ E.164, อีเมลบนโดเมนบริษัท (sale@omc.co.th — เลือกอัตโนมัติจากรายการท้ายเว็บ ข้าม hotmail ที่ขึ้นก่อน), Facebook · **ไม่มี** rating / review / award / จำนวนลูกค้า |
 | IndexNow | `IndexNowService` | แจ้ง Bing/Yandex/Seznam ทุกครั้งที่เผยแพร่/แก้หน้า · ทำงานเฉพาะ production ที่ตั้ง `INDEXNOW_KEY` · `/<key>.txt` ตอบเฉพาะคีย์ที่ถูก ที่เหลือ 404 |
 
 ## 1.6 ไม่เปิดข้อมูลที่ไม่ควรเปิด

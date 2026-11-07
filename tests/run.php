@@ -777,6 +777,9 @@ preg_match('#<script type="application/ld\+json"[^>]*>(.*?)</script>#s', $http('
 $org = (array) (json_decode((string) ($homeLd[1] ?? ''), true)['@graph'][0] ?? []);
 $check(($org['foundingDate'] ?? '') === '2009-04-03' && ($org['address']['addressCountry'] ?? '') === 'TH' && ($org['contactPoint'][0]['contactType'] ?? '') === 'sales'
     && in_array('OMC', (array) ($org['alternateName'] ?? []), true), 'Organization schema: foundingDate, address, contactPoint, alternateName');
+// อีเมล entity = อีเมลบนโดเมนบริษัท (ไม่ใช่กล่องแจ้งเตือน lead หรืออีเมลฟรีที่ขึ้นก่อนในท้ายเว็บ)
+$check(str_ends_with((string) ($org['contactPoint'][0]['email'] ?? ''), '@omc.co.th') && preg_match('/- Contact: .*@omc\.co\.th/', $llms['body']) === 1,
+    'Organization + llms.txt: contact e-mail is on the company domain');
 $check(!isset($org['aggregateRating']) && !isset($org['award']) && !isset($org['review']), 'Organization schema: no ratings/awards/reviews (nothing unverified)');
 foreach (['/wp-sitemap.xml' => '/sitemap.xml', '/wp-sitemap-posts-post-1.xml' => '/sitemap-posts.xml', '/wp-sitemap-posts-page-1.xml' => '/sitemap-pages.xml'] as $from => $to) {
     $res = $http('GET', $from);

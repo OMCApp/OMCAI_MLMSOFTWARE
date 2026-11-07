@@ -69,6 +69,27 @@ final class SchemaService
         );
     }
 
+    /**
+     * อีเมลของบริษัทสำหรับ entity (schema · llms.txt) — อีเมลแรกท้ายเว็บที่อยู่บนโดเมนบริษัท (โดเมนของ canonical host)
+     * ‼️ ไม่ใช่กล่องรับแจ้งเตือน lead (ตั้งเป็นอีเมลภายในได้) · อีเมลฟรี (hotmail ฯลฯ) ทำให้ AI ไม่แน่ใจว่าเป็นช่องทางทางการ
+     *
+     * @param array<string, mixed> $contact จาก SiteService::company()
+     */
+    public static function entityEmail(array $contact): string
+    {
+        $emails = array_values(array_filter(array_map('strval', (array) ($contact['emails'] ?? [])), 'strlen'));
+        $host   = strtolower((string) parse_url(SeoService::base(), PHP_URL_HOST));
+
+        foreach ($emails as $email) {
+            $domain = strtolower(substr((string) strrchr($email, '@'), 1));
+            if ($domain !== '' && ($host === $domain || str_ends_with($host, '.' . $domain))) {
+                return $email;
+            }
+        }
+
+        return $emails[0] ?? (string) ($contact['email'] ?? '');
+    }
+
     /** @return array<string, mixed> */
     private function organization(string $base, string $locale): array
     {
@@ -129,7 +150,7 @@ final class SchemaService
                 '@type'       => 'ContactPoint',
                 'contactType' => 'sales',
                 'telephone'   => (string) $contact['phone_e164'],
-                'email'       => (string) ($contact['email'] ?? ''),
+                'email'       => self::entityEmail($contact),
                 'areaServed'  => 'TH',
             ]];
         }
