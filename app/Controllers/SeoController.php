@@ -10,6 +10,7 @@ namespace App\Controllers;
 use App\Services\FeedService;
 use App\Services\LocaleService;
 use App\Services\PostService;
+use App\Services\LlmsService;
 use App\Services\RobotsService;
 use App\Services\SitemapService;
 use Core\Path;
@@ -39,6 +40,23 @@ final class SeoController extends PublicController
             (new RobotsService())->content((string) config('env'), (string) config('url')),
             'text/plain; charset=utf-8'
         );
+    }
+
+    /** /llms.txt — สรุปเว็บสำหรับผู้ช่วย AI (App\Services\LlmsService) */
+    public function llms(): void
+    {
+        $this->plain((new LlmsService())->content(), 'text/markdown; charset=utf-8');
+    }
+
+    /** /<INDEXNOW_KEY>.txt — พิสูจน์ความเป็นเจ้าของโดเมนให้ IndexNow (ตอบเฉพาะคีย์ที่ตั้งไว้) */
+    public function indexNowKey(string $key): void
+    {
+        if (!\App\Services\IndexNowService::enabled() || !hash_equals(\App\Services\IndexNowService::key(), $key)) {
+            http_response_code(404);
+            exit;
+        }
+
+        $this->plain($key, 'text/plain; charset=utf-8');
     }
 
     /** /feed/ (ไทย) · /en/feed/ · /zh/feed/ — แต่ละภาษามี feed ของตัวเอง */

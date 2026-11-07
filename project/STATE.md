@@ -1,5 +1,5 @@
 # สถานะโปรเจค
-> อัปเดตล่าสุด: 2026-11-04
+> อัปเดตล่าสุด: 2026-11-07
 
 - **ช่วง:** C — ลงมือทีละ phase
 - **โหมด:** เร็ว (ผู้ใช้สั่ง "ทำให้เสร็จเลย ไม่ต้องถามจุกจิก")
@@ -8,6 +8,7 @@
 - **ประตูที่ผ่านแล้ว:** A ✅ (2026-11-03 — brief 3 ฉบับแทนการสัมภาษณ์) · B ✅ (2026-11-03 — ผู้ใช้อนุมัติเต็มรูปแบบล่วงหน้า + ส่งแบบอ้างอิงหน้าแรก)
 
 ## ค้างอยู่ที่
+[2026-11-07] Blog redesign ✅ บน staging · GEO / AI Search Visibility ✅ ส่วนที่ทำได้ในระบบ (llms.txt · Organization schema · sitemap WordPress 301 · IndexNow · เอกสาร `docs/geo/` 01–05 · รายงาน `project/GEO-REPORT.md`) — เนื้อหาใหม่ยังไม่เผยแพร่ รอ OMC ยืนยันข้อเท็จจริง
 Production Preparation เสร็จ (2026-11-06) — `/_preflight` · release builder · verify-wp-backup · ซ้อมติดตั้งจากแพ็กเกจลงฐานเปล่า (migrated 28) · runbook แบบโฟลเดอร์ใหม่ (ไม่ทับ WordPress) · ตรวจเซิร์ฟเวอร์ production + อีเมล DNS จากภายนอก · repo GitHub เป็นสาธารณะ (ไม่มีความลับหลุด)
 ค้าง: 🔴 7 ข้อใน `GO-NO-GO.md` (อนุมัติ · backup WordPress · ฐานใหม่ · .env · `/_preflight` บนเครื่องจริง · SMTP · commit) — รายละเอียด `OMC-CHECKLIST.md`
 

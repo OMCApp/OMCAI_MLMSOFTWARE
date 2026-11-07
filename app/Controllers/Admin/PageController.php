@@ -102,6 +102,7 @@ final class PageController extends AdminController
         }
 
         $saved = $this->pages->save(null, $data, false);
+        (new \App\Services\IndexNowService())->page((int) $saved['id']);
         $this->flash('success', __('cms.common.saved'));
         $this->redirect('/admin/pages/' . $saved['id']);
     }
@@ -122,6 +123,7 @@ final class PageController extends AdminController
         }
 
         $saved = $this->pages->save((int) $id, $data, $this->bool('redirect_old_path'));
+        (new \App\Services\IndexNowService())->page((int) $id, $saved['redirect']);
         $this->flash('success', $saved['redirect'] !== null
             ? __('cms.common.saved_with_redirect', ['from' => $saved['redirect']])
             : __('cms.common.saved'));

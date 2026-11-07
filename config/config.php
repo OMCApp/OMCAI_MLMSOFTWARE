@@ -83,6 +83,9 @@ return [
 
     // อีเมลแจ้งเตือน lead ใหม่ (App\Services\MailService) — ปิด/ไม่มีผู้ส่ง = ไม่ส่ง สถานะ lead เป็น skipped
     // driver: smtp (แนะนำ — ส่งผ่านกล่องอีเมลจริงที่ยืนยันตัวตน) · mail (mail() ของ PHP ของโฮสต์)
+    // IndexNow (Bing/Copilot ฯลฯ) — ส่งเฉพาะ production เมื่อตั้งคีย์ (App\Services\IndexNowService) · คีย์ไม่ใช่ความลับ (เปิดที่ /<key>.txt)
+    'indexnow' => ['key' => $get('INDEXNOW_KEY', '')],
+
     'mail' => [
         'enabled'    => $get('MAIL_ENABLED', 'false') === 'true',
         'from'       => $get('MAIL_FROM', ''),

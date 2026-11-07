@@ -103,7 +103,47 @@ final class SchemaService
             $org['logo'] = ['@type' => 'ImageObject', 'url' => SeoService::absolute($logo)];
         }
 
+        // ‼️ เฉพาะข้อเท็จจริงที่แสดงบนเว็บอยู่แล้ว/ยืนยันแล้ว (GEO 2026-11-07) — ไม่มี rating/award/จำนวนลูกค้า
+        [$brand, $contact] = SiteService::company(SiteService::configFor($locale), $locale);
+
+        $alternate = array_values(array_unique(array_filter([
+            'OMC',
+            (string) ($brand['legal_name'] ?? ''),
+            'Online Marketing Communication Co., Ltd.',
+        ], static fn (string $n): bool => $n !== '' && $n !== ($org['legalName'] ?? '') && $n !== $org['name'])));
+        if ($alternate !== []) {
+            $org['alternateName'] = $alternate;
+        }
+
+        $founded = SiteService::founded();
+        if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $founded) === 1) {
+            $org['foundingDate'] = $founded; // ยืนยันแล้ว: จดทะเบียน 3 เม.ย. 2552
+        }
+
+        if ((string) ($contact['address'] ?? '') !== '') {
+            $org['address'] = ['@type' => 'PostalAddress', 'streetAddress' => (string) $contact['address'], 'addressCountry' => 'TH'];
+        }
+
+        if ((string) ($contact['phone_e164'] ?? '') !== '') {
+            $org['contactPoint'] = [[
+                '@type'       => 'ContactPoint',
+                'contactType' => 'sales',
+                'telephone'   => (string) $contact['phone_e164'],
+                'email'       => (string) ($contact['email'] ?? ''),
+                'areaServed'  => 'TH',
+            ]];
+        }
+
+        $org['areaServed'] = 'TH';
+        $org['knowsAbout'] = ['MLM software', 'Direct selling software', 'Network marketing compensation plans', 'Commission calculation'];
+
         $sameAs = array_values(array_filter((array) SettingService::get('organization.same_as', []), 'is_string'));
+        foreach (['facebook'] as $field) { // LINE เป็นช่องแชต ไม่ใช่โปรไฟล์ขององค์กร — ไม่ใส่ใน sameAs
+            if (str_starts_with((string) ($contact[$field] ?? ''), 'https://')) {
+                $sameAs[] = (string) $contact[$field];
+            }
+        }
+        $sameAs = array_values(array_unique($sameAs));
 
         if ($sameAs !== []) {
             $org['sameAs'] = $sameAs;

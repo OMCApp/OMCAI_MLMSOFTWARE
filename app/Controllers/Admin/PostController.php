@@ -106,6 +106,7 @@ final class PostController extends AdminController
         }
 
         $saved = $this->posts->save(null, $data, false);
+        (new \App\Services\IndexNowService())->post((int) $saved['id']);
         $this->flash('success', __('cms.common.saved'));
         $this->redirect('/admin/posts/' . $saved['id']);
     }
@@ -124,6 +125,7 @@ final class PostController extends AdminController
         }
 
         $saved = $this->posts->save((int) $id, $data, $this->bool('redirect_old_path'));
+        (new \App\Services\IndexNowService())->post((int) $id, $saved['redirect']);
         $this->flash('success', $saved['redirect'] !== null
             ? __('cms.common.saved_with_redirect', ['from' => $saved['redirect']])
             : __('cms.common.saved'));
