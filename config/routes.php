@@ -41,6 +41,9 @@ $router->get('/sitemap.xml', 'SeoController@sitemapIndex');
 // sitemap แยกภาษา: sitemap-pages.xml (ไทย) · sitemap-pages-en.xml · sitemap-posts-zh.xml …
 $router->get('/sitemap-{section:[a-z]+(?:-[a-z]+)?}.xml', 'SeoController@sitemap');
 $router->get('/robots.txt', 'SeoController@robots');
+$router->get('/llms.txt', 'SeoController@llms');
+// IndexNow key file (/<INDEXNOW_KEY>.txt) — 404 ถ้าไม่ตรงคีย์ที่ตั้งไว้
+$router->get('/{key:[A-Za-z0-9-]{8,128}}.txt', 'SeoController@indexNowKey');
 $router->get('/feed', 'SeoController@feed');
 // feed ของภาษาอื่น (/en/feed/) — รายการภาษามาจาก config/locales.php · 404 ถ้าภาษานั้นยังไม่มีบทความ
 $router->get('/{locale:' . \App\Services\LocaleService::prefixPattern() . '}/feed', 'SeoController@feed');

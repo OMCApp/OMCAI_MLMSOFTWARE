@@ -105,7 +105,7 @@ final class Page extends Model
     public function indexable(): array
     {
         return Database::select(
-            "SELECT id, path, locale, translation_group, template, canonical_override, updated_at FROM pages
+            "SELECT id, path, locale, translation_group, template, canonical_override, updated_at, title, meta_description FROM pages
              WHERE status = 'published' AND robots = 'index' AND deleted_at IS NULL
                AND (published_at IS NULL OR published_at <= NOW())
              ORDER BY sort, id"

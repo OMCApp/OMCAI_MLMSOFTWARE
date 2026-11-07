@@ -765,6 +765,26 @@ $home = $p4Bodies['/'] ?? '';
 $check(substr_count($home, 'class="lang-switch') >= 3, 'header (desktop + drawer) and footer have the language switcher');
 $check(str_contains($home, 'aria-label="' . e(__('site.lang_switch')) . '"') || str_contains($home, 'class="lang-switch is-header" aria-label='), 'language switcher has an accessible label');
 
+$section('GEO — llms.txt · entity schema · old WordPress sitemaps · IndexNow');
+$llms = $http('GET', '/llms.txt');
+$check($llms['status'] === 200 && str_contains($header($llms, 'content-type'), 'text/markdown') && str_starts_with($llms['body'], '# '), '/llms.txt: 200 markdown');
+$check(str_contains($llms['body'], 'Registered: 2009-04-03') && str_contains($llms['body'], '(https://mlmsoftware.omc.co.th/mlm-software-omc/)')
+    && str_contains($llms['body'], '## English pages') && str_contains($llms['body'], '## Articles (Thai)'), '/llms.txt: verified facts + live pages in 3 languages + articles');
+// zz-test-* = หน้าทดสอบที่ชุดนี้เผยแพร่ชั่วคราว (ออกจาก llms.txt เองเมื่อลบ) — ตรวจแค่ไม่มีหลังบ้าน/หน้า noindex
+$check(!str_contains($llms['body'], '/admin/') && !str_contains($llms['body'], '/thank-you/'), '/llms.txt: no admin URLs, no noindex pages (/thank-you/)');
+$homeLd = [];
+preg_match('#<script type="application/ld\+json"[^>]*>(.*?)</script>#s', $http('GET', '/')['body'], $homeLd);
+$org = (array) (json_decode((string) ($homeLd[1] ?? ''), true)['@graph'][0] ?? []);
+$check(($org['foundingDate'] ?? '') === '2009-04-03' && ($org['address']['addressCountry'] ?? '') === 'TH' && ($org['contactPoint'][0]['contactType'] ?? '') === 'sales'
+    && in_array('OMC', (array) ($org['alternateName'] ?? []), true), 'Organization schema: foundingDate, address, contactPoint, alternateName');
+$check(!isset($org['aggregateRating']) && !isset($org['award']) && !isset($org['review']), 'Organization schema: no ratings/awards/reviews (nothing unverified)');
+foreach (['/wp-sitemap.xml' => '/sitemap.xml', '/wp-sitemap-posts-post-1.xml' => '/sitemap-posts.xml', '/wp-sitemap-posts-page-1.xml' => '/sitemap-pages.xml'] as $from => $to) {
+    $res = $http('GET', $from);
+    $check($res['status'] === 301 && str_ends_with($header($res, 'location'), $to) && $http('GET', $to)['status'] === 200, "old sitemap {$from} → 301 {$to} (one hop)");
+}
+// ‼️ ห้ามเรียก IndexNowService::enabled() ตรงนี้ — config() จำค่าครั้งแรกไว้ (static) ทำให้ส่วน production ด้านล่างได้ config ผิด
+$check($http('GET', '/' . bin2hex(random_bytes(8)) . '.txt')['status'] === 404, 'IndexNow: key file route answers 404 outside production');
+
 $section('Phase 4 — sitemaps per language with hreflang alternates');
 $index = $http('GET', '/sitemap.xml')['body'];
 foreach (['pages', 'posts', 'categories', 'pages-en', 'pages-zh'] as $part) {

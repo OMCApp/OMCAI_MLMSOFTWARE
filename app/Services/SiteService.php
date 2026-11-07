@@ -117,11 +117,12 @@ final class SiteService
 
     /**
      * แบรนด์ + ข้อมูลติดต่อ: settings.company (CMS) ทับค่าใน config ทีละช่อง — ช่องว่างไม่ทับ
+     * public: JSON-LD Organization + llms.txt ใช้ชุดเดียวกับท้ายเว็บ — company(configFor($locale), $locale)
      *
      * @param  array<string, mixed> $site
      * @return array{0: array<string, mixed>, 1: array<string, mixed>}
      */
-    private static function company(array $site, string $locale): array
+    public static function company(array $site, string $locale): array
     {
         $brand   = (array) ($site['brand'] ?? []);
         $contact = (array) ($site['contact'] ?? []);
