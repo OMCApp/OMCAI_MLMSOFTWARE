@@ -735,6 +735,26 @@ $blogImgs = [];
 preg_match_all('#<img class="news-item-image"[^>]*>#', $http('GET', '/blog/')['body'], $blogImgs);
 $check(count($blogImgs[0]) > 2 && str_contains($blogImgs[0][0], 'fetchpriority="high"') && !str_contains($blogImgs[0][0], 'loading="lazy"')
     && str_contains($blogImgs[0][1], 'loading="lazy"'), '/blog/: first card image eager (LCP), the rest lazy');
+
+// blog redesign 2026-11-07 — mockup "บทความ / ความรู้"
+$blog = $http('GET', '/blog/')['body'];
+$check(substr_count($blog, '<h1') === 1 && preg_match('#<h1 class="hero-page-title"[^>]*>\s*บทความ / ความรู้\s*</h1>#u', $blog) === 1, '/blog/: one H1 "บทความ / ความรู้" (keeps the old keyword "บทความ")');
+$check(str_contains($blog, 'class="hero-page is-dark has-visual"') && str_contains($blog, '<link rel="canonical" href="https://mlmsoftware.omc.co.th/blog/">'), '/blog/: navy hero + canonical unchanged');
+$check(str_contains($blog, 'aria-current="page">') && str_contains($blog, 'href="/category/' . rawurlencode('ข่าวขายตรง') . '/"') && str_contains($blog, 'href="/category/' . rawurlencode('ประกัน') . '/"'),
+    '/blog/: category filter links to the existing category URLs (no new filter URLs)');
+$check(substr_count($blog, 'class="news-item"') === 10 && substr_count($blog, 'class="news-chip is-category"') === 10, '/blog/: 10 cards, each with its real category chip');
+$check(str_contains($blog, 'href="/contact/#lead-form"') && str_contains($blog, 'href="/demo/#lead-form"'), '/blog/: CTA buttons go to the real lead forms');
+$check(str_contains($blog, 'rel="next" href="/blog/page/2/"') && str_contains($blog, 'href="/blog/page/4/"'), '/blog/: pagination keeps /blog/page/N/ URLs');
+$check(!preg_match('#/blog/\?(filter|category|page)=#', $blog), '/blog/: no query-string listing URLs');
+$searchRes = $http('GET', '/blog/?q=' . rawurlencode('คอมมิชชัน'));
+$check($searchRes['status'] === 200 && str_contains($searchRes['body'], 'content="noindex, follow"') && !str_contains($searchRes['body'], 'rel="canonical"')
+    && substr_count($searchRes['body'], 'class="news-item"') > 0 && str_contains($searchRes['body'], 'class="blog-results"'), 'search: results, noindex follow, no canonical');
+$check(substr_count($http('GET', '/blog/?q=' . rawurlencode('%_'))['body'], 'class="news-item"') === 0, 'search: % and _ are literal (not wildcards)');
+$check(str_contains($http('GET', '/blog/?q=zz-no-such-word')['body'], 'empty-state'), 'search: no result → empty state with a way back');
+$catPage = $http('GET', '/category/' . rawurlencode('ประกัน') . '/')['body'];
+$check(substr_count($catPage, 'class="news-item"') >= 9 && preg_match('#<h1 class="hero-page-title"[^>]*>\s*ประกัน\s*</h1>#u', $catPage) === 1
+    && str_contains($catPage, 'content="index, follow'), 'category page: own H1, its posts (9 real + test fixtures), still indexable',
+    substr_count($catPage, 'class="news-item"') . ' cards · ' . (preg_match('#<h1[^>]*>\s*([^<]*)#u', $catPage, $hm) ? trim($hm[1]) : 'no h1'));
 preg_match('#class="post-related".*#s', $thaiPost['body'], $related);
 $check(!str_contains($related[0] ?? '', 'fetchpriority="high"'), 'related posts below an article stay lazy');
 $check(str_contains($thaiPost['body'], '%E0%B8%9B%E0%B8%81') && !str_contains($thaiPost['body'], 'src="/wp-content/uploads/2025/05/ปก'), 'Thai image file names are percent-encoded in src/srcset');

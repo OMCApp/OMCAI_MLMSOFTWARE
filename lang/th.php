@@ -30,6 +30,10 @@ return [
     // ---- เว็บสาธารณะ: layout (header · เมนู · footer) และข้อความ UI ของบล็อก
     // ‼️ เนื้อหาของหน้า (หัวข้อ ย่อหน้า ป้ายเมนู) ไม่อยู่ที่นี่ — อยู่ใน CMS / config/site.php
     'site' => [
+        'blog_filter' => 'หมวดบทความ', 'blog_all' => 'ทั้งหมด', 'blog_search_label' => 'ค้นหาบทความ', 'blog_search_placeholder' => 'ค้นหาบทความ…',
+        'blog_search_button' => 'ค้นหา', 'blog_search_clear' => 'ล้างการค้นหา', 'blog_results' => 'ผลการค้นหา “:q” — :count บทความ', 'search_title' => 'ค้นหา “:q”',
+        'blog_cta_title' => 'กำลังวางแผนสร้างธุรกิจ MLM?', 'blog_cta_text' => 'ให้ OMC ช่วยออกแบบระบบขายตรงและแผนรายได้ที่เหมาะกับธุรกิจของคุณ',
+        'blog_cta_consult' => 'ปรึกษาผู้เชี่ยวชาญฟรี', 'blog_cta_demo' => 'นัดชม Demo ระบบ', 'read_minutes' => 'อ่าน :min นาที',
         'lang_switch' => 'เลือกภาษา',
         'related_posts' => 'บทความที่เกี่ยวข้อง',
         'post_by' => 'โดย :name',
@@ -378,6 +382,7 @@ return [
             'legal' => 'นโยบาย/กฎหมาย', 'contact' => 'ติดต่อ',
         ],
         'field' => [
+            'tags' => 'แท็ก',
             'title' => 'ชื่อเรื่อง', 'path' => 'URL (path)', 'status' => 'สถานะ', 'locale' => 'ภาษา', 'updated_at' => 'แก้ไขล่าสุด',
             'published_at' => 'วันเผยแพร่', 'template' => 'แม่แบบ', 'parent' => 'หน้าแม่', 'slug' => 'Slug', 'excerpt' => 'บทคัดย่อ',
             'content' => 'เนื้อหา', 'category' => 'หมวด', 'author_name' => 'ผู้เขียน', 'featured_image' => 'รูปหลัก', 'name' => 'ชื่อ',
@@ -400,6 +405,7 @@ return [
             'redirect_old_hint' => 'URL ปัจจุบัน :path เผยแพร่อยู่ — คนที่มาจาก Google หรือลิงก์เดิมจะถูกพาไป URL ใหม่',
         ],
         'posts' => [
+            'tags_hint' => 'คั่นด้วยจุลภาค เช่น MLM, แผนรายได้ — แสดงบนการ์ดบทความและใช้ค้นหา (ไม่เกิน 8 แท็ก)',
             'title' => 'บทความ', 'lead' => 'บทความในบล็อก — URL เป็น /ปี/เดือน/วัน/slug/ ตามวันเผยแพร่',
             'add' => 'เขียนบทความ', 'edit' => 'แก้ไขบทความ', 'section_main' => 'เนื้อหา',
             'slug_hint' => 'ส่วนท้ายของ URL — ภาษาไทยได้ ห้ามมี / หรือช่องว่าง',

@@ -138,6 +138,19 @@ final class SiteResolver
             return ['kind' => 'redirect', 'code' => 301, 'location' => $base . ($query !== '' ? '?' . $query : '')];
         }
 
+        // ค้นหาบทความ /blog/?q= — หน้าผลค้นหา noindex (SiteViewService) · ผลไม่เกิน 50 เรื่อง หน้าเดียว (บทความทั้งเว็บ 36 เรื่อง)
+        parse_str($query, $params);
+        $term = PostService::searchTerm((string) ($params['q'] ?? ''));
+
+        if ($kind === 'blog' && $term !== '' && $pageParam === '') {
+            $found = $this->posts->searchPublished($term, $locale, 50);
+
+            return [
+                'kind' => 'blog', 'locale' => $locale, 'base' => $base, 'page' => 1, 'perPage' => 50, 'category' => null,
+                'posts' => $found, 'total' => count($found), 'pages' => 1, 'search' => $term,
+            ];
+        }
+
         $page    = $pageParam === '' ? 1 : (int) $pageParam;
         $perPage = max(1, min((int) SettingService::get('blog.per_page', 10), 50));
         $result  = $this->posts->listing(max(1, $page), $perPage, $category !== null ? (int) $category['id'] : null, $locale);

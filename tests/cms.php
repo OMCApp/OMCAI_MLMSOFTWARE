@@ -497,6 +497,17 @@ $send('PATCH', '/admin/posts/' . $postId, 'p3editor', ['title' => 'ZZ บทค�
     'published_at' => '2025-03-04T10:00', 'robots' => 'index', 'locale' => 'th', 'content' => '<p>a</p>', 'redirect_old_path' => '1']);
 $oldPost = $http('GET', $enc($postUrl));
 $check($oldPost['status'] === 301 && str_contains(rawurldecode($location($oldPost)), $slug . '-x/'), 'slug change → 301 from old URL');
+
+// แท็ก (blog redesign 2026-11-07): normalize ในหลังบ้าน → ชิปบนการ์ด → ค้นหาด้วยแท็ก
+$tagWord = 'zzแท็ก' . substr((string) $stamp, -4);
+$send('PATCH', '/admin/posts/' . $postId, 'p3editor', ['title' => 'ZZ บทความ', 'slug' => $slug . '-x', 'status' => 'published',
+    'published_at' => '2025-03-04T10:00', 'robots' => 'index', 'locale' => 'th', 'content' => '<p>a</p>', 'tags' => " #{$tagWord}, MLM ,mlm, , #แผนรายได้ "]);
+$postRow->execute(['id' => $postId]);
+$check(($postRow->fetch()['tags'] ?? null) === "{$tagWord}, MLM, แผนรายได้", 'tags normalized on save (trim · no # · no duplicates)');
+$tagSearch = $http('GET', '/blog/?q=' . rawurlencode($tagWord));
+$check(str_contains($tagSearch['body'], 'ZZ บทความ') && str_contains($tagSearch['body'], '#' . $tagWord) && substr_count($tagSearch['body'], 'class="news-item"') === 1,
+    'search finds the post by its tag and shows the tag chips');
+$check(str_contains($tagSearch['body'], 'href="/blog/?q=' . rawurlencode($tagWord) . '" rel="nofollow"'), 'tag chip links to the tag search (nofollow)');
 $check($http('GET', '/admin/posts/' . $postId, ['jar' => 'p3editor'])['status'] === 200 && str_contains($http('GET', '/admin/posts/' . $postId, ['jar' => 'p3editor'])['body'], 'data-html-editor'), 'post edit renders the HTML editor');
 $trPost = $send('POST', '/admin/posts/' . $postId . '/translations', 'p3editor', ['locale' => 'en']);
 $enPostId = preg_match('#/admin/posts/(\d+)$#', $location($trPost), $m) === 1 ? (int) $m[1] : 0;

@@ -39,6 +39,24 @@ final class CategoryService
         return $out;
     }
 
+    /**
+     * หมวดของภาษานี้ (เรียงตาม sort) — ตัวกรองหน้ารวมบทความ + ชิปหมวดบนการ์ด · query เดียว
+     *
+     * @return array<int, array{id:int, name:string, path:string}> id => หมวด
+     */
+    public function forLocale(string $locale): array
+    {
+        $out = [];
+
+        foreach ($this->categories->allLive() as $row) {
+            if ((string) ($row['locale'] ?? LocaleService::DEFAULT) === $locale) {
+                $out[(int) $row['id']] = ['id' => (int) $row['id'], 'name' => (string) $row['name'], 'path' => self::path($row)];
+            }
+        }
+
+        return $out;
+    }
+
     public static function path(array $category): string
     {
         return LocaleService::prefix((string) ($category['locale'] ?? LocaleService::DEFAULT)) . '/category/' . $category['slug'] . '/';

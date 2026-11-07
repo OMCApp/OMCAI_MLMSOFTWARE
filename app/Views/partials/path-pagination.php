@@ -24,19 +24,34 @@ if ($pathPaginationPages <= 1) {
 $pathPaginationHref = static fn (int $target): string
     => url(Path::encode($target === 1 ? $pathPaginationBase : $pathPaginationBase . 'page/' . $target . '/'));
 ?>
-<nav class="pagination row" aria-label="<?= e(__('site.pagination')) ?>">
+<?php
+// หน้าแรก · หน้าสุดท้าย · รอบหน้าปัจจุบัน ±1 — ช่องว่างที่เหลือเป็น "…" (12 หน้าก็ไม่ล้นจอมือถือ)
+$pathPaginationShow = [];
+for ($pathPaginationI = 1; $pathPaginationI <= $pathPaginationPages; $pathPaginationI++) {
+    if ($pathPaginationI === 1 || $pathPaginationI === $pathPaginationPages || abs($pathPaginationI - $pathPaginationPage) <= 1) {
+        $pathPaginationShow[] = $pathPaginationI;
+    }
+}
+?>
+<nav class="site-pagination" aria-label="<?= e(__('site.pagination')) ?>">
     <?php if ($pathPaginationPage > 1): ?>
-        <a class="btn" rel="prev" href="<?= e($pathPaginationHref($pathPaginationPage - 1)) ?>"><?= e(__('site.newer')) ?></a>
+        <a class="site-pagination-step" rel="prev" href="<?= e($pathPaginationHref($pathPaginationPage - 1)) ?>"
+           aria-label="<?= e(__('site.newer')) ?>"><?= icon('chevron-left', 'icon-sm') ?></a>
     <?php endif; ?>
 
-    <?php for ($pathPaginationI = 1; $pathPaginationI <= $pathPaginationPages; $pathPaginationI++): ?>
-        <a class="btn" href="<?= e($pathPaginationHref($pathPaginationI)) ?>"
-           <?php if ($pathPaginationI === $pathPaginationPage): ?>aria-current="page"<?php endif; ?>><?= e((string) $pathPaginationI) ?></a>
-    <?php endfor; ?>
+    <?php $pathPaginationPrev = 0; ?>
+    <?php foreach ($pathPaginationShow as $pathPaginationI): ?>
+        <?php if ($pathPaginationI - $pathPaginationPrev > 1): ?><span class="site-pagination-gap" aria-hidden="true">…</span><?php endif; ?>
+        <a class="site-pagination-page" href="<?= e($pathPaginationHref($pathPaginationI)) ?>"
+           <?php if ($pathPaginationI === $pathPaginationPage): ?>aria-current="page"<?php endif; ?>
+           aria-label="<?= e(__('site.page_n', ['page' => (string) $pathPaginationI])) ?>"><?= e((string) $pathPaginationI) ?></a>
+        <?php $pathPaginationPrev = $pathPaginationI; ?>
+    <?php endforeach; ?>
 
     <?php if ($pathPaginationPage < $pathPaginationPages): ?>
-        <a class="btn" rel="next" href="<?= e($pathPaginationHref($pathPaginationPage + 1)) ?>"><?= e(__('site.older')) ?></a>
+        <a class="site-pagination-step" rel="next" href="<?= e($pathPaginationHref($pathPaginationPage + 1)) ?>"
+           aria-label="<?= e(__('site.older')) ?>"><?= icon('chevron-right', 'icon-sm') ?></a>
     <?php endif; ?>
 </nav>
 <?php
-unset($pathPaginationHref, $pathPaginationI);
+unset($pathPaginationHref, $pathPaginationI, $pathPaginationShow, $pathPaginationPrev);

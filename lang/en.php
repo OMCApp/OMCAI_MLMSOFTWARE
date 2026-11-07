@@ -28,6 +28,10 @@ return [
     // ---- Public site: layout (header · menu · footer) and block UI strings
     // ‼️ Page content (headings, paragraphs, menu labels) does not live here — it lives in the CMS / config/site.php
     'site' => [
+        'blog_filter' => 'Article categories', 'blog_all' => 'All', 'blog_search_label' => 'Search articles', 'blog_search_placeholder' => 'Search articles…',
+        'blog_search_button' => 'Search', 'blog_search_clear' => 'Clear search', 'blog_results' => 'Results for “:q” — :count article(s)', 'search_title' => 'Search “:q”',
+        'blog_cta_title' => 'Planning an MLM business?', 'blog_cta_text' => 'Let OMC design the direct selling system and compensation plan that fit your business',
+        'blog_cta_consult' => 'Free expert consultation', 'blog_cta_demo' => 'Book a system demo', 'read_minutes' => ':min min read',
         'lang_switch' => 'Choose language',
         'related_posts' => 'Related articles',
         'post_by' => 'By :name',
@@ -374,6 +378,7 @@ return [
             'legal' => 'Policy / legal', 'contact' => 'Contact',
         ],
         'field' => [
+            'tags' => 'Tags',
             'title' => 'Title', 'path' => 'URL (path)', 'status' => 'Status', 'locale' => 'Language', 'updated_at' => 'Last edited',
             'published_at' => 'Publish date', 'template' => 'Template', 'parent' => 'Parent page', 'slug' => 'Slug', 'excerpt' => 'Excerpt',
             'content' => 'Content', 'category' => 'Category', 'author_name' => 'Author', 'featured_image' => 'Featured image', 'name' => 'Name',
@@ -396,6 +401,7 @@ return [
             'redirect_old_hint' => 'The current URL :path is live — visitors from Google or old links will be sent to the new URL',
         ],
         'posts' => [
+            'tags_hint' => 'Comma-separated, e.g. MLM, compensation plan — shown on article cards and used by search (max 8)',
             'title' => 'Posts', 'lead' => 'Blog posts — the URL is /year/month/day/slug/ from the publish date',
             'add' => 'Write a post', 'edit' => 'Edit post', 'section_main' => 'Content',
             'slug_hint' => 'Last part of the URL — Thai is allowed, no / or spaces',

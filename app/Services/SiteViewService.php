@@ -158,23 +158,49 @@ final class SiteViewService
 
         $breadcrumbs[] = ['label' => $name, 'url' => null];
 
+        // ‼️ หน้าผลค้นหา (/blog/?q=) ห้าม index — เนื้อหาซ้ำกับหน้ารวม และ URL ไม่สิ้นสุด · follow ให้ลิงก์บทความยังถูกตาม
+        $search = (string) ($r['search'] ?? '');
+
         $seo = $this->seo->meta([
-            'title'       => $name . $pageSuffix,
-            'seo_title'   => ($seoTitle !== null && $seoTitle !== '') ? $seoTitle . $pageSuffix : null,
+            'title'       => ($search !== '' ? __('site.search_title', ['q' => $search]) . ' – ' : '') . $name . $pageSuffix,
+            'seo_title'   => $search === '' && $seoTitle !== null && $seoTitle !== '' ? $seoTitle . $pageSuffix : null,
             'description' => SeoService::description($description),
-            'path'        => $path,
-            'robots'      => $robots,
+            'path'        => $search !== '' ? null : $path,
+            'robots'      => $search !== '' ? 'noindex' : $robots,
             'locale'      => $locale,
         ]);
 
-        $items = $this->cards($r['posts'], 200);
+        // ส่วนเปิด: /blog/ = บล็อก hero บล็อกแรกของหน้า /blog/ ใน CMS (แก้ข้อความได้) · หมวด = ชื่อ + คำอธิบายหมวด
+        $heroBlock = null;
+        foreach ($blogPage !== null ? $this->pages->blocks($blogPage) : [] as $block) {
+            if (($block['type'] ?? '') === 'hero') {
+                $heroBlock = (array) ($block['data'] ?? []);
+                break;
+            }
+        }
+        $hero = [
+            'variant' => 'page',
+            'tone'    => 'dark',
+            'visual'  => 'network',
+            '_uid'    => 'listing-hero',
+            'eyebrow' => $category !== null ? $this->blogLabel($locale) : (string) ($heroBlock['eyebrow'] ?? ''),
+            'title'   => $category !== null ? $name : ((string) ($heroBlock['title'] ?? '') !== '' ? (string) $heroBlock['title'] : $name),
+            'lead'    => $category !== null ? (string) ($category['description'] ?? '') : (string) ($heroBlock['lead'] ?? ''),
+        ];
+
+        $categories = (new CategoryService())->forLocale($locale);
 
         return $this->result(200, 'site/listing', $name, [
-            'siteItems'      => $items,
+            'siteItems'      => $this->cards($r['posts'], 200, $categories),
             'sitePage'       => $page,
             'sitePages'      => (int) $r['pages'],
             'siteBase'       => (string) $r['base'],
-            'siteListIntro'  => $page === 1 && $category !== null ? (string) ($category['description'] ?? '') : '',
+            'siteHero'       => $hero,
+            'siteCategories' => array_values($categories),
+            'siteCategoryId' => $category !== null ? (int) $category['id'] : 0,
+            'siteSearch'     => $search,
+            'siteTotal'      => (int) $r['total'],
+            'siteBlogUrl'    => LocaleService::localize('/blog/', $locale),
             'sitePreview'    => false,
         ], $seo, $breadcrumbs, false, [], $locale, $category === null && $blogPage !== null ? $this->pages->switcherPaths($blogPage) : []);
     }
@@ -210,24 +236,33 @@ final class SiteViewService
     /**
      * การ์ดบทความ (หน้ารวม · บทความที่เกี่ยวข้อง) — ภาพเด่นดึงทีเดียวทั้งชุด (ไม่ query ทีละบทความ)
      *
-     * @param  array<int, array<string, mixed>> $posts
+     * @param  array<int, array<string, mixed>>               $posts
+     * @param  array<int, array{name:string, path:string}>|null $categories id => หมวด (null = ดึงเอง)
      * @return list<array<string, mixed>>
      */
-    private function cards(array $posts, int $leadLength): array
+    private function cards(array $posts, int $leadLength, ?array $categories = null): array
     {
-        $images = $this->media->images(array_map(
+        $images     = $this->media->images(array_map(
             static fn (array $post): ?int => $post['featured_image_id'] !== null ? (int) $post['featured_image_id'] : null,
             $posts
         ));
-        $items  = [];
+        $categories ??= (new CategoryService())->forLocale((string) ($posts[0]['locale'] ?? LocaleService::DEFAULT));
+        $items        = [];
 
         foreach ($posts as $post) {
-            $image   = $post['featured_image_id'] !== null ? ($images[(int) $post['featured_image_id']] ?? null) : null;
-            $items[] = [
-                'url'   => Path::encode(PostService::permalink($post)),
-                'date'  => format_date((string) $post['published_at']),
-                'title' => (string) $post['title'],
-                'lead'  => SeoService::description((string) ($post['excerpt'] ?: $post['content']), $leadLength),
+            $image    = $post['featured_image_id'] !== null ? ($images[(int) $post['featured_image_id']] ?? null) : null;
+            $category = $post['category_id'] !== null ? ($categories[(int) $post['category_id']] ?? null) : null;
+            $items[]  = [
+                'url'      => Path::encode(PostService::permalink($post)),
+                'date'     => format_date((string) $post['published_at']),
+                'datetime' => SeoService::isoDate((string) $post['published_at']),
+                'title'    => (string) $post['title'],
+                'lead'     => SeoService::description((string) ($post['excerpt'] ?: $post['content']), $leadLength),
+                'category' => $category === null ? null : ['name' => $category['name'], 'url' => Path::encode($category['path'])],
+                'tags'     => PostTags::toList($post['tags'] ?? null),
+                // เวลาอ่านจากความยาวจริงของเนื้อหา (~1,200 ตัวอักษรไม่นับช่องว่าง/นาที สำหรับไทย) — ไม่ใช่ตัวเลขแต่งเอง
+                'minutes'  => max(1, (int) round(mb_strlen((string) preg_replace('/\s+/u', '',
+                    html_entity_decode(strip_tags((string) $post['content']), ENT_QUOTES, 'UTF-8'))) / 1200)),
                 'cover' => $image === null ? null : [
                     'src'    => $image['src'],
                     'srcset' => $image['srcset'],
